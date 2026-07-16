@@ -1,0 +1,7 @@
+# Phusion Passenger Configuration for Netcup Webhosting
+# Adjust the Node.js path to match your server's installation
+# You can find this via: which node (in your server SSH terminal)
+
+# PassengerNodejs /usr/bin/node
+PassengerAppType node
+PassengerStartupFile app.js

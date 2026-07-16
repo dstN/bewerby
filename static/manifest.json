@@ -1,0 +1,27 @@
+{
+	"name": "bewerby",
+	"short_name": "bewerby",
+	"description": "DSGVO-konformer Bewerbungsmanager. Verwalte deine Bewerbungen lokal und sicher im Browser.",
+	"start_url": "/",
+	"display": "standalone",
+	"background_color": "#ffffff",
+	"theme_color": "#2563eb",
+	"orientation": "any",
+	"categories": ["productivity", "utilities"],
+	"lang": "de",
+	"dir": "ltr",
+	"icons": [
+		{
+			"src": "/icons/web-app-manifest-192x192.png",
+			"sizes": "192x192",
+			"type": "image/png",
+			"purpose": "maskable"
+		},
+		{
+			"src": "/icons/web-app-manifest-512x512.png",
+			"sizes": "512x512",
+			"type": "image/png",
+			"purpose": "maskable"
+		}
+	]
+}

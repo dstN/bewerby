@@ -1,0 +1,184 @@
+{
+	"app": {
+		"name": "bewerby",
+		"description": "Dein DSGVO-konformer Bewerbungsmanager"
+	},
+	"nav": {
+		"dashboard": "Dashboard",
+		"kanban": "Kanban-Board",
+		"analytics": "Statistiken",
+		"backup": "Backup & Sync",
+		"settings": "Einstellungen"
+	},
+	"kanban": {
+		"columns": {
+			"draft": "In Arbeit",
+			"sent": "Versendet",
+			"interview": "Vorstellung",
+			"accepted": "Zusage",
+			"rejected": "Absage"
+		},
+		"actions": {
+			"add": "Bewerbung hinzufügen",
+			"edit": "Bearbeiten",
+			"delete": "Löschen",
+			"move": "Verschieben"
+		},
+		"confirmDelete": "Möchtest du diese Bewerbung wirklich löschen?",
+		"dueAlerts": "Fällige Wiedervorlagen",
+		"requiresFollowUp": "erfordert Rückfragen",
+		"subtitle": "Verwalte deine Job-Bewerbungen offline und sicher.",
+		"searchPlaceholder": "Suchen nach Firma, Titel...",
+		"allTags": "Alle Tags",
+		"allPriorities": "Alle Prioritäten",
+		"allColors": "Alle Farben",
+		"coloredOnly": "Mit Farbmarkierung",
+		"uncoloredOnly": "Ohne Farbmarkierung",
+		"sortBy": "Sortieren nach",
+		"sortDefault": "Standard",
+		"sortColor": "Farbe",
+		"sortPriority": "Priorität",
+		"sortDate": "Datum"
+	},
+	"application": {
+		"title": "Jobtitel",
+		"company": "Firma",
+		"url": "Stellenausschreibung URL",
+		"salary": "Gehaltsvorstellung",
+		"contact": "Ansprechpartner",
+		"notes": "Notizen",
+		"priority": "Priorität",
+		"tags": "Tags / Labels",
+		"cardColor": "Farbmarkierung (z.B. für High-Value/Sortierung)",
+		"colorNone": "Keine Farbe",
+		"addCustomColor": "Eigene Farbe (+)",
+		"appliedAt": "Bewerbungsdatum",
+		"createdAt": "Erstellt am",
+		"updatedAt": "Aktualisiert am",
+		"reminder": "Erinnerung",
+		"placeholderTitle": "z.B. Frontend Entwickler",
+		"placeholderCompany": "z.B. ACME GmbH",
+		"placeholderUrl": "https://...",
+		"placeholderSalary": "z.B. 60.000 €",
+		"placeholderNotes": "Weitere Details zur Bewerbung...",
+		"placeholderTags": "Tag eingeben & Enter drücken",
+		"contactName": "Name",
+		"contactEmail": "E-Mail",
+		"contactPhone": "Telefon",
+		"placeholderContactName": "z.B. Jane Doe",
+		"placeholderContactEmail": "kontakt@firma.de",
+		"placeholderContactPhone": "z.B. +49 123 45678",
+		"priorities": {
+			"low": "Niedrig",
+			"medium": "Mittel",
+			"high": "Hoch"
+		},
+		"pdf": {
+			"uploadText": "Stellenausschreibung hochladen (PDF) für Auto-Ausfüllen",
+			"scanning": "Scanne Ausschreibung..."
+		}
+	},
+	"datepicker": {
+		"today": "Heute",
+		"yesterday": "Gestern",
+		"daysAgo3": "Vor 3 Tagen",
+		"weekAgo1": "Vor 1 Woche",
+		"weeksAgo2": "Vor 2 Wochen",
+		"selectDate": "Kalender öffnen"
+	},
+	"reminders": {
+		"seconds10": "10s (Test)",
+		"none": "Keine",
+		"hours24": "24 Stunden",
+		"hours48": "48 Stunden",
+		"days7": "7 Tage",
+		"days14": "14 Tage"
+	},
+	"actions": {
+		"save": "Speichern",
+		"cancel": "Abbrechen",
+		"confirm": "Bestätigen",
+		"export": "Exportieren",
+		"import": "Importieren",
+		"upload": "Hochladen",
+		"search": "Suchen",
+		"addTag": "Hinzufügen"
+	},
+	"theme": {
+		"light": "Hell",
+		"dark": "Dunkel",
+		"toggle": "Design wechseln"
+	},
+	"backup": {
+		"title": "Backup & Sync",
+		"subtitle": "Sichere deine Daten lokal oder lade Backups hoch.",
+		"exportJson": "Als JSON exportieren",
+		"importJson": "JSON importieren",
+		"localDump": "Lokales Backup",
+		"cloudSync": "Cloud-Synchronisation",
+		"cloudSyncDisabled": "Cloud-Sync ist noch nicht konfiguriert. OAuth-App-Zugangsdaten sind erforderlich.",
+		"manualTitle": "Manueller JSON Import/Export",
+		"manualDesc": "Lade deine vollständige Datenbank als JSON-Datei herunter oder lade eine zuvor exportierte Datei hoch, um deinen Datenstand wiederherzustellen.",
+		"localTitle": "Lokaler Dump (Ordner-Zugriff)",
+		"localDesc": "Nutze die File System Access API, um Backups direkt in einem von dir ausgewählten Verzeichnis auf deinem Dateisystem zu speichern.",
+		"localButton": "Ordner auswählen & sichern",
+		"cloudTitle": "Cloud-Synchronisation",
+		"cloudDesc": "Hintergrund-Synchronisation mit Google Drive oder Dropbox.",
+		"inactive": "Inaktiv",
+		"active": "Aktiv",
+		"successImport": "Datenbank erfolgreich wiederhergestellt!",
+		"errorFormat": "Ungültiges Dateiformat. Datenschema-Version wird nicht unterstützt.",
+		"errorValidation": "Einige Einträge im Backup entsprechen nicht dem Datenmodell.",
+		"errorRead": "Fehler beim Lesen oder Parsen der Backup-Datei.",
+		"successLocal": "Sicherungsdatei im ausgewählten Ordner gespeichert!",
+		"errorDirectSave": "Das direkte Speichern in lokalen Ordnern wird von diesem Browser nicht unterstützt. Bitte nutze den manuellen JSON-Export.",
+		"errorSaveFail": "Ordner-Speicherung fehlgeschlagen."
+	},
+	"analytics": {
+		"title": "Statistiken",
+		"subtitle": "Verfolge deine Erfolgsquoten und Antwortzeiten.",
+		"statusOverview": "Status Übersicht",
+		"funnelTitle": "Bewerbungstrichter",
+		"funnelDesc": "Konvertierung der Bewerbungen durch die Hauptphasen.",
+		"selectionRate": "Quote",
+		"successRate": "Zusagequote",
+		"totalConversion": "Gesamtkonvertierung (Gesendet ➔ Zusage)",
+		"responseTitle": "Antwortzeiten der Arbeitgeber",
+		"responseDesc": "Berechnet aus der Dauer zwischen Versendet und Rückmeldung (Gespräch/Absage).",
+		"noDataAlert": "Noch nicht genügend Rückmeldungsdaten vorhanden, um Antwortzeiten zu berechnen.",
+		"bestTime": "Beste Antwortzeit",
+		"avgTime": "Durchschnittlich",
+		"worstTime": "Schlechteste",
+		"days": "Tage",
+		"basedOn": "Basierend auf {count} Bewerbungen mit Rückmeldung.",
+		"stepSelection": "Auswahl / Gespräch"
+	},
+	"settings": {
+		"title": "Einstellungen",
+		"subtitle": "Konfiguriere bewerby für deinen Bewerbungsalltag.",
+		"remindersTitle": "Erinnerungen & Benachrichtigungen",
+		"remindersDesc": "Aktiviere Push-Mitteilungen auf deinem Gerät, um fällige Nachfragen zu deinen Bewerbungen nicht zu verpassen. Alle Daten bleiben privat auf diesem Gerät.",
+		"statusLabel": "Status:",
+		"statusActive": "Aktiviert",
+		"statusInactive": "Deaktiviert",
+		"btnAllow": "Benachrichtigungen erlauben",
+		"privacyTitle": "Sicherheit & Datenschutz",
+		"privacyItem1Title": "100% Client-Side",
+		"privacyItem1Desc": "Alle Daten (Jobtitel, Gehaltsvorstellungen, Notizen, PDFs) werden ausschließlich in der IndexedDB deines Browsers gespeichert.",
+		"privacyItem2Title": "Kein Server",
+		"privacyItem2Desc": "Es gibt keine zentrale Datenbank. Keine Registrierung notwendig.",
+		"privacyItem3Title": "Offline-First",
+		"privacyItem3Desc": "Bewerby funktioniert vollständig offline. Die Anwendung kann als PWA auf dem Desktop oder Smartphone installiert werden."
+	},
+	"empty": {
+		"kanban": "Noch keine Bewerbungen vorhanden. Erstelle deine erste Bewerbung, um loszulegen.",
+		"analytics": "Noch keine Daten vorhanden. Füge Bewerbungen hinzu, um Statistiken zu sehen."
+	},
+	"a11y": {
+		"skipToContent": "Zum Inhalt springen",
+		"openMenu": "Menü öffnen",
+		"closeMenu": "Menü schließen",
+		"toggleTheme": "Design wechseln",
+		"switchLanguage": "Sprache wechseln"
+	}
+}

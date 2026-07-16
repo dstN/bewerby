@@ -1,0 +1,184 @@
+{
+	"app": {
+		"name": "bewerby",
+		"description": "Your GDPR-compliant application manager"
+	},
+	"nav": {
+		"dashboard": "Dashboard",
+		"kanban": "Kanban Board",
+		"analytics": "Analytics",
+		"backup": "Backup & Sync",
+		"settings": "Settings"
+	},
+	"kanban": {
+		"columns": {
+			"draft": "In Progress",
+			"sent": "Sent",
+			"interview": "Interview",
+			"accepted": "Accepted",
+			"rejected": "Rejected"
+		},
+		"actions": {
+			"add": "Add application",
+			"edit": "Edit",
+			"delete": "Delete",
+			"move": "Move"
+		},
+		"confirmDelete": "Do you really want to delete this application?",
+		"dueAlerts": "Due reminders",
+		"requiresFollowUp": "requires follow-up",
+		"subtitle": "Manage your job applications offline and securely.",
+		"searchPlaceholder": "Search by company, title...",
+		"allTags": "All Tags",
+		"allPriorities": "All Priorities",
+		"allColors": "All Colors",
+		"coloredOnly": "With Color",
+		"uncoloredOnly": "No Color",
+		"sortBy": "Sort by",
+		"sortDefault": "Default",
+		"sortColor": "Color",
+		"sortPriority": "Priority",
+		"sortDate": "Date"
+	},
+	"application": {
+		"title": "Job Title",
+		"company": "Company",
+		"url": "Job Listing URL",
+		"salary": "Salary expectation",
+		"contact": "Contact person",
+		"notes": "Notes",
+		"priority": "Priority",
+		"tags": "Tags / Labels",
+		"cardColor": "Card Color (e.g. High Value / Sorting)",
+		"colorNone": "No Color",
+		"addCustomColor": "Custom Color (+)",
+		"appliedAt": "Application date",
+		"createdAt": "Created at",
+		"updatedAt": "Updated at",
+		"reminder": "Reminder",
+		"placeholderTitle": "e.g. Frontend Developer",
+		"placeholderCompany": "e.g. ACME Ltd",
+		"placeholderUrl": "https://...",
+		"placeholderSalary": "e.g. $60,000",
+		"placeholderNotes": "Further details about the application...",
+		"placeholderTags": "Enter tag & press Enter",
+		"contactName": "Name",
+		"contactEmail": "Email",
+		"contactPhone": "Phone",
+		"placeholderContactName": "e.g. Jane Doe",
+		"placeholderContactEmail": "contact@company.com",
+		"placeholderContactPhone": "e.g. +49 123 45678",
+		"priorities": {
+			"low": "Low",
+			"medium": "Medium",
+			"high": "High"
+		},
+		"pdf": {
+			"uploadText": "Upload job listing (PDF) to auto-fill",
+			"scanning": "Scanning job listing..."
+		}
+	},
+	"datepicker": {
+		"today": "Today",
+		"yesterday": "Yesterday",
+		"daysAgo3": "3 days ago",
+		"weekAgo1": "1 week ago",
+		"weeksAgo2": "2 weeks ago",
+		"selectDate": "Open date picker"
+	},
+	"reminders": {
+		"seconds10": "10s (Test)",
+		"none": "None",
+		"hours24": "24 hours",
+		"hours48": "48 hours",
+		"days7": "7 days",
+		"days14": "14 days"
+	},
+	"actions": {
+		"save": "Save",
+		"cancel": "Cancel",
+		"confirm": "Confirm",
+		"export": "Export",
+		"import": "Import",
+		"upload": "Upload",
+		"search": "Search",
+		"addTag": "Add"
+	},
+	"theme": {
+		"light": "Light",
+		"dark": "Dark",
+		"toggle": "Toggle theme"
+	},
+	"backup": {
+		"title": "Backup & Sync",
+		"subtitle": "Secure your data locally or upload backups.",
+		"exportJson": "Export as JSON",
+		"importJson": "Import JSON",
+		"localDump": "Local backup",
+		"cloudSync": "Cloud sync",
+		"cloudSyncDisabled": "Cloud sync is not configured yet. OAuth app credentials are required.",
+		"manualTitle": "Manual JSON Import/Export",
+		"manualDesc": "Download your complete database as a JSON file or upload a previously exported file to restore your data status.",
+		"localTitle": "Local Dump (Folder Access)",
+		"localDesc": "Use the File System Access API to save backups directly to a directory of your choice on your file system.",
+		"localButton": "Select folder & save",
+		"cloudTitle": "Cloud Sync",
+		"cloudDesc": "Background sync with Google Drive or Dropbox.",
+		"inactive": "Inactive",
+		"active": "Active",
+		"successImport": "Database successfully restored!",
+		"errorFormat": "Invalid file format. Database schema version is not supported.",
+		"errorValidation": "Some entries in the backup do not match the data model.",
+		"errorRead": "Error reading or parsing the backup file.",
+		"successLocal": "Backup file saved in the selected folder!",
+		"errorDirectSave": "Direct saving to local folders is not supported by this browser. Please use manual JSON export.",
+		"errorSaveFail": "Folder saving failed."
+	},
+	"analytics": {
+		"title": "Analytics",
+		"subtitle": "Track your success rates and response times.",
+		"statusOverview": "Status Overview",
+		"funnelTitle": "Application Funnel",
+		"funnelDesc": "Conversion of applications through the main stages.",
+		"selectionRate": "Rate",
+		"successRate": "Success rate",
+		"totalConversion": "Total conversion (Sent ➔ Accepted)",
+		"responseTitle": "Employer Response Times",
+		"responseDesc": "Calculated from the duration between Sent and response (Interview/Rejection).",
+		"noDataAlert": "Not enough response data available yet to calculate response times.",
+		"bestTime": "Best response time",
+		"avgTime": "Average",
+		"worstTime": "Worst",
+		"days": "days",
+		"basedOn": "Based on {count} applications with responses.",
+		"stepSelection": "Selection / Interview"
+	},
+	"settings": {
+		"title": "Settings",
+		"subtitle": "Configure bewerby for your daily application tracking.",
+		"remindersTitle": "Reminders & Notifications",
+		"remindersDesc": "Enable push notifications on your device to ensure you don't miss follow-ups. All data remains private on this device.",
+		"statusLabel": "Status:",
+		"statusActive": "Enabled",
+		"statusInactive": "Disabled",
+		"btnAllow": "Allow notifications",
+		"privacyTitle": "Security & Privacy",
+		"privacyItem1Title": "100% Client-Side",
+		"privacyItem1Desc": "All data (job titles, salary expectations, notes, PDFs) are stored exclusively in your browser's IndexedDB.",
+		"privacyItem2Title": "No Server",
+		"privacyItem2Desc": "There is no central database. No registration required.",
+		"privacyItem3Title": "Offline-First",
+		"privacyItem3Desc": "Bewerby works completely offline. The application can be installed as a PWA on desktop or smartphone."
+	},
+	"empty": {
+		"kanban": "No applications yet. Create your first application to get started.",
+		"analytics": "No data available yet. Add applications to see statistics."
+	},
+	"a11y": {
+		"skipToContent": "Skip to content",
+		"openMenu": "Open menu",
+		"closeMenu": "Close menu",
+		"toggleTheme": "Toggle theme",
+		"switchLanguage": "Switch language"
+	}
+}
