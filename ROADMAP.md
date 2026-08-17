@@ -33,7 +33,7 @@ Nicht alles muss angefasst werden. Folgendes ist geprüft und in Ordnung:
 | #   | Aufgabe                                                            | Labels                                      | Issue                                            |
 | :-- | :----------------------------------------------------------------- | :------------------------------------------ | :----------------------------------------------- |
 | 1   | ✅ Persönliche Bewerbungs-PDFs aus dem Auslieferungspfad entfernen | `security` `dsgvo` `v1-blocker`             | [#1](https://github.com/dstN/bewerby/issues/1)   |
-| 2   | Build-Gate reparieren und toten pdf.js-Ballast entfernen           | `bug` `dx` `v1-blocker`                     | [#2](https://github.com/dstN/bewerby/issues/2)   |
+| 2   | ✅ Build-Gate reparieren und toten pdf.js-Ballast entfernen        | `bug` `dx` `v1-blocker`                     | [#2](https://github.com/dstN/bewerby/issues/2)   |
 | 3   | Service-Worker-Installation reparieren                             | `bug` `offline` `v1-blocker`                | [#3](https://github.com/dstN/bewerby/issues/3)   |
 | 4   | Statische App-Shell prerendern und Fehlergrenze einziehen          | `architecture` `offline` `v1-blocker`       | [#4](https://github.com/dstN/bewerby/issues/4)   |
 | 5   | PDFs nach OPFS auslagern (Dexie-Schema v2)                         | `architecture` `refactoring` `v1-blocker`   | [#5](https://github.com/dstN/bewerby/issues/5)   |
@@ -57,6 +57,8 @@ Nicht alles muss angefasst werden. Folgendes ist geprüft und in Ordnung:
 **Soll:** Keine personenbezogene Fremddatei liegt je im Auslieferungspfad. Testfixtures leben außerhalb von `static/` (z. B. `tests/fixtures/`, aus dem Build ausgeschlossen). Ein Build-Guard bricht ab, sobald `static/` eine nicht explizit freigegebene Datei enthält — damit kann derselbe Fehler nicht wiederkehren.
 
 ### 2 — Build-Gate reparieren und toten pdf.js-Ballast entfernen
+
+**Status:** ✅ Erledigt in [515e0d0](https://github.com/dstN/bewerby/commit/515e0d0) (#2, geschlossen). 45 statt 44 reale ESLint-Fehler (die Schätzung war knapp daneben), alle einzeln behoben statt unterdrückt — Details im [Issue-Kommentar](https://github.com/dstN/bewerby/issues/2#issuecomment-5320977221). Live-Browser-Smoketest war nicht möglich (Dev-Server nicht erreichbar, `chromium-cli` fehlt); Verifikation stützt sich auf Build/Typecheck/Lint.
 
 **Ist:** `npm run lint` stürzt ab. Prettier bricht auf 24 Dateien ab, weil `prettier.config.js:8` `tailwindStylesheet` auf das nicht existierende `./src/routes/layout.css` zeigt. ESLint meldet 2553 Fehler, davon 2509 aus `static/pdf.min.mjs` (442 KB) und `static/pdf.worker.min.mjs` (1,23 MB) — zwei minifizierte pdf.js-Kopien, die von nichts referenziert werden (die genutzten Bundles kommen über `pdfjs-dist` aus `node_modules`), aber ausgeliefert, gelintet und precacht werden. Es bleiben 44 echte Fehler in `src/`.
 
