@@ -34,7 +34,7 @@ Nicht alles muss angefasst werden. Folgendes ist geprüft und in Ordnung:
 | :-- | :----------------------------------------------------------------- | :------------------------------------------ | :----------------------------------------------- |
 | 1   | ✅ Persönliche Bewerbungs-PDFs aus dem Auslieferungspfad entfernen | `security` `dsgvo` `v1-blocker`             | [#1](https://github.com/dstN/bewerby/issues/1)   |
 | 2   | ✅ Build-Gate reparieren und toten pdf.js-Ballast entfernen        | `bug` `dx` `v1-blocker`                     | [#2](https://github.com/dstN/bewerby/issues/2)   |
-| 3   | Service-Worker-Installation reparieren                             | `bug` `offline` `v1-blocker`                | [#3](https://github.com/dstN/bewerby/issues/3)   |
+| 3   | ✅ Service-Worker-Installation reparieren                          | `bug` `offline` `v1-blocker`                | [#3](https://github.com/dstN/bewerby/issues/3)   |
 | 4   | Statische App-Shell prerendern und Fehlergrenze einziehen          | `architecture` `offline` `v1-blocker`       | [#4](https://github.com/dstN/bewerby/issues/4)   |
 | 5   | PDFs nach OPFS auslagern (Dexie-Schema v2)                         | `architecture` `refactoring` `v1-blocker`   | [#5](https://github.com/dstN/bewerby/issues/5)   |
 | 6   | Backup-Roundtrip: PDFs müssen Export und Import überleben          | `bug` `v1-blocker`                          | [#6](https://github.com/dstN/bewerby/issues/6)   |
@@ -65,6 +65,8 @@ Nicht alles muss angefasst werden. Folgendes ist geprüft und in Ordnung:
 **Soll:** `npm run lint` läuft durch und meldet null Fehler. `tailwindStylesheet` zeigt auf `src/app.css`. Die 1,71 MB toter pdf.js-Kopien sind gelöscht. ESLint ignoriert vendorierte Minifikate strukturell.
 
 ### 3 — Service-Worker-Installation reparieren
+
+**Status:** ✅ Erledigt in [07663ad](https://github.com/dstN/bewerby/commit/07663ad) (#3, geschlossen). Bekannte Grenze bis #4: es gibt noch kein vorgerendertes HTML für den allerersten Offline-Besuch einer Route. Details im [Issue-Kommentar](https://github.com/dstN/bewerby/issues/3#issuecomment-5321015589).
 
 **Ist:** `ASSETS = [...build, ...files]` (`src/service-worker.ts:13`) zieht alles aus `static/` ein — **inklusive `static/.gitignore`**. Verifiziert: `/.gitignore` steht in der Precache-Liste des gebauten Service Workers. `adapter-node` serviert über `sirv` ohne Dotfiles, liefert also 404 → `cache.addAll()` rejected (`src/service-worker.ts:20`) → `install` schlägt fehl → der Service Worker aktiviert nie. Die gesamte Offline-First-Prämisse ist durch eine 6-Byte-Datei still ausgehebelt. Zusätzlich fehlt jedes `.catch()` in der Fetch-Kette (`src/service-worker.ts:50-65`), es gibt keinen Navigation-Fallback, und Cache-First auf Dokumente würde Nutzer auf veraltetem HTML festnageln.
 
