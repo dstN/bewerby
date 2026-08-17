@@ -187,4 +187,10 @@ export type TranslationKeys = {
 		toggleTheme: string;
 		switchLanguage: string;
 	};
+	errorPage: {
+		title: string;
+		message: string;
+		reload: string;
+		home: string;
+	};
 };

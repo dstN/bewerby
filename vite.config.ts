@@ -18,6 +18,13 @@ export default defineConfig({
 			}),
 			alias: {
 				$i18n: 'src/lib/i18n'
+			},
+			prerender: {
+				// The skip-link in app.html targets #main-content, which is part of
+				// +layout.svelte - with ssr disabled (see +layout.ts) that element only
+				// exists after client-side hydration, not in the prerendered HTML. That's
+				// expected for this fully client-rendered app, not a broken link.
+				handleMissingId: 'warn'
 			}
 		})
 	]

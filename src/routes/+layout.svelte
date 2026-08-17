@@ -2,6 +2,7 @@
 	import '../app.css';
 	import { theme } from '$lib/stores/theme.svelte.js';
 	import { i18n, t } from '$lib/i18n/index.svelte.js';
+	import { resolve } from '$app/paths';
 	import Sidebar from '$lib/components/layout/Sidebar.svelte';
 	import {
 		syncRemindersToServiceWorker,
@@ -93,7 +94,23 @@
 		</header>
 
 		<div class="page-content">
-			{@render children()}
+			<svelte:boundary onerror={(error) => console.error('Unhandled render error:', error)}>
+				{@render children()}
+
+				{#snippet failed(error, reset)}
+					<div class="render-error">
+						<h2>{t('errorPage.title')}</h2>
+						<p class="message">{t('errorPage.message')}</p>
+						{#if error instanceof Error && error.message}
+							<p class="detail">{error.message}</p>
+						{/if}
+						<div class="actions">
+							<button class="btn-primary" onclick={reset}>{t('errorPage.reload')}</button>
+							<a class="btn-flat" href={resolve('/backup')}>{t('nav.backup')}</a>
+						</div>
+					</div>
+				{/snippet}
+			</svelte:boundary>
 		</div>
 	</main>
 </div>
@@ -196,6 +213,87 @@
 		flex: 1;
 		padding: 24px;
 		overflow-y: auto;
+	}
+
+	.render-error {
+		max-width: 420px;
+		margin: 48px auto;
+		background-color: var(--surface-0);
+		border: 1px solid var(--border-default);
+		border-radius: var(--radius-xl);
+		box-shadow: var(--shadow-lg);
+		padding: 32px;
+		text-align: center;
+	}
+
+	.render-error h2 {
+		font-size: 18px;
+		font-weight: 700;
+		color: var(--text-primary);
+		margin: 0 0 12px 0;
+	}
+
+	.render-error .message {
+		font-size: 14px;
+		line-height: 1.6;
+		color: var(--text-secondary);
+		margin: 0;
+	}
+
+	.render-error .detail {
+		font-size: 12px;
+		font-family: var(--font-mono);
+		color: var(--text-tertiary);
+		background-color: var(--surface-2);
+		border-radius: var(--radius-md);
+		padding: 8px 12px;
+		margin: 12px 0 0 0;
+		word-break: break-word;
+	}
+
+	.render-error .actions {
+		display: flex;
+		justify-content: center;
+		gap: 12px;
+		margin-top: 24px;
+	}
+
+	.render-error .btn-primary {
+		padding: 8px 16px;
+		background-color: var(--color-accent-600);
+		color: white;
+		border: none;
+		border-radius: var(--radius-md);
+		font-family: inherit;
+		font-size: 14px;
+		font-weight: 600;
+		cursor: pointer;
+		transition: background-color var(--duration-fast) ease;
+	}
+
+	.render-error .btn-primary:hover {
+		background-color: var(--color-accent-700);
+	}
+
+	.render-error .btn-flat {
+		display: inline-flex;
+		align-items: center;
+		padding: 8px 16px;
+		background: transparent;
+		color: var(--text-secondary);
+		border: 1px solid var(--border-strong);
+		border-radius: var(--radius-md);
+		font-size: 14px;
+		font-weight: 500;
+		text-decoration: none;
+		transition:
+			background-color var(--duration-fast) ease,
+			color var(--duration-fast) ease;
+	}
+
+	.render-error .btn-flat:hover {
+		background-color: var(--surface-2);
+		color: var(--text-primary);
 	}
 
 	@media (max-width: 768px) {

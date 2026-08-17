@@ -180,5 +180,11 @@
 		"closeMenu": "Close menu",
 		"toggleTheme": "Toggle theme",
 		"switchLanguage": "Switch language"
+	},
+	"errorPage": {
+		"title": "Something went wrong",
+		"message": "An unexpected error occurred. Your data is safe - it still lives locally on this device.",
+		"reload": "Reload",
+		"home": "Go to Kanban board"
 	}
 }

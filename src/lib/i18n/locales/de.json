@@ -180,5 +180,11 @@
 		"closeMenu": "Menü schließen",
 		"toggleTheme": "Design wechseln",
 		"switchLanguage": "Sprache wechseln"
+	},
+	"errorPage": {
+		"title": "Etwas ist schiefgelaufen",
+		"message": "Ein unerwarteter Fehler ist aufgetreten. Deine Daten sind sicher — sie liegen weiterhin lokal auf diesem Gerät.",
+		"reload": "Neu laden",
+		"home": "Zum Kanban-Board"
 	}
 }
