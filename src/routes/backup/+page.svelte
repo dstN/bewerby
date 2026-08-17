@@ -1,6 +1,51 @@
 <script lang="ts">
 	import { t } from '$lib/i18n/index.svelte.js';
+	import { SvelteMap } from 'svelte/reactivity';
 	import { db, type Application } from '$lib/db/index.js';
+	import { readPdfFromOpfs, writePdfToOpfs } from '$lib/utils/opfs.js';
+
+	const BACKUP_FORMAT_VERSION = 2;
+
+	interface BackupPayload {
+		version: number;
+		exportedAt: number;
+		applications: Application[];
+		/** OPFS ref -> base64-encoded PDF bytes, so an attached PDF survives the roundtrip. */
+		pdfs: Record<string, string>;
+	}
+
+	async function blobToBase64(blob: Blob): Promise<string> {
+		const bytes = new Uint8Array(await blob.arrayBuffer());
+		const chunkSize = 0x8000;
+		let binary = '';
+		for (let i = 0; i < bytes.length; i += chunkSize) {
+			binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+		}
+		return btoa(binary);
+	}
+
+	function base64ToBlob(base64: string, mimeType = 'application/pdf'): Blob {
+		const binary = atob(base64);
+		const bytes = new Uint8Array(binary.length);
+		for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+		return new Blob([bytes], { type: mimeType });
+	}
+
+	/** Gathers every application row plus the actual bytes of every attached PDF. */
+	async function buildBackupPayload(): Promise<BackupPayload> {
+		const applications = await db.applications.toArray();
+		const pdfs: Record<string, string> = {};
+		for (const app of applications) {
+			if (!app.pdfRef) continue;
+			const blob = await readPdfFromOpfs(app.pdfRef);
+			if (blob) {
+				pdfs[app.pdfRef] = await blobToBase64(blob);
+			} else {
+				console.warn(`Backup: PDF for ${app.pdfRef} is missing from OPFS, skipping it`);
+			}
+		}
+		return { version: BACKUP_FORMAT_VERSION, exportedAt: Date.now(), applications, pdfs };
+	}
 
 	// File System Access API isn't part of lib.dom.d.ts yet; declare just enough
 	// of it for the feature-detected local dump below.
@@ -25,13 +70,7 @@
 	// TIER 1: JSON Export
 	async function exportDatabase() {
 		try {
-			const applications = await db.applications.toArray();
-			const backupData = {
-				version: 1,
-				exportedAt: Date.now(),
-				applications
-			};
-
+			const backupData = await buildBackupPayload();
 			const json = JSON.stringify(backupData, null, 2);
 			const blob = new Blob([json], { type: 'application/json' });
 			const url = URL.createObjectURL(blob);
@@ -62,7 +101,7 @@
 			const text = await file.text();
 			const data = JSON.parse(text);
 
-			if (data.version !== 1 || !Array.isArray(data.applications)) {
+			if (data.version !== BACKUP_FORMAT_VERSION || !Array.isArray(data.applications)) {
 				importError = 'backup.errorFormat';
 				return;
 			}
@@ -78,10 +117,30 @@
 				return;
 			}
 
+			// Restore every PDF under a *fresh* OPFS ref before touching the
+			// database - never reuse the ref from the backup file, since it could
+			// collide with an unrelated file this browser already has on disk.
+			// Decoding/writing all of them up front, before any db write, means a
+			// corrupt PDF entry fails the whole import cleanly instead of leaving
+			// some applications pointing at attachments that never got restored.
+			const pdfs = (data.pdfs && typeof data.pdfs === 'object' ? data.pdfs : {}) as Record<
+				string,
+				string
+			>;
+			const refRemap = new SvelteMap<string, string>();
+			for (const [oldRef, base64] of Object.entries(pdfs)) {
+				const newRef = await writePdfToOpfs(base64ToBlob(base64));
+				refRemap.set(oldRef, newRef);
+			}
+			const remappedApps = appsToImport.map((app) => ({
+				...app,
+				pdfRef: app.pdfRef ? (refRemap.get(app.pdfRef) ?? undefined) : undefined
+			}));
+
 			// Clear IndexedDB and bulk add
 			await db.applications.clear();
 			// Strip autoincrement ID if we want fresh insertions or preserve existing IDs
-			await db.applications.bulkAdd(appsToImport);
+			await db.applications.bulkAdd(remappedApps);
 
 			importStatus = 'backup.successImport';
 		} catch (err) {
@@ -103,13 +162,7 @@
 		try {
 			// Ask user to pick a folder
 			const handle = await (window as unknown as WindowWithDirectoryPicker).showDirectoryPicker();
-			const applications = await db.applications.toArray();
-			const backupData = {
-				version: 1,
-				exportedAt: Date.now(),
-				applications
-			};
-
+			const backupData = await buildBackupPayload();
 			const json = JSON.stringify(backupData, null, 2);
 
 			// Create file inside folder

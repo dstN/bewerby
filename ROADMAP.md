@@ -37,7 +37,7 @@ Nicht alles muss angefasst werden. Folgendes ist geprüft und in Ordnung:
 | 3   | ✅ Service-Worker-Installation reparieren                          | `bug` `offline` `v1-blocker`                | [#3](https://github.com/dstN/bewerby/issues/3)   |
 | 4   | ✅ Statische App-Shell prerendern und Fehlergrenze einziehen       | `architecture` `offline` `v1-blocker`       | [#4](https://github.com/dstN/bewerby/issues/4)   |
 | 5   | ✅ PDFs nach OPFS auslagern (Dexie-Schema v2)                      | `architecture` `refactoring` `v1-blocker`   | [#5](https://github.com/dstN/bewerby/issues/5)   |
-| 6   | Backup-Roundtrip: PDFs müssen Export und Import überleben          | `bug` `v1-blocker`                          | [#6](https://github.com/dstN/bewerby/issues/6)   |
+| 6   | ✅ Backup-Roundtrip: PDFs müssen Export und Import überleben       | `bug` `v1-blocker`                          | [#6](https://github.com/dstN/bewerby/issues/6)   |
 | 7   | Import darf den Datenbestand nicht mehr zerstören                  | `bug` `v1-blocker`                          | [#7](https://github.com/dstN/bewerby/issues/7)   |
 | 8   | Datenhaltbarkeit absichern (Persistenz, Quota, Schreibfehler)      | `architecture` `v1-blocker`                 | [#8](https://github.com/dstN/bewerby/issues/8)   |
 | 9   | Status per Tastatur und Touch änderbar machen                      | `a11y` `enhancement` `v1-blocker`           | [#9](https://github.com/dstN/bewerby/issues/9)   |
@@ -89,6 +89,8 @@ Nicht alles muss angefasst werden. Folgendes ist geprüft und in Ordnung:
 **Soll:** Dexie-Schema v2 mit `upgrade()`-Migration bestehender Daten. Die Anwendungs-Row hält nur noch eine Referenz (`pdfRef`), die Datei selbst liegt im Origin Private File System. Board und Analytics lesen ausschließlich schlanke Rows. Orphan-Cleanup entfernt OPFS-Dateien ohne zugehörigen Datensatz.
 
 ### 6 — Backup-Roundtrip: PDFs müssen Export und Import überleben
+
+**Status:** ✅ Erledigt (siehe [#6](https://github.com/dstN/bewerby/issues/6) für den schließenden Commit und Details). Backup-Format v2 mit Base64-kodierten PDFs neben den Applications; Import schreibt sie unter frischen OPFS-Refs zurück und mappt `pdfRef` entsprechend um. Mit Playwright end-to-end verifiziert: Bewerbung mit echtem PDF anlegen → exportieren → Daten vollständig löschen → importieren → Karte samt PDF (byteidentisch) wieder da. Bewusst nicht angefasst: die `clear()`-vor-Validierung-Reihenfolge und die fehlende Zusammenführen/Ersetzen-Wahl bleiben für #7.
 
 **Ist:** `src/routes/backup/+page.svelte:19` serialisiert per `JSON.stringify` über Rows mit `pdfBlob: Blob`. Ein Blob serialisiert zu `{}` — der Export verliert also **jedes** angehängte PDF, und der Re-Import schreibt das leere Objekt als `pdfBlob` zurück. Derselbe Fehler steckt im Tier-2-Ordner-Dump (`:95`). Der einzige Disaster-Recovery-Pfad einer rein lokalen App zerstört damit Daten.
 
