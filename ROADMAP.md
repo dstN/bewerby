@@ -32,7 +32,7 @@ Nicht alles muss angefasst werden. Folgendes ist geprüft und in Ordnung:
 
 | # | Aufgabe | Labels | Issue |
 |:--|:--|:--|:--|
-| 1 | Persönliche Bewerbungs-PDFs aus dem Auslieferungspfad entfernen | `security` `dsgvo` `v1-blocker` | [#1](https://github.com/dstN/bewerby/issues/1) |
+| 1 | ✅ Persönliche Bewerbungs-PDFs aus dem Auslieferungspfad entfernen | `security` `dsgvo` `v1-blocker` | [#1](https://github.com/dstN/bewerby/issues/1) |
 | 2 | Build-Gate reparieren und toten pdf.js-Ballast entfernen | `bug` `dx` `v1-blocker` | [#2](https://github.com/dstN/bewerby/issues/2) |
 | 3 | Service-Worker-Installation reparieren | `bug` `offline` `v1-blocker` | [#3](https://github.com/dstN/bewerby/issues/3) |
 | 4 | Statische App-Shell prerendern und Fehlergrenze einziehen | `architecture` `offline` `v1-blocker` | [#4](https://github.com/dstN/bewerby/issues/4) |
@@ -49,6 +49,8 @@ Nicht alles muss angefasst werden. Folgendes ist geprüft und in Ordnung:
 | 15 | Deployment verifizieren und dokumentieren | `architecture` `documentation` `v1-blocker` | [#15](https://github.com/dstN/bewerby/issues/15) |
 
 ### 1 — Persönliche Bewerbungs-PDFs aus dem Auslieferungspfad entfernen
+
+**Status:** ✅ Erledigt in [d9734b9](https://github.com/dstN/bewerby/commit/d9734b9) (#1, geschlossen). Abweichung vom ursprünglichen Soll: die PDFs wurden ersatzlos gelöscht statt nach `tests/fixtures/` verschoben — das Repo ist öffentlich, Verschieben hätte das Leck nur in die Git-Historie verlagert. Synthetische Fixtures folgen unter #29. Details im [Issue-Kommentar](https://github.com/dstN/bewerby/issues/1#issuecomment-5320783468).
 
 **Ist:** `static/data/` enthält neun echte persönliche Anschreiben (`Bewerbung-Conlabz.pdf`, `Bewerbung-Zollsoft.pdf`, `Bewerbung-Blueways.pdf` u. a.). Sie sind über `static/.gitignore` aus Git ausgeschlossen — aber Vite kopiert `static/` vollständig nach `build/client/` (verifiziert: `build/client/data/` enthält alle neun Dateien), und der generierte Service Worker schreibt sie fest in die Precache-Liste (verifiziert: `/data/Bewerbung-Conlabz.pdf` steht in `build/client/service-worker.js`). Beim Deploy sind sie unter ratbaren öffentlichen URLs erreichbar, werden jedem Besucher zwangsweise heruntergeladen, und `static/robots.txt` lädt Crawler ausdrücklich ein.
 
