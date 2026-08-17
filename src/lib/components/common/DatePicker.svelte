@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { fade, scale } from 'svelte/transition';
+	import { scale } from 'svelte/transition';
 	import { t, i18n } from '$lib/i18n/index.svelte.js';
 
 	let {
@@ -258,14 +258,47 @@
 		aria-label={t('datepicker.selectDate')}
 	>
 		<div class="trigger-content">
-			<svg width="16" height="16" viewBox="0 0 24 24" fill="none" class="calendar-icon" aria-hidden="true">
-				<path d="M19 4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-				<path d="M16 2v4M8 2v4M3 10h18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+			<svg
+				width="16"
+				height="16"
+				viewBox="0 0 24 24"
+				fill="none"
+				class="calendar-icon"
+				aria-hidden="true"
+			>
+				<path
+					d="M19 4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2z"
+					stroke="currentColor"
+					stroke-width="1.5"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+				/>
+				<path
+					d="M16 2v4M8 2v4M3 10h18"
+					stroke="currentColor"
+					stroke-width="1.5"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+				/>
 			</svg>
 			<span class="trigger-label">{formattedDisplay}</span>
 		</div>
-		<svg width="16" height="16" viewBox="0 0 24 24" fill="none" class="chevron-icon" class:rotated={isOpen} aria-hidden="true">
-			<path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+		<svg
+			width="16"
+			height="16"
+			viewBox="0 0 24 24"
+			fill="none"
+			class="chevron-icon"
+			class:rotated={isOpen}
+			aria-hidden="true"
+		>
+			<path
+				d="M6 9l6 6 6-6"
+				stroke="currentColor"
+				stroke-width="1.5"
+				stroke-linecap="round"
+				stroke-linejoin="round"
+			/>
 		</svg>
 	</button>
 
@@ -280,18 +313,34 @@
 		>
 			<!-- Quick shortcuts pill bar -->
 			<div class="quick-shortcuts">
-				<button type="button" class="btn-quick" onclick={() => selectQuickDate(0)}>{t('datepicker.today')}</button>
-				<button type="button" class="btn-quick" onclick={() => selectQuickDate(1)}>{t('datepicker.yesterday')}</button>
-				<button type="button" class="btn-quick" onclick={() => selectQuickDate(3)}>{t('datepicker.daysAgo3')}</button>
-				<button type="button" class="btn-quick" onclick={() => selectQuickDate(7)}>{t('datepicker.weekAgo1')}</button>
-				<button type="button" class="btn-quick" onclick={() => selectQuickDate(14)}>{t('datepicker.weeksAgo2')}</button>
+				<button type="button" class="btn-quick" onclick={() => selectQuickDate(0)}
+					>{t('datepicker.today')}</button
+				>
+				<button type="button" class="btn-quick" onclick={() => selectQuickDate(1)}
+					>{t('datepicker.yesterday')}</button
+				>
+				<button type="button" class="btn-quick" onclick={() => selectQuickDate(3)}
+					>{t('datepicker.daysAgo3')}</button
+				>
+				<button type="button" class="btn-quick" onclick={() => selectQuickDate(7)}
+					>{t('datepicker.weekAgo1')}</button
+				>
+				<button type="button" class="btn-quick" onclick={() => selectQuickDate(14)}
+					>{t('datepicker.weeksAgo2')}</button
+				>
 			</div>
 
 			<!-- Month navigation bar -->
 			<header class="calendar-header">
 				<button type="button" class="btn-nav" onclick={prevMonth} aria-label="Vorheriger Monat">
 					<svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-						<path d="M15 19l-7-7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+						<path
+							d="M15 19l-7-7 7-7"
+							stroke="currentColor"
+							stroke-width="2"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+						/>
 					</svg>
 				</button>
 
@@ -299,14 +348,20 @@
 
 				<button type="button" class="btn-nav" onclick={nextMonth} aria-label="Nächster Monat">
 					<svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-						<path d="M9 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+						<path
+							d="M9 5l7 7-7 7"
+							stroke="currentColor"
+							stroke-width="2"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+						/>
 					</svg>
 				</button>
 			</header>
 
 			<!-- Weekday headers -->
 			<div class="weekday-grid">
-				{#each weekdayHeaders as wday}
+				{#each weekdayHeaders as wday, i (i)}
 					<span class="weekday-cell">{wday}</span>
 				{/each}
 			</div>

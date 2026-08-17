@@ -2,6 +2,22 @@
 	import { t } from '$lib/i18n/index.svelte.js';
 	import { db, type Application } from '$lib/db/index.js';
 
+	// File System Access API isn't part of lib.dom.d.ts yet; declare just enough
+	// of it for the feature-detected local dump below.
+	interface FileSystemWritableFileStream {
+		write(data: string): Promise<void>;
+		close(): Promise<void>;
+	}
+	interface FileSystemFileHandle {
+		createWritable(): Promise<FileSystemWritableFileStream>;
+	}
+	interface FileSystemDirectoryHandle {
+		getFileHandle(name: string, options?: { create?: boolean }): Promise<FileSystemFileHandle>;
+	}
+	interface WindowWithDirectoryPicker extends Window {
+		showDirectoryPicker(): Promise<FileSystemDirectoryHandle>;
+	}
+
 	let importStatus = $state('');
 	let importError = $state('');
 	let localDumpStatus = $state('');
@@ -53,7 +69,9 @@
 
 			// Simple verification of keys
 			const appsToImport = data.applications as Application[];
-			const isValid = appsToImport.every(app => typeof app.title === 'string' && typeof app.company === 'string');
+			const isValid = appsToImport.every(
+				(app) => typeof app.title === 'string' && typeof app.company === 'string'
+			);
 
 			if (!isValid) {
 				importError = 'backup.errorValidation';
@@ -84,7 +102,7 @@
 
 		try {
 			// Ask user to pick a folder
-			const handle = await (window as any).showDirectoryPicker();
+			const handle = await (window as unknown as WindowWithDirectoryPicker).showDirectoryPicker();
 			const applications = await db.applications.toArray();
 			const backupData = {
 				version: 1,
@@ -95,14 +113,17 @@
 			const json = JSON.stringify(backupData, null, 2);
 
 			// Create file inside folder
-			const fileHandle = await handle.getFileHandle(`bewerby-local-dump-${new Date().toISOString().slice(0, 10)}.json`, { create: true });
+			const fileHandle = await handle.getFileHandle(
+				`bewerby-local-dump-${new Date().toISOString().slice(0, 10)}.json`,
+				{ create: true }
+			);
 			const writable = await fileHandle.createWritable();
 			await writable.write(json);
 			await writable.close();
 
 			localDumpStatus = 'backup.successLocal';
-		} catch (err: any) {
-			if (err.name === 'AbortError') {
+		} catch (err) {
+			if (err instanceof Error && err.name === 'AbortError') {
 				// User cancelled directory picker
 				return;
 			}
@@ -185,9 +206,31 @@
 			</div>
 
 			<div class="disabled-notice">
-				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true" class="lock-icon">
-					<rect x="3" y="11" width="18" height="11" rx="2" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
-					<path d="M7 11V7a5 5 0 0110 0v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+				<svg
+					width="16"
+					height="16"
+					viewBox="0 0 24 24"
+					fill="none"
+					aria-hidden="true"
+					class="lock-icon"
+				>
+					<rect
+						x="3"
+						y="11"
+						width="18"
+						height="11"
+						rx="2"
+						stroke="currentColor"
+						stroke-width="1.5"
+						stroke-linejoin="round"
+					/>
+					<path
+						d="M7 11V7a5 5 0 0110 0v4"
+						stroke="currentColor"
+						stroke-width="1.5"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					/>
 				</svg>
 				<span>{t('backup.cloudSyncDisabled')}</span>
 			</div>

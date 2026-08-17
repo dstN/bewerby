@@ -2,9 +2,11 @@
 	import '../app.css';
 	import { theme } from '$lib/stores/theme.svelte.js';
 	import { i18n, t } from '$lib/i18n/index.svelte.js';
-	import type { Locale } from '$lib/i18n/types.js';
 	import Sidebar from '$lib/components/layout/Sidebar.svelte';
-	import { syncRemindersToServiceWorker, registerPeriodicReminderCheck } from '$lib/utils/reminders.js';
+	import {
+		syncRemindersToServiceWorker,
+		registerPeriodicReminderCheck
+	} from '$lib/utils/reminders.js';
 	import { colorStore } from '$lib/stores/colors.svelte.js';
 
 	let { children } = $props();
@@ -26,21 +28,23 @@
 </svelte:head>
 
 <div class="app-shell" class:sidebar-collapsed={sidebarCollapsed}>
-	<Sidebar
-		collapsed={sidebarCollapsed}
-		ontoggle={() => sidebarCollapsed = !sidebarCollapsed}
-	/>
+	<Sidebar collapsed={sidebarCollapsed} />
 
 	<main id="main-content" class="main-content" tabindex="-1">
 		<header class="top-bar">
 			<div class="top-bar-left">
 				<button
 					class="sidebar-toggle"
-					onclick={() => sidebarCollapsed = !sidebarCollapsed}
+					onclick={() => (sidebarCollapsed = !sidebarCollapsed)}
 					aria-label={sidebarCollapsed ? t('a11y.openMenu') : t('a11y.closeMenu')}
 				>
 					<svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-						<path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+						<path
+							d="M3 5h14M3 10h14M3 15h14"
+							stroke="currentColor"
+							stroke-width="1.5"
+							stroke-linecap="round"
+						/>
 					</svg>
 				</button>
 			</div>
@@ -65,12 +69,23 @@
 				>
 					{#if theme.isDark}
 						<svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-							<circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="1.5"/>
-							<path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+							<circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="1.5" />
+							<path
+								d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"
+								stroke="currentColor"
+								stroke-width="1.5"
+								stroke-linecap="round"
+							/>
 						</svg>
 					{:else}
 						<svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-							<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+							<path
+								d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"
+								stroke="currentColor"
+								stroke-width="1.5"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+							/>
 						</svg>
 					{/if}
 				</button>
@@ -137,8 +152,9 @@
 		color: var(--text-secondary);
 		border-radius: var(--radius-md);
 		cursor: pointer;
-		transition: background-color var(--duration-fast) ease,
-		            color var(--duration-fast) ease;
+		transition:
+			background-color var(--duration-fast) ease,
+			color var(--duration-fast) ease;
 	}
 
 	.sidebar-toggle:hover {
@@ -160,8 +176,9 @@
 		font-family: inherit;
 		font-size: 12px;
 		font-weight: 600;
-		transition: background-color var(--duration-fast) ease,
-		            color var(--duration-fast) ease;
+		transition:
+			background-color var(--duration-fast) ease,
+			color var(--duration-fast) ease;
 	}
 
 	.toolbar-btn:hover {

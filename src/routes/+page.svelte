@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { liveQuery } from 'dexie';
+	import { SvelteSet } from 'svelte/reactivity';
 	import { db, type Application } from '$lib/db/index.js';
 	import { t } from '$lib/i18n/index.svelte.js';
 	import ApplicationModal from '$lib/components/kanban/ApplicationModal.svelte';
@@ -9,12 +10,16 @@
 	const columns = [
 		{ id: 'draft', labelKey: 'kanban.columns.draft', color: 'var(--color-kanban-draft)' },
 		{ id: 'sent', labelKey: 'kanban.columns.sent', color: 'var(--color-kanban-sent)' },
-		{ id: 'interview', labelKey: 'kanban.columns.interview', color: 'var(--color-kanban-interview)' },
+		{
+			id: 'interview',
+			labelKey: 'kanban.columns.interview',
+			color: 'var(--color-kanban-interview)'
+		},
 		{ id: 'accepted', labelKey: 'kanban.columns.accepted', color: 'var(--color-kanban-accepted)' },
 		{ id: 'rejected', labelKey: 'kanban.columns.rejected', color: 'var(--color-kanban-rejected)' }
 	] as const;
 
-	type Status = typeof columns[number]['id'];
+	type Status = (typeof columns)[number]['id'];
 
 	// Reactive Live Query for applications
 	const applicationsStore = liveQuery(() => db.applications.toArray());
@@ -29,7 +34,7 @@
 	// Derived lists of matching applications
 	let filteredApplications = $derived.by(() => {
 		const list = $applicationsStore ?? [];
-		const filtered = list.filter(app => {
+		const filtered = list.filter((app) => {
 			const matchesSearch =
 				app.title.toLowerCase().includes(searchFilter.toLowerCase()) ||
 				app.company.toLowerCase().includes(searchFilter.toLowerCase()) ||
@@ -40,7 +45,7 @@
 				!selectedColor ||
 				(selectedColor === 'colored' && !!app.cardColor && app.cardColor !== 'none') ||
 				(selectedColor === 'uncolored' && (!app.cardColor || app.cardColor === 'none')) ||
-				(app.cardColor?.toLowerCase() === selectedColor.toLowerCase());
+				app.cardColor?.toLowerCase() === selectedColor.toLowerCase();
 			return matchesSearch && matchesTag && matchesPriority && matchesColor;
 		});
 
@@ -65,8 +70,8 @@
 	// Get unique tags for filter dropdown
 	let allTags = $derived.by(() => {
 		const list = $applicationsStore ?? [];
-		const tagsSet = new Set<string>();
-		list.forEach(app => app.tags.forEach(t => tagsSet.add(t)));
+		const tagsSet = new SvelteSet<string>();
+		list.forEach((app) => app.tags.forEach((t) => tagsSet.add(t)));
 		return Array.from(tagsSet);
 	});
 
@@ -74,8 +79,12 @@
 	let activeAlerts = $derived.by(() => {
 		const list = $applicationsStore ?? [];
 		const now = Date.now();
-		return list.filter(app => {
-			if (app.reminderInterval === 'none' || app.status === 'accepted' || app.status === 'rejected') {
+		return list.filter((app) => {
+			if (
+				app.reminderInterval === 'none' ||
+				app.status === 'accepted' ||
+				app.status === 'rejected'
+			) {
 				return false;
 			}
 			let intervalMs = 0;
@@ -141,7 +150,7 @@
 		if (!idStr) return;
 
 		const id = parseInt(idStr, 10);
-		const app = ($applicationsStore ?? []).find(a => a.id === id);
+		const app = ($applicationsStore ?? []).find((a) => a.id === id);
 
 		if (app && app.status !== targetStatus) {
 			const now = Date.now();
@@ -170,16 +179,35 @@
 	{#if activeAlerts.length > 0}
 		<div class="alerts-banner" role="alert">
 			<div class="alerts-header">
-				<svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true" class="alert-icon">
-					<path d="M12 9v4M12 17h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-					<path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+				<svg
+					width="20"
+					height="20"
+					viewBox="0 0 24 24"
+					fill="none"
+					aria-hidden="true"
+					class="alert-icon"
+				>
+					<path
+						d="M12 9v4M12 17h.01"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					/>
+					<path
+						d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
+						stroke="currentColor"
+						stroke-width="1.5"
+						stroke-linejoin="round"
+					/>
 				</svg>
 				<span class="alerts-title">{t('kanban.dueAlerts')} ({activeAlerts.length})</span>
 			</div>
 			<ul class="alerts-list">
 				{#each activeAlerts as alert (alert.id)}
 					<li>
-						<strong>{alert.company}</strong> ({alert.title}) — {t('application.reminder')} {t('kanban.requiresFollowUp')}.
+						<strong>{alert.company}</strong> ({alert.title}) — {t('application.reminder')}
+						{t('kanban.requiresFollowUp')}.
 					</li>
 				{/each}
 			</ul>
@@ -193,7 +221,7 @@
 		</div>
 		<button class="btn-primary" onclick={() => openAddModal('draft')}>
 			<svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-				<path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+				<path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
 			</svg>
 			{t('kanban.actions.add')}
 		</button>
@@ -202,17 +230,34 @@
 	<!-- Filter Toolbars -->
 	<div class="filter-bar">
 		<div class="search-input-wrapper">
-			<svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true" class="search-icon">
-				<circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="1.5"/>
-				<path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+			<svg
+				width="16"
+				height="16"
+				viewBox="0 0 24 24"
+				fill="none"
+				aria-hidden="true"
+				class="search-icon"
+			>
+				<circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="1.5" />
+				<path
+					d="M21 21l-4.35-4.35"
+					stroke="currentColor"
+					stroke-width="1.5"
+					stroke-linecap="round"
+				/>
 			</svg>
-			<input type="text" bind:value={searchFilter} placeholder={t('kanban.searchPlaceholder')} aria-label={t('actions.search')} />
+			<input
+				type="text"
+				bind:value={searchFilter}
+				placeholder={t('kanban.searchPlaceholder')}
+				aria-label={t('actions.search')}
+			/>
 		</div>
 
 		<div class="filter-dropdowns">
 			<select bind:value={selectedTag} aria-label={t('application.tags')}>
 				<option value="">{t('kanban.allTags')}</option>
-				{#each allTags as tag}
+				{#each allTags as tag (tag)}
 					<option value={tag}>{tag}</option>
 				{/each}
 			</select>
@@ -228,10 +273,10 @@
 				<option value="">{t('kanban.allColors')}</option>
 				<option value="colored">✦ {t('kanban.coloredOnly')}</option>
 				<option value="uncolored">{t('kanban.uncoloredOnly')}</option>
-				{#each colorStore.auto as preset}
+				{#each colorStore.auto as preset (preset.id)}
 					<option value={preset.hex}>● {preset.labelKey || preset.hex}</option>
 				{/each}
-				{#each colorStore.custom as customHex}
+				{#each colorStore.custom as customHex (customHex)}
 					<option value={customHex}>● {customHex}</option>
 				{/each}
 			</select>
@@ -248,13 +293,13 @@
 	<!-- Kanban Workspace -->
 	<div class="kanban-board">
 		{#each columns as col (col.id)}
-			{@const columnApps = filteredApplications.filter(app => app.status === col.id)}
+			{@const columnApps = filteredApplications.filter((app) => app.status === col.id)}
 			<div
 				class="kanban-column"
 				class:drag-over={activeDragOverColumn === col.id}
-				ondragover={e => handleDragOver(e, col.id)}
+				ondragover={(e) => handleDragOver(e, col.id)}
 				ondragleave={handleDragLeave}
-				ondrop={e => handleDrop(e, col.id)}
+				ondrop={(e) => handleDrop(e, col.id)}
 				role="region"
 				aria-label={t(col.labelKey)}
 			>
@@ -269,18 +314,19 @@
 
 				<div class="cards-list">
 					{#each columnApps as app (app.id)}
-						<!-- svelte-ignore a11y_no_noninteractive_element_to_interactive_role -->
 						<div
 							class="card"
 							class:specular-card={!!app.cardColor && app.cardColor !== 'none'}
-							style:--card-glow-color={app.cardColor && app.cardColor !== 'none' ? app.cardColor : 'transparent'}
+							style:--card-glow-color={app.cardColor && app.cardColor !== 'none'
+								? app.cardColor
+								: 'transparent'}
 							draggable="true"
-							ondragstart={e => handleDragStart(e, app.id!)}
+							ondragstart={(e) => handleDragStart(e, app.id!)}
 							ondragend={handleDragEnd}
 							onclick={() => openEditModal(app)}
 							role="button"
 							tabindex="0"
-							onkeydown={e => {
+							onkeydown={(e) => {
 								if (e.key === 'Enter' || e.key === ' ') {
 									e.preventDefault();
 									openEditModal(app);
@@ -292,12 +338,20 @@
 								<div class="card-top">
 									<div class="card-company-row">
 										{#if app.cardColor && app.cardColor !== 'none'}
-											<span class="card-color-dot" style:--dot-color={app.cardColor} title="Farbmarkierung"></span>
+											<span
+												class="card-color-dot"
+												style:--dot-color={app.cardColor}
+												title="Farbmarkierung"
+											></span>
 										{/if}
 										<span class="card-company">{app.company}</span>
 									</div>
-									<span class="card-priority" class:priority-high={app.priority === 'high'} class:priority-low={app.priority === 'low'}>
-										{app.priority === 'high' ? '!!!' : (app.priority === 'low' ? 'Low' : 'Mid')}
+									<span
+										class="card-priority"
+										class:priority-high={app.priority === 'high'}
+										class:priority-low={app.priority === 'low'}
+									>
+										{app.priority === 'high' ? '!!!' : app.priority === 'low' ? 'Low' : 'Mid'}
 									</span>
 								</div>
 								<h3 class="card-title">{app.title}</h3>
@@ -308,7 +362,7 @@
 
 								{#if app.tags.length > 0}
 									<div class="card-tags">
-										{#each app.tags.slice(0, 3) as tag}
+										{#each app.tags.slice(0, 3) as tag (tag)}
 											<span class="card-tag">{tag}</span>
 										{/each}
 										{#if app.tags.length > 3}
@@ -320,18 +374,27 @@
 
 							<footer class="card-footer">
 								<span class="card-date">
-									{new Date(app.appliedAt || app.createdAt || app.updatedAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
+									{new Date(app.appliedAt || app.createdAt || app.updatedAt).toLocaleDateString(
+										undefined,
+										{ day: 'numeric', month: 'short' }
+									)}
 								</span>
 								<button
 									class="btn-card-delete"
-									onclick={e => {
+									onclick={(e) => {
 										e.stopPropagation();
 										deleteApp(app.id!);
 									}}
 									aria-label="Löschen"
 								>
 									<svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-										<path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+										<path
+											d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+											stroke="currentColor"
+											stroke-width="1.5"
+											stroke-linecap="round"
+											stroke-linejoin="round"
+										/>
 									</svg>
 								</button>
 							</footer>
@@ -433,8 +496,9 @@
 		font-size: 14px;
 		font-weight: 600;
 		cursor: pointer;
-		transition: background-color var(--duration-fast) ease,
-		            transform var(--duration-fast) ease;
+		transition:
+			background-color var(--duration-fast) ease,
+			transform var(--duration-fast) ease;
 	}
 
 	.btn-primary:hover {
@@ -524,8 +588,9 @@
 		flex-direction: column;
 		gap: 12px;
 		min-height: 450px;
-		transition: border-color var(--duration-fast) ease,
-		            background-color var(--duration-fast) ease;
+		transition:
+			border-color var(--duration-fast) ease,
+			background-color var(--duration-fast) ease;
 	}
 
 	.kanban-column.drag-over {
@@ -603,9 +668,10 @@
 		display: flex;
 		flex-direction: column;
 		gap: 12px;
-		transition: transform var(--duration-fast) var(--ease-out-expo),
-		            box-shadow var(--duration-fast) var(--ease-out-expo),
-		            border-color var(--duration-fast) ease;
+		transition:
+			transform var(--duration-fast) var(--ease-out-expo),
+			box-shadow var(--duration-fast) var(--ease-out-expo),
+			border-color var(--duration-fast) ease;
 	}
 
 	.card:hover {
@@ -615,8 +681,9 @@
 
 	.card.specular-card {
 		border: 1.5px solid color-mix(in srgb, var(--card-glow-color) 65%, var(--border-default));
-		box-shadow: 0 4px 24px -6px color-mix(in srgb, var(--card-glow-color) 35%, transparent),
-		            inset 0 1px 2px 0 color-mix(in srgb, var(--card-glow-color) 25%, transparent);
+		box-shadow:
+			0 4px 24px -6px color-mix(in srgb, var(--card-glow-color) 35%, transparent),
+			inset 0 1px 2px 0 color-mix(in srgb, var(--card-glow-color) 25%, transparent);
 		position: relative;
 		overflow: hidden;
 	}
@@ -643,9 +710,10 @@
 
 	.card.specular-card:hover {
 		border-color: var(--card-glow-color);
-		box-shadow: 0 8px 32px -4px color-mix(in srgb, var(--card-glow-color) 65%, transparent),
-		            0 0 18px -2px color-mix(in srgb, var(--card-glow-color) 45%, transparent),
-		            inset 0 1px 3px 0 color-mix(in srgb, var(--card-glow-color) 50%, white);
+		box-shadow:
+			0 8px 32px -4px color-mix(in srgb, var(--card-glow-color) 65%, transparent),
+			0 0 18px -2px color-mix(in srgb, var(--card-glow-color) 45%, transparent),
+			inset 0 1px 3px 0 color-mix(in srgb, var(--card-glow-color) 50%, white);
 		transform: translateY(-3px) scale(1.01);
 	}
 
@@ -782,8 +850,9 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		transition: background-color var(--duration-fast) ease,
-		            color var(--duration-fast) ease;
+		transition:
+			background-color var(--duration-fast) ease,
+			color var(--duration-fast) ease;
 	}
 
 	.btn-card-delete:hover {

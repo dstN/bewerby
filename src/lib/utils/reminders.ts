@@ -1,6 +1,15 @@
 import { browser } from '$app/environment';
 import { db } from '$lib/db/index.js';
 
+// The Background Sync API (navigator.serviceWorker.ready.sync) isn't part of
+// lib.dom.d.ts yet; declare just enough of it for the feature-detected call below.
+interface SyncManager {
+	register(tag: string): Promise<void>;
+}
+interface ServiceWorkerRegistrationWithSync extends ServiceWorkerRegistration {
+	sync: SyncManager;
+}
+
 /**
  * Checks if browser notifications are supported and permitted.
  */
@@ -37,13 +46,17 @@ export async function syncRemindersToServiceWorker(): Promise<void> {
 	const now = Date.now();
 
 	const remindersToRegister = list
-		.filter(app => {
-			if (app.reminderInterval === 'none' || app.status === 'accepted' || app.status === 'rejected') {
+		.filter((app) => {
+			if (
+				app.reminderInterval === 'none' ||
+				app.status === 'accepted' ||
+				app.status === 'rejected'
+			) {
 				return false;
 			}
 			return true;
 		})
-		.map(app => {
+		.map((app) => {
 			let intervalMs = 0;
 			if (app.reminderInterval === '10s') intervalMs = 10 * 1000;
 			else if (app.reminderInterval === '24h') intervalMs = 24 * 60 * 60 * 1000;
@@ -66,38 +79,51 @@ export async function syncRemindersToServiceWorker(): Promise<void> {
 			if (!localStorage.getItem(notifyKey)) {
 				localStorage.setItem(notifyKey, 'true');
 				if ('serviceWorker' in navigator) {
-					navigator.serviceWorker.ready.then(reg => {
-						if (reg && reg.active) {
-							reg.showNotification(reminder.title, {
-								body: reminder.body,
-								icon: '/icons/apple-touch-icon.png',
-								tag: `reminder-${reminder.id}`,
-								data: { applicationId: reminder.id }
-							});
-						} else if ('Notification' in window && Notification.permission === 'granted') {
-							new Notification(reminder.title, { body: reminder.body, icon: '/icons/apple-touch-icon.png' });
-						}
-					}).catch(() => {
-						if ('Notification' in window && Notification.permission === 'granted') {
-							new Notification(reminder.title, { body: reminder.body, icon: '/icons/apple-touch-icon.png' });
-						}
-					});
+					navigator.serviceWorker.ready
+						.then((reg) => {
+							if (reg && reg.active) {
+								reg.showNotification(reminder.title, {
+									body: reminder.body,
+									icon: '/icons/apple-touch-icon.png',
+									tag: `reminder-${reminder.id}`,
+									data: { applicationId: reminder.id }
+								});
+							} else if ('Notification' in window && Notification.permission === 'granted') {
+								new Notification(reminder.title, {
+									body: reminder.body,
+									icon: '/icons/apple-touch-icon.png'
+								});
+							}
+						})
+						.catch(() => {
+							if ('Notification' in window && Notification.permission === 'granted') {
+								new Notification(reminder.title, {
+									body: reminder.body,
+									icon: '/icons/apple-touch-icon.png'
+								});
+							}
+						});
 				} else if ('Notification' in window && Notification.permission === 'granted') {
-					new Notification(reminder.title, { body: reminder.body, icon: '/icons/apple-touch-icon.png' });
+					new Notification(reminder.title, {
+						body: reminder.body,
+						icon: '/icons/apple-touch-icon.png'
+					});
 				}
 			}
 		}
 	}
 
 	if ('serviceWorker' in navigator) {
-		navigator.serviceWorker.ready.then(registration => {
-			if (registration && registration.active) {
-				registration.active.postMessage({
-					type: 'CHECK_REMINDERS',
-					reminders: remindersToRegister
-				});
-			}
-		}).catch(() => {});
+		navigator.serviceWorker.ready
+			.then((registration) => {
+				if (registration && registration.active) {
+					registration.active.postMessage({
+						type: 'CHECK_REMINDERS',
+						reminders: remindersToRegister
+					});
+				}
+			})
+			.catch(() => {});
 	}
 }
 
@@ -116,7 +142,7 @@ export async function registerPeriodicReminderCheck(): Promise<void> {
 
 	try {
 		const registration = await navigator.serviceWorker.ready;
-		await (registration as any).sync.register('check-reminders');
+		await (registration as ServiceWorkerRegistrationWithSync).sync.register('check-reminders');
 	} catch (err) {
 		console.warn('Background sync registration failed (normal for standard browsers):', err);
 	}

@@ -5,7 +5,10 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
 		<meta name="theme-color" content="#2563eb" media="(prefers-color-scheme: dark)" />
-		<meta name="description" content="bewerby - DSGVO-konformer Bewerbungsmanager. Verwalte deine Bewerbungen lokal und sicher im Browser." />
+		<meta
+			name="description"
+			content="bewerby - DSGVO-konformer Bewerbungsmanager. Verwalte deine Bewerbungen lokal und sicher im Browser."
+		/>
 		<meta name="apple-mobile-web-app-capable" content="yes" />
 		<meta name="apple-mobile-web-app-status-bar-style" content="default" />
 		<meta name="apple-mobile-web-app-title" content="bewerby" />
@@ -15,7 +18,7 @@
 
 		<!-- Prevent FOUC on theme: apply .dark before first paint -->
 		<script>
-			(function() {
+			(function () {
 				const stored = localStorage.getItem('bewerby-theme');
 				const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 				if (stored === 'dark' || (!stored && prefersDark)) {
@@ -28,7 +31,10 @@
 	</head>
 	<body data-sveltekit-preload-data="hover">
 		<!-- Skip to content link for keyboard/screen reader users -->
-		<a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-[var(--color-accent-600)] focus:text-white focus:rounded-lg focus:text-sm focus:font-medium">
+		<a
+			href="#main-content"
+			class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded-lg focus:bg-[var(--color-accent-600)] focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-white"
+		>
 			Zum Inhalt springen
 		</a>
 		<div style="display: contents">%sveltekit.body%</div>

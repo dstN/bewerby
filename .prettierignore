@@ -7,3 +7,6 @@ bun.lockb
 
 # Miscellaneous
 /static/
+
+# Vendored, hash-locked skill files (see skills-lock.json) — never reformat
+/.agents/

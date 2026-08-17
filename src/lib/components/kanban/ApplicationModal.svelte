@@ -73,7 +73,9 @@
 			tags = [...application.tags];
 			pdfName = application.pdfName || '';
 			pdfBlob = application.pdfBlob;
-			appliedDateStr = formatDateForInput(application.appliedAt || application.createdAt || Date.now());
+			appliedDateStr = formatDateForInput(
+				application.appliedAt || application.createdAt || Date.now()
+			);
 		} else {
 			cardColor = undefined;
 			appliedDateStr = formatDateForInput(Date.now());
@@ -89,7 +91,7 @@
 	}
 
 	function removeTag(tagToRemove: string) {
-		tags = tags.filter(t => t !== tagToRemove);
+		tags = tags.filter((t) => t !== tagToRemove);
 	}
 
 	async function handlePdfUpload(event: Event) {
@@ -112,9 +114,10 @@
 			if (!contactEmail) contactEmail = parsed.contactEmail;
 			if (!contactPhone) contactPhone = parsed.contactPhone;
 			if (!url) url = parsed.url;
-		} catch (err: any) {
+		} catch (err) {
 			console.error('Failed to parse PDF:', err);
-			alert('Fehler beim Scannen der PDF: ' + (err.message || err));
+			const message = err instanceof Error ? err.message : String(err);
+			alert('Fehler beim Scannen der PDF: ' + message);
 		} finally {
 			isParsingPdf = false;
 		}
@@ -127,7 +130,9 @@
 
 		const now = Date.now();
 		const currentStatus = application ? application.status : initialStatus;
-		const parsedAppliedAt = appliedDateStr ? parseDateInput(appliedDateStr) : (application?.appliedAt || application?.createdAt || now);
+		const parsedAppliedAt = appliedDateStr
+			? parseDateInput(appliedDateStr)
+			: application?.appliedAt || application?.createdAt || now;
 
 		const appData: Omit<Application, 'id'> = {
 			title: title.trim(),
@@ -167,14 +172,26 @@
 </script>
 
 <div class="modal-backdrop" onclick={onclose} role="presentation">
-	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 	<!-- svelte-ignore a11y_click_events_have_key_events -->
-	<div class="modal-content" tabindex="-1" onclick={e => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="modal-title">
+	<div
+		class="modal-content"
+		tabindex="-1"
+		onclick={(e) => e.stopPropagation()}
+		role="dialog"
+		aria-modal="true"
+		aria-labelledby="modal-title"
+	>
 		<header class="modal-header">
 			<h2 id="modal-title">{application ? t('kanban.actions.edit') : t('kanban.actions.add')}</h2>
 			<button class="btn-icon-close" onclick={onclose} aria-label={t('actions.cancel')}>
 				<svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-					<path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+					<path
+						d="M18 6L6 18M6 6l12 12"
+						stroke="currentColor"
+						stroke-width="1.5"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					/>
 				</svg>
 			</button>
 		</header>
@@ -184,9 +201,26 @@
 			<div class="form-section-pdf">
 				<label class="pdf-upload-box" class:parsing={isParsingPdf}>
 					<input type="file" accept=".pdf" onchange={handlePdfUpload} class="sr-only" />
-					<svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true" class="pdf-icon">
-						<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
-						<path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+					<svg
+						width="24"
+						height="24"
+						viewBox="0 0 24 24"
+						fill="none"
+						aria-hidden="true"
+						class="pdf-icon"
+					>
+						<path
+							d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"
+							stroke="currentColor"
+							stroke-width="1.5"
+							stroke-linejoin="round"
+						/>
+						<path
+							d="M14 2v6h6M16 13H8M16 17H8M10 9H8"
+							stroke="currentColor"
+							stroke-width="1.5"
+							stroke-linecap="round"
+						/>
 					</svg>
 					<span class="pdf-upload-text">
 						{#if isParsingPdf}
@@ -203,17 +237,34 @@
 			<div class="form-grid">
 				<div class="form-group col-span-2">
 					<label for="title">{t('application.title')} *</label>
-					<input id="title" type="text" bind:value={title} required placeholder={t('application.placeholderTitle')} />
+					<input
+						id="title"
+						type="text"
+						bind:value={title}
+						required
+						placeholder={t('application.placeholderTitle')}
+					/>
 				</div>
 
 				<div class="form-group col-span-2">
 					<label for="company">{t('application.company')} *</label>
-					<input id="company" type="text" bind:value={company} required placeholder={t('application.placeholderCompany')} />
+					<input
+						id="company"
+						type="text"
+						bind:value={company}
+						required
+						placeholder={t('application.placeholderCompany')}
+					/>
 				</div>
 
 				<div class="form-group col-span-2">
 					<label for="url">{t('application.url')}</label>
-					<input id="url" type="url" bind:value={url} placeholder={t('application.placeholderUrl')} />
+					<input
+						id="url"
+						type="url"
+						bind:value={url}
+						placeholder={t('application.placeholderUrl')}
+					/>
 				</div>
 
 				<div class="form-group">
@@ -232,7 +283,12 @@
 
 				<div class="form-group col-span-2">
 					<label for="salary">{t('application.salary')}</label>
-					<input id="salary" type="text" bind:value={salary} placeholder={t('application.placeholderSalary')} />
+					<input
+						id="salary"
+						type="text"
+						bind:value={salary}
+						placeholder={t('application.placeholderSalary')}
+					/>
 				</div>
 
 				<div class="form-group col-span-2">
@@ -241,17 +297,32 @@
 
 				<div class="form-group">
 					<label for="contactName">{t('application.contactName')}</label>
-					<input id="contactName" type="text" bind:value={contactName} placeholder={t('application.placeholderContactName')} />
+					<input
+						id="contactName"
+						type="text"
+						bind:value={contactName}
+						placeholder={t('application.placeholderContactName')}
+					/>
 				</div>
 
 				<div class="form-group">
 					<label for="contactEmail">{t('application.contactEmail')}</label>
-					<input id="contactEmail" type="email" bind:value={contactEmail} placeholder={t('application.placeholderContactEmail')} />
+					<input
+						id="contactEmail"
+						type="email"
+						bind:value={contactEmail}
+						placeholder={t('application.placeholderContactEmail')}
+					/>
 				</div>
 
 				<div class="form-group">
 					<label for="contactPhone">{t('application.contactPhone')}</label>
-					<input id="contactPhone" type="tel" bind:value={contactPhone} placeholder={t('application.placeholderContactPhone')} />
+					<input
+						id="contactPhone"
+						type="tel"
+						bind:value={contactPhone}
+						placeholder={t('application.placeholderContactPhone')}
+					/>
 				</div>
 
 				<div class="form-group">
@@ -274,25 +345,30 @@
 							type="button"
 							class="color-swatch swatch-none"
 							class:active={!cardColor || cardColor === 'none'}
-							onclick={() => cardColor = 'none'}
+							onclick={() => (cardColor = 'none')}
 							title={t('application.colorNone')}
 							aria-label={t('application.colorNone')}
 							aria-checked={!cardColor || cardColor === 'none'}
 							role="radio"
 						>
 							<svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-								<path d="M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+								<path
+									d="M18 6L6 18"
+									stroke="currentColor"
+									stroke-width="2"
+									stroke-linecap="round"
+								/>
 							</svg>
 						</button>
 
 						<!-- Preset Auto Colors -->
-						{#each colorStore.auto as preset}
+						{#each colorStore.auto as preset (preset.id)}
 							<button
 								type="button"
 								class="color-swatch"
 								style:--swatch-color={preset.hex}
 								class:active={cardColor?.toLowerCase() === preset.hex.toLowerCase()}
-								onclick={() => cardColor = preset.hex}
+								onclick={() => (cardColor = preset.hex)}
 								title={preset.labelKey || preset.hex}
 								aria-label={preset.labelKey || preset.hex}
 								aria-checked={cardColor?.toLowerCase() === preset.hex.toLowerCase()}
@@ -300,21 +376,27 @@
 							>
 								{#if cardColor?.toLowerCase() === preset.hex.toLowerCase()}
 									<svg width="14" height="14" viewBox="0 0 24 24" fill="none" class="check-icon">
-										<path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+										<path
+											d="M20 6L9 17l-5-5"
+											stroke="currentColor"
+											stroke-width="2.5"
+											stroke-linecap="round"
+											stroke-linejoin="round"
+										/>
 									</svg>
 								{/if}
 							</button>
 						{/each}
 
 						<!-- Custom Saved Colors -->
-						{#each colorStore.custom as customHex}
+						{#each colorStore.custom as customHex (customHex)}
 							<div class="custom-swatch-wrapper">
 								<button
 									type="button"
 									class="color-swatch"
 									style:--swatch-color={customHex}
 									class:active={cardColor?.toLowerCase() === customHex.toLowerCase()}
-									onclick={() => cardColor = customHex}
+									onclick={() => (cardColor = customHex)}
 									title={customHex}
 									aria-label={customHex}
 									aria-checked={cardColor?.toLowerCase() === customHex.toLowerCase()}
@@ -322,7 +404,13 @@
 								>
 									{#if cardColor?.toLowerCase() === customHex.toLowerCase()}
 										<svg width="14" height="14" viewBox="0 0 24 24" fill="none" class="check-icon">
-											<path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+											<path
+												d="M20 6L9 17l-5-5"
+												stroke="currentColor"
+												stroke-width="2.5"
+												stroke-linecap="round"
+												stroke-linejoin="round"
+											/>
 										</svg>
 									{/if}
 								</button>
@@ -335,8 +423,8 @@
 										if (cardColor?.toLowerCase() === customHex.toLowerCase()) cardColor = 'none';
 									}}
 									title="Entfernen"
-									aria-label="Farbe löschen"
-								>×</button>
+									aria-label="Farbe löschen">×</button
+								>
 							</div>
 						{/each}
 
@@ -354,7 +442,12 @@
 								}}
 							/>
 							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-								<path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+								<path
+									d="M12 5v14M5 12h14"
+									stroke="currentColor"
+									stroke-width="2"
+									stroke-linecap="round"
+								/>
 							</svg>
 						</label>
 					</div>
@@ -368,21 +461,28 @@
 							type="text"
 							bind:value={tagInput}
 							placeholder={t('application.placeholderTags')}
-							onkeydown={e => {
+							onkeydown={(e) => {
 								if (e.key === 'Enter') {
 									e.preventDefault();
 									addTag();
 								}
 							}}
 						/>
-						<button type="button" class="btn-secondary" onclick={addTag}>{t('actions.addTag')}</button>
+						<button type="button" class="btn-secondary" onclick={addTag}
+							>{t('actions.addTag')}</button
+						>
 					</div>
 					{#if tags.length > 0}
 						<div class="tags-list">
-							{#each tags as tag}
+							{#each tags as tag (tag)}
 								<span class="tag-badge">
 									{tag}
-									<button type="button" class="btn-tag-remove" onclick={() => removeTag(tag)} aria-label="Tag löschen">×</button>
+									<button
+										type="button"
+										class="btn-tag-remove"
+										onclick={() => removeTag(tag)}
+										aria-label="Tag löschen">×</button
+									>
 								</span>
 							{/each}
 						</div>
@@ -391,7 +491,11 @@
 
 				<div class="form-group col-span-2">
 					<label for="notes">{t('application.notes')}</label>
-					<textarea id="notes" bind:value={notes} rows="4" placeholder={t('application.placeholderNotes')}></textarea>
+					<textarea
+						id="notes"
+						bind:value={notes}
+						rows="4"
+						placeholder={t('application.placeholderNotes')}></textarea>
 				</div>
 			</div>
 		</div>
@@ -437,8 +541,14 @@
 	}
 
 	@keyframes modal-enter {
-		from { opacity: 0; transform: scale(0.96) translateY(8px); }
-		to { opacity: 1; transform: scale(1) translateY(0); }
+		from {
+			opacity: 0;
+			transform: scale(0.96) translateY(8px);
+		}
+		to {
+			opacity: 1;
+			transform: scale(1) translateY(0);
+		}
 	}
 
 	.modal-header {
@@ -498,8 +608,9 @@
 		padding: 16px;
 		cursor: pointer;
 		text-align: center;
-		transition: border-color var(--duration-fast) ease,
-		            background-color var(--duration-fast) ease;
+		transition:
+			border-color var(--duration-fast) ease,
+			background-color var(--duration-fast) ease;
 	}
 
 	.pdf-upload-box:hover {
@@ -668,8 +779,9 @@
 		font-size: 14px;
 		font-weight: 500;
 		cursor: pointer;
-		transition: background-color var(--duration-fast) ease,
-		            color var(--duration-fast) ease;
+		transition:
+			background-color var(--duration-fast) ease,
+			color var(--duration-fast) ease;
 	}
 
 	.btn-flat:hover {
@@ -713,18 +825,21 @@
 		cursor: pointer;
 		position: relative;
 		box-shadow: var(--shadow-sm);
-		transition: transform var(--duration-fast) var(--ease-out-expo),
-		            box-shadow var(--duration-fast) ease;
+		transition:
+			transform var(--duration-fast) var(--ease-out-expo),
+			box-shadow var(--duration-fast) ease;
 	}
 
 	.color-swatch:hover {
 		transform: scale(1.15);
-		box-shadow: 0 4px 12px -2px var(--swatch-color, rgba(0,0,0,0.2));
+		box-shadow: 0 4px 12px -2px var(--swatch-color, rgba(0, 0, 0, 0.2));
 	}
 
 	.color-swatch.active {
 		transform: scale(1.15);
-		box-shadow: 0 0 0 2px var(--surface-0), 0 0 0 4px var(--swatch-color, var(--text-primary));
+		box-shadow:
+			0 0 0 2px var(--surface-0),
+			0 0 0 4px var(--swatch-color, var(--text-primary));
 	}
 
 	.swatch-none {
@@ -736,12 +851,14 @@
 	.swatch-none.active {
 		border-color: var(--color-accent-500);
 		color: var(--color-accent-500);
-		box-shadow: 0 0 0 2px var(--surface-0), 0 0 0 4px var(--color-accent-500);
+		box-shadow:
+			0 0 0 2px var(--surface-0),
+			0 0 0 4px var(--color-accent-500);
 	}
 
 	.check-icon {
 		color: #ffffff;
-		filter: drop-shadow(0 1px 2px rgba(0,0,0,0.6));
+		filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
 	}
 
 	.custom-swatch-wrapper {
@@ -787,9 +904,10 @@
 		justify-content: center;
 		cursor: pointer;
 		position: relative;
-		transition: border-color var(--duration-fast) ease,
-		            color var(--duration-fast) ease,
-		            transform var(--duration-fast) var(--ease-out-expo);
+		transition:
+			border-color var(--duration-fast) ease,
+			color var(--duration-fast) ease,
+			transform var(--duration-fast) var(--ease-out-expo);
 	}
 
 	.btn-add-color:hover {

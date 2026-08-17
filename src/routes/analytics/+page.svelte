@@ -18,7 +18,7 @@
 
 		const responseTimes: number[] = [];
 
-		list.forEach(app => {
+		list.forEach((app) => {
 			// Basic status count
 			if (app.status === 'draft') draft++;
 			else if (app.status === 'sent') sent++;
@@ -28,13 +28,14 @@
 
 			// Calculate response time from history log
 			// Time from 'sent' -> first 'interview' or 'rejected'
-			const sentEvent = app.history.find(h => h.status === 'sent');
+			const sentEvent = app.history.find((h) => h.status === 'sent');
 			const responseEvent = app.history.find(
-				h => h.status === 'interview' || h.status === 'rejected'
+				(h) => h.status === 'interview' || h.status === 'rejected'
 			);
 
 			if (sentEvent && responseEvent && responseEvent.timestamp > sentEvent.timestamp) {
-				const durationDays = (responseEvent.timestamp - sentEvent.timestamp) / (1000 * 60 * 60 * 24);
+				const durationDays =
+					(responseEvent.timestamp - sentEvent.timestamp) / (1000 * 60 * 60 * 24);
 				responseTimes.push(durationDays);
 			}
 		});
@@ -52,7 +53,8 @@
 
 		// Response time aggregations
 		const count = responseTimes.length;
-		const avg = count > 0 ? Math.round((responseTimes.reduce((a, b) => a + b, 0) / count) * 10) / 10 : 0;
+		const avg =
+			count > 0 ? Math.round((responseTimes.reduce((a, b) => a + b, 0) / count) * 10) / 10 : 0;
 		const best = count > 0 ? Math.round(Math.min(...responseTimes) * 10) / 10 : 0;
 		const worst = count > 0 ? Math.round(Math.max(...responseTimes) * 10) / 10 : 0;
 
@@ -87,8 +89,20 @@
 			<div class="empty-state">
 				<div class="empty-icon">
 					<svg width="48" height="48" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-						<path d="M3 3v18h18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-						<path d="M7 17l4-5 4 3 5-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+						<path
+							d="M3 3v18h18"
+							stroke="currentColor"
+							stroke-width="1.5"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+						/>
+						<path
+							d="M7 17l4-5 4 3 5-7"
+							stroke="currentColor"
+							stroke-width="1.5"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+						/>
 					</svg>
 				</div>
 				<p>{t('empty.analytics')}</p>
@@ -150,12 +164,16 @@
 						<div class="step-bar-wrapper">
 							<div
 								class="step-bar accent-bar"
-								style:width="{stats.funnel.sent > 0 ? (stats.funnel.selection / stats.funnel.sent) * 100 : 0}%"
+								style:width="{stats.funnel.sent > 0
+									? (stats.funnel.selection / stats.funnel.sent) * 100
+									: 0}%"
 							></div>
 							<span class="step-count">{stats.funnel.selection}</span>
 						</div>
 						{#if stats.funnel.sent > 0}
-							<span class="step-percentage">↳ {stats.funnel.selectionRate}% {t('analytics.selectionRate')}</span>
+							<span class="step-percentage"
+								>↳ {stats.funnel.selectionRate}% {t('analytics.selectionRate')}</span
+							>
 						{/if}
 					</div>
 
@@ -168,12 +186,16 @@
 						<div class="step-bar-wrapper">
 							<div
 								class="step-bar success-bar"
-								style:width="{stats.funnel.sent > 0 ? (stats.funnel.success / stats.funnel.sent) * 100 : 0}%"
+								style:width="{stats.funnel.sent > 0
+									? (stats.funnel.success / stats.funnel.sent) * 100
+									: 0}%"
 							></div>
 							<span class="step-count text-success">{stats.funnel.success}</span>
 						</div>
 						{#if stats.funnel.selection > 0}
-							<span class="step-percentage text-success">↳ {stats.funnel.successRate}% {t('analytics.successRate')}</span>
+							<span class="step-percentage text-success"
+								>↳ {stats.funnel.successRate}% {t('analytics.successRate')}</span
+							>
 						{/if}
 					</div>
 				</div>
@@ -193,9 +215,21 @@
 
 				{#if stats.response.count === 0}
 					<div class="no-times-alert">
-						<svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true" class="info-icon">
-							<circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/>
-							<path d="M12 16v-4M12 8h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+						<svg
+							width="18"
+							height="18"
+							viewBox="0 0 24 24"
+							fill="none"
+							aria-hidden="true"
+							class="info-icon"
+						>
+							<circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5" />
+							<path
+								d="M12 16v-4M12 8h.01"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+							/>
 						</svg>
 						{t('analytics.noDataAlert')}
 					</div>
@@ -203,17 +237,23 @@
 					<div class="times-grid">
 						<div class="time-box">
 							<span class="time-label">{t('analytics.bestTime')}</span>
-							<span class="time-val text-success">{stats.response.best} <span class="time-unit">{t('analytics.days')}</span></span>
+							<span class="time-val text-success"
+								>{stats.response.best} <span class="time-unit">{t('analytics.days')}</span></span
+							>
 						</div>
 
 						<div class="time-box">
 							<span class="time-label">{t('analytics.avgTime')}</span>
-							<span class="time-val">{stats.response.avg} <span class="time-unit">{t('analytics.days')}</span></span>
+							<span class="time-val"
+								>{stats.response.avg} <span class="time-unit">{t('analytics.days')}</span></span
+							>
 						</div>
 
 						<div class="time-box">
 							<span class="time-label">{t('analytics.worstTime')}</span>
-							<span class="time-val text-danger">{stats.response.worst} <span class="time-unit">{t('analytics.days')}</span></span>
+							<span class="time-val text-danger"
+								>{stats.response.worst} <span class="time-unit">{t('analytics.days')}</span></span
+							>
 						</div>
 					</div>
 					<div class="times-meta">

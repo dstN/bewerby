@@ -28,11 +28,7 @@ sw.addEventListener('activate', (event) => {
 		caches
 			.keys()
 			.then((keys) =>
-				Promise.all(
-					keys
-						.filter((key) => key !== CACHE_NAME)
-						.map((key) => caches.delete(key))
-				)
+				Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key)))
 			)
 			.then(() => sw.clients.claim())
 	);
@@ -108,15 +104,13 @@ sw.addEventListener('notificationclick', (event) => {
 	event.notification.close();
 
 	event.waitUntil(
-		sw.clients
-			.matchAll({ type: 'window', includeUncontrolled: true })
-			.then((clients) => {
-				// Focus existing window or open new one
-				const existingClient = clients.find((c) => 'focus' in c);
-				if (existingClient) {
-					return existingClient.focus();
-				}
-				return sw.clients.openWindow('/');
-			})
+		sw.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
+			// Focus existing window or open new one
+			const existingClient = clients.find((c) => 'focus' in c);
+			if (existingClient) {
+				return existingClient.focus();
+			}
+			return sw.clients.openWindow('/');
+		})
 	);
 });

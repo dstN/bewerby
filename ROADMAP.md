@@ -30,23 +30,23 @@ Nicht alles muss angefasst werden. Folgendes ist geprüft und in Ordnung:
 
 **Ziel:** Datenverlust, Datenleck und Nicht-Benutzbarkeit beseitigen. Ohne diese 15 Aufgaben ist kein v1 möglich.
 
-| # | Aufgabe | Labels | Issue |
-|:--|:--|:--|:--|
-| 1 | ✅ Persönliche Bewerbungs-PDFs aus dem Auslieferungspfad entfernen | `security` `dsgvo` `v1-blocker` | [#1](https://github.com/dstN/bewerby/issues/1) |
-| 2 | Build-Gate reparieren und toten pdf.js-Ballast entfernen | `bug` `dx` `v1-blocker` | [#2](https://github.com/dstN/bewerby/issues/2) |
-| 3 | Service-Worker-Installation reparieren | `bug` `offline` `v1-blocker` | [#3](https://github.com/dstN/bewerby/issues/3) |
-| 4 | Statische App-Shell prerendern und Fehlergrenze einziehen | `architecture` `offline` `v1-blocker` | [#4](https://github.com/dstN/bewerby/issues/4) |
-| 5 | PDFs nach OPFS auslagern (Dexie-Schema v2) | `architecture` `refactoring` `v1-blocker` | [#5](https://github.com/dstN/bewerby/issues/5) |
-| 6 | Backup-Roundtrip: PDFs müssen Export und Import überleben | `bug` `v1-blocker` | [#6](https://github.com/dstN/bewerby/issues/6) |
-| 7 | Import darf den Datenbestand nicht mehr zerstören | `bug` `v1-blocker` | [#7](https://github.com/dstN/bewerby/issues/7) |
-| 8 | Datenhaltbarkeit absichern (Persistenz, Quota, Schreibfehler) | `architecture` `v1-blocker` | [#8](https://github.com/dstN/bewerby/issues/8) |
-| 9 | Status per Tastatur und Touch änderbar machen | `a11y` `enhancement` `v1-blocker` | [#9](https://github.com/dstN/bewerby/issues/9) |
-| 10 | Mobile Navigation und Board-Reflow | `a11y` `enhancement` `v1-blocker` | [#10](https://github.com/dstN/bewerby/issues/10) |
-| 11 | Reminder-Engine neu bauen | `bug` `performance` `v1-blocker` | [#11](https://github.com/dstN/bewerby/issues/11) |
-| 12 | Security-Header und Content-Security-Policy | `security` `v1-blocker` | [#12](https://github.com/dstN/bewerby/issues/12) |
-| 13 | Impressum und Datenschutzerklärung | `dsgvo` `documentation` `v1-blocker` | [#13](https://github.com/dstN/bewerby/issues/13) |
-| 14 | Recht auf Löschung umsetzen | `dsgvo` `enhancement` `v1-blocker` | [#14](https://github.com/dstN/bewerby/issues/14) |
-| 15 | Deployment verifizieren und dokumentieren | `architecture` `documentation` `v1-blocker` | [#15](https://github.com/dstN/bewerby/issues/15) |
+| #   | Aufgabe                                                            | Labels                                      | Issue                                            |
+| :-- | :----------------------------------------------------------------- | :------------------------------------------ | :----------------------------------------------- |
+| 1   | ✅ Persönliche Bewerbungs-PDFs aus dem Auslieferungspfad entfernen | `security` `dsgvo` `v1-blocker`             | [#1](https://github.com/dstN/bewerby/issues/1)   |
+| 2   | Build-Gate reparieren und toten pdf.js-Ballast entfernen           | `bug` `dx` `v1-blocker`                     | [#2](https://github.com/dstN/bewerby/issues/2)   |
+| 3   | Service-Worker-Installation reparieren                             | `bug` `offline` `v1-blocker`                | [#3](https://github.com/dstN/bewerby/issues/3)   |
+| 4   | Statische App-Shell prerendern und Fehlergrenze einziehen          | `architecture` `offline` `v1-blocker`       | [#4](https://github.com/dstN/bewerby/issues/4)   |
+| 5   | PDFs nach OPFS auslagern (Dexie-Schema v2)                         | `architecture` `refactoring` `v1-blocker`   | [#5](https://github.com/dstN/bewerby/issues/5)   |
+| 6   | Backup-Roundtrip: PDFs müssen Export und Import überleben          | `bug` `v1-blocker`                          | [#6](https://github.com/dstN/bewerby/issues/6)   |
+| 7   | Import darf den Datenbestand nicht mehr zerstören                  | `bug` `v1-blocker`                          | [#7](https://github.com/dstN/bewerby/issues/7)   |
+| 8   | Datenhaltbarkeit absichern (Persistenz, Quota, Schreibfehler)      | `architecture` `v1-blocker`                 | [#8](https://github.com/dstN/bewerby/issues/8)   |
+| 9   | Status per Tastatur und Touch änderbar machen                      | `a11y` `enhancement` `v1-blocker`           | [#9](https://github.com/dstN/bewerby/issues/9)   |
+| 10  | Mobile Navigation und Board-Reflow                                 | `a11y` `enhancement` `v1-blocker`           | [#10](https://github.com/dstN/bewerby/issues/10) |
+| 11  | Reminder-Engine neu bauen                                          | `bug` `performance` `v1-blocker`            | [#11](https://github.com/dstN/bewerby/issues/11) |
+| 12  | Security-Header und Content-Security-Policy                        | `security` `v1-blocker`                     | [#12](https://github.com/dstN/bewerby/issues/12) |
+| 13  | Impressum und Datenschutzerklärung                                 | `dsgvo` `documentation` `v1-blocker`        | [#13](https://github.com/dstN/bewerby/issues/13) |
+| 14  | Recht auf Löschung umsetzen                                        | `dsgvo` `enhancement` `v1-blocker`          | [#14](https://github.com/dstN/bewerby/issues/14) |
+| 15  | Deployment verifizieren und dokumentieren                          | `architecture` `documentation` `v1-blocker` | [#15](https://github.com/dstN/bewerby/issues/15) |
 
 ### 1 — Persönliche Bewerbungs-PDFs aus dem Auslieferungspfad entfernen
 
@@ -146,21 +146,21 @@ Nicht alles muss angefasst werden. Folgendes ist geprüft und in Ordnung:
 
 **Ziel:** WCAG 2.2 AA durchgehend erfüllen und Lighthouse 100 in allen vier Kategorien erreichen.
 
-| # | Aufgabe | Labels | Issue |
-|:--|:--|:--|:--|
-| 16 | Fokus-Sichtbarkeit wiederherstellen | `a11y` | [#16](https://github.com/dstN/bewerby/issues/16) |
-| 17 | Kontrastverstöße beheben | `a11y` | [#17](https://github.com/dstN/bewerby/issues/17) |
-| 18 | Fokusmanagement im Bearbeitungsdialog | `a11y` `refactoring` | [#18](https://github.com/dstN/bewerby/issues/18) |
-| 19 | DatePicker als bedienbares Kalender-Grid | `a11y` `performance` `refactoring` | [#19](https://github.com/dstN/bewerby/issues/19) |
-| 20 | Kanban-Karte semantisch entflechten | `a11y` | [#20](https://github.com/dstN/bewerby/issues/20) |
-| 21 | Tailwind-Scope eingrenzen (30 KB → ~2 KB CSS) | `performance` | [#21](https://github.com/dstN/bewerby/issues/21) |
-| 22 | Asset-Gewicht reduzieren | `performance` | [#22](https://github.com/dstN/bewerby/issues/22) |
-| 23 | Board- und Analytics-Queries entkoppeln | `performance` | [#23](https://github.com/dstN/bewerby/issues/23) |
-| 24 | $effect-Disziplin herstellen | `refactoring` | [#24](https://github.com/dstN/bewerby/issues/24) |
-| 25 | prefers-reduced-motion durchgehend respektieren | `a11y` | [#25](https://github.com/dstN/bewerby/issues/25) |
-| 26 | i18n vervollständigen und Seitentitel differenzieren | `a11y` `bug` | [#26](https://github.com/dstN/bewerby/issues/26) |
-| 27 | PDF-Verarbeitung härten | `bug` `performance` | [#27](https://github.com/dstN/bewerby/issues/27) |
-| 28 | Cloud-Sync-Platzhalter ehrlich und barrierefrei machen | `a11y` | [#28](https://github.com/dstN/bewerby/issues/28) |
+| #   | Aufgabe                                                | Labels                             | Issue                                            |
+| :-- | :----------------------------------------------------- | :--------------------------------- | :----------------------------------------------- |
+| 16  | Fokus-Sichtbarkeit wiederherstellen                    | `a11y`                             | [#16](https://github.com/dstN/bewerby/issues/16) |
+| 17  | Kontrastverstöße beheben                               | `a11y`                             | [#17](https://github.com/dstN/bewerby/issues/17) |
+| 18  | Fokusmanagement im Bearbeitungsdialog                  | `a11y` `refactoring`               | [#18](https://github.com/dstN/bewerby/issues/18) |
+| 19  | DatePicker als bedienbares Kalender-Grid               | `a11y` `performance` `refactoring` | [#19](https://github.com/dstN/bewerby/issues/19) |
+| 20  | Kanban-Karte semantisch entflechten                    | `a11y`                             | [#20](https://github.com/dstN/bewerby/issues/20) |
+| 21  | Tailwind-Scope eingrenzen (30 KB → ~2 KB CSS)          | `performance`                      | [#21](https://github.com/dstN/bewerby/issues/21) |
+| 22  | Asset-Gewicht reduzieren                               | `performance`                      | [#22](https://github.com/dstN/bewerby/issues/22) |
+| 23  | Board- und Analytics-Queries entkoppeln                | `performance`                      | [#23](https://github.com/dstN/bewerby/issues/23) |
+| 24  | $effect-Disziplin herstellen                           | `refactoring`                      | [#24](https://github.com/dstN/bewerby/issues/24) |
+| 25  | prefers-reduced-motion durchgehend respektieren        | `a11y`                             | [#25](https://github.com/dstN/bewerby/issues/25) |
+| 26  | i18n vervollständigen und Seitentitel differenzieren   | `a11y` `bug`                       | [#26](https://github.com/dstN/bewerby/issues/26) |
+| 27  | PDF-Verarbeitung härten                                | `bug` `performance`                | [#27](https://github.com/dstN/bewerby/issues/27) |
+| 28  | Cloud-Sync-Platzhalter ehrlich und barrierefrei machen | `a11y`                             | [#28](https://github.com/dstN/bewerby/issues/28) |
 
 ### 16 — Fokus-Sichtbarkeit wiederherstellen
 
@@ -246,15 +246,15 @@ Nicht alles muss angefasst werden. Folgendes ist geprüft und in Ordnung:
 
 **Ziel:** Das Erreichte gegen Regression absichern und den Release ausliefern.
 
-| # | Aufgabe | Labels | Issue |
-|:--|:--|:--|:--|
-| 29 | Unit-Tests für die risikoreiche Logik | `dx` | [#29](https://github.com/dstN/bewerby/issues/29) |
-| 30 | End-to-End-Smoketests | `dx` | [#30](https://github.com/dstN/bewerby/issues/30) |
-| 31 | CI-Pipeline als Merge-Gate | `dx` | [#31](https://github.com/dstN/bewerby/issues/31) |
-| 32 | Dokumentation: README, Runbook, Architektur | `documentation` | [#32](https://github.com/dstN/bewerby/issues/32) |
-| 33 | Toten Code und Konfigurationsdrift entfernen | `refactoring` | [#33](https://github.com/dstN/bewerby/issues/33) |
-| 34 | Manifest vervollständigen und Lighthouse 100 verifizieren | `performance` | [#34](https://github.com/dstN/bewerby/issues/34) |
-| 35 | Versionsstände synchronisieren und v1.0.0 releasen | `enhancement` | [#35](https://github.com/dstN/bewerby/issues/35) |
+| #   | Aufgabe                                                   | Labels          | Issue                                            |
+| :-- | :-------------------------------------------------------- | :-------------- | :----------------------------------------------- |
+| 29  | Unit-Tests für die risikoreiche Logik                     | `dx`            | [#29](https://github.com/dstN/bewerby/issues/29) |
+| 30  | End-to-End-Smoketests                                     | `dx`            | [#30](https://github.com/dstN/bewerby/issues/30) |
+| 31  | CI-Pipeline als Merge-Gate                                | `dx`            | [#31](https://github.com/dstN/bewerby/issues/31) |
+| 32  | Dokumentation: README, Runbook, Architektur               | `documentation` | [#32](https://github.com/dstN/bewerby/issues/32) |
+| 33  | Toten Code und Konfigurationsdrift entfernen              | `refactoring`   | [#33](https://github.com/dstN/bewerby/issues/33) |
+| 34  | Manifest vervollständigen und Lighthouse 100 verifizieren | `performance`   | [#34](https://github.com/dstN/bewerby/issues/34) |
+| 35  | Versionsstände synchronisieren und v1.0.0 releasen        | `enhancement`   | [#35](https://github.com/dstN/bewerby/issues/35) |
 
 ### 29 — Unit-Tests für die risikoreiche Logik
 
@@ -302,9 +302,9 @@ Nicht alles muss angefasst werden. Folgendes ist geprüft und in Ordnung:
 
 ## Nach v1 (Backlog, ohne Milestone)
 
-| # | Aufgabe | Labels | Issue |
-|:--|:--|:--|:--|
-| 36 | Epic: Ende-zu-Ende-verschlüsselter Cloud-Sync | `enhancement` | [#36](https://github.com/dstN/bewerby/issues/36) |
+| #   | Aufgabe                                       | Labels        | Issue                                            |
+| :-- | :-------------------------------------------- | :------------ | :----------------------------------------------- |
+| 36  | Epic: Ende-zu-Ende-verschlüsselter Cloud-Sync | `enhancement` | [#36](https://github.com/dstN/bewerby/issues/36) |
 
 ### 36 — Epic: Ende-zu-Ende-verschlüsselter Cloud-Sync
 

@@ -1,12 +1,11 @@
 <script lang="ts">
 	import { t } from '$lib/i18n/index.svelte.js';
-	import { getNotificationPermissionState, requestNotificationPermission } from '$lib/utils/reminders.js';
+	import {
+		getNotificationPermissionState,
+		requestNotificationPermission
+	} from '$lib/utils/reminders.js';
 
-	let permissionState = $state<NotificationPermission>('default');
-
-	$effect(() => {
-		permissionState = getNotificationPermissionState();
-	});
+	let permissionState = $derived(getNotificationPermissionState());
 
 	async function toggleNotifications() {
 		const result = await requestNotificationPermission();
@@ -24,8 +23,21 @@
 		<!-- Notification settings card -->
 		<section class="settings-card">
 			<h2 class="card-title">
-				<svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true" class="card-icon">
-					<path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+				<svg
+					width="20"
+					height="20"
+					viewBox="0 0 24 24"
+					fill="none"
+					aria-hidden="true"
+					class="card-icon"
+				>
+					<path
+						d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"
+						stroke="currentColor"
+						stroke-width="1.5"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					/>
 				</svg>
 				{t('settings.remindersTitle')}
 			</h2>
@@ -34,7 +46,11 @@
 			<div class="settings-control">
 				<div class="status-info">
 					<span class="status-label">{t('settings.statusLabel')}</span>
-					<span class="status-badge" class:granted={permissionState === 'granted'} class:denied={permissionState === 'denied'}>
+					<span
+						class="status-badge"
+						class:granted={permissionState === 'granted'}
+						class:denied={permissionState === 'denied'}
+					>
 						{#if permissionState === 'granted'}
 							{t('settings.statusActive')}
 						{:else}
@@ -54,20 +70,35 @@
 		<!-- Privacy & Offline Info Card -->
 		<section class="settings-card info-card">
 			<h2 class="card-title">
-				<svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true" class="card-icon">
-					<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+				<svg
+					width="20"
+					height="20"
+					viewBox="0 0 24 24"
+					fill="none"
+					aria-hidden="true"
+					class="card-icon"
+				>
+					<path
+						d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"
+						stroke="currentColor"
+						stroke-width="1.5"
+						stroke-linejoin="round"
+					/>
 				</svg>
 				{t('settings.privacyTitle')}
 			</h2>
 			<ul class="info-list">
 				<li>
-					<strong>{t('settings.privacyItem1Title')}:</strong> {t('settings.privacyItem1Desc')}
+					<strong>{t('settings.privacyItem1Title')}:</strong>
+					{t('settings.privacyItem1Desc')}
 				</li>
 				<li>
-					<strong>{t('settings.privacyItem2Title')}:</strong> {t('settings.privacyItem2Desc')}
+					<strong>{t('settings.privacyItem2Title')}:</strong>
+					{t('settings.privacyItem2Desc')}
 				</li>
 				<li>
-					<strong>{t('settings.privacyItem3Title')}:</strong> {t('settings.privacyItem3Desc')}
+					<strong>{t('settings.privacyItem3Title')}:</strong>
+					{t('settings.privacyItem3Desc')}
 				</li>
 			</ul>
 		</section>

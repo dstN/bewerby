@@ -4,22 +4,13 @@
 // service worker — anything unexpected here becomes public and offline-cached.
 // See ROADMAP.md #1 (personal PDFs were shipped this way) and #2 (dead pdf.js
 // bundles were shipped this way).
-import { readdirSync, statSync } from 'node:fs';
+import { readdirSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const STATIC_DIR = fileURLToPath(new URL('../static', import.meta.url));
 
-const ALLOWED_FILES = new Set([
-	'.gitignore',
-	'manifest.json',
-	'robots.txt',
-	// TODO(#2): pdf.min.mjs / pdf.worker.min.mjs are unreferenced dead copies of
-	// pdfjs-dist and will be deleted; kept allowed here so this guard doesn't
-	// block unrelated work until #2 lands.
-	'pdf.min.mjs',
-	'pdf.worker.min.mjs'
-]);
+const ALLOWED_FILES = new Set(['.gitignore', 'manifest.json', 'robots.txt']);
 const ALLOWED_DIRS = new Set(['fonts', 'icons']);
 
 function walk(dir, isRoot) {
