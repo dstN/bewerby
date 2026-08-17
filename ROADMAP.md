@@ -35,7 +35,7 @@ Nicht alles muss angefasst werden. Folgendes ist geprüft und in Ordnung:
 | 1   | ✅ Persönliche Bewerbungs-PDFs aus dem Auslieferungspfad entfernen | `security` `dsgvo` `v1-blocker`             | [#1](https://github.com/dstN/bewerby/issues/1)   |
 | 2   | ✅ Build-Gate reparieren und toten pdf.js-Ballast entfernen        | `bug` `dx` `v1-blocker`                     | [#2](https://github.com/dstN/bewerby/issues/2)   |
 | 3   | ✅ Service-Worker-Installation reparieren                          | `bug` `offline` `v1-blocker`                | [#3](https://github.com/dstN/bewerby/issues/3)   |
-| 4   | Statische App-Shell prerendern und Fehlergrenze einziehen          | `architecture` `offline` `v1-blocker`       | [#4](https://github.com/dstN/bewerby/issues/4)   |
+| 4   | ✅ Statische App-Shell prerendern und Fehlergrenze einziehen       | `architecture` `offline` `v1-blocker`       | [#4](https://github.com/dstN/bewerby/issues/4)   |
 | 5   | PDFs nach OPFS auslagern (Dexie-Schema v2)                         | `architecture` `refactoring` `v1-blocker`   | [#5](https://github.com/dstN/bewerby/issues/5)   |
 | 6   | Backup-Roundtrip: PDFs müssen Export und Import überleben          | `bug` `v1-blocker`                          | [#6](https://github.com/dstN/bewerby/issues/6)   |
 | 7   | Import darf den Datenbestand nicht mehr zerstören                  | `bug` `v1-blocker`                          | [#7](https://github.com/dstN/bewerby/issues/7)   |
@@ -73,6 +73,8 @@ Nicht alles muss angefasst werden. Folgendes ist geprüft und in Ordnung:
 **Soll:** Der Service Worker installiert und aktiviert zuverlässig. Precache filtert Dotfiles und ist fehlertolerant (einzelne `cache.add`-Aufrufe statt eines atomaren `addAll`, damit ein fehlendes Asset nicht die ganze Installation kippt). Der Fetch-Handler hat einen Fehlerpfad mit Offline-Fallback. Dokumente werden network-first bzw. stale-while-revalidate behandelt, statische Assets cache-first.
 
 ### 4 — Statische App-Shell prerendern und Fehlergrenze einziehen
+
+**Status:** ✅ Erledigt in [1a7684e](https://github.com/dstN/bewerby/commit/1a7684e) (#4, geschlossen). Über die Roadmap-Formulierung hinaus zwei getrennte Fehlergrenzen eingebaut, da `+error.svelte` allein Render-Fehler in bereits gemounteten Routen nicht abfängt (siehe #7). Details im [Issue-Kommentar](https://github.com/dstN/bewerby/issues/4#issuecomment-5321130819).
 
 **Ist:** Es existiert kein einziges `+layout.ts`/`+page.ts`. SSR ist also aktiv und nichts wird prerendert, obwohl alle Daten aus Dexie (browser-only) kommen — jeder Cold Load ist ein Node/Passenger-Roundtrip für eine Seite, die serverseitig null Daten rendert. Weil kein HTML-Dokument prerendert wird, liegt auch keins im Precache, was Aufgabe 3 offline unlösbar macht. Zudem gibt es **kein `+error.svelte`** im ganzen Projekt.
 
