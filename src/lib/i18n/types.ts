@@ -82,6 +82,8 @@ export type TranslationKeys = {
 		pdf: {
 			uploadText: string;
 			scanning: string;
+			view: string;
+			viewError: string;
 		};
 	};
 	datepicker: {

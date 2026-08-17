@@ -5,6 +5,7 @@
 	import { t } from '$lib/i18n/index.svelte.js';
 	import ApplicationModal from '$lib/components/kanban/ApplicationModal.svelte';
 	import { colorStore } from '$lib/stores/colors.svelte.js';
+	import { deletePdfFromOpfs } from '$lib/utils/opfs.js';
 
 	// Columns definition
 	const columns = [
@@ -121,7 +122,11 @@
 
 	async function deleteApp(id: number) {
 		if (confirm(t('kanban.confirmDelete'))) {
+			const app = await db.applications.get(id);
 			await db.applications.delete(id);
+			if (app?.pdfRef) {
+				await deletePdfFromOpfs(app.pdfRef);
+			}
 		}
 	}
 

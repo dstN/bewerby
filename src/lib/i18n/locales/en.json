@@ -75,7 +75,9 @@
 		},
 		"pdf": {
 			"uploadText": "Upload job listing (PDF) to auto-fill",
-			"scanning": "Scanning job listing..."
+			"scanning": "Scanning job listing...",
+			"view": "View",
+			"viewError": "Could not load the PDF."
 		}
 	},
 	"datepicker": {

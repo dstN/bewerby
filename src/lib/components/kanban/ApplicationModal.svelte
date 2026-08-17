@@ -2,6 +2,7 @@
 	import { t } from '$lib/i18n/index.svelte.js';
 	import { db, type Application } from '$lib/db/index.js';
 	import { extractTextFromPdf, parseJobDetailsFromText } from '$lib/utils/pdf.js';
+	import { writePdfToOpfs, readPdfFromOpfs, deletePdfFromOpfs } from '$lib/utils/opfs.js';
 	import DatePicker from '$lib/components/common/DatePicker.svelte';
 	import { colorStore } from '$lib/stores/colors.svelte.js';
 
@@ -52,8 +53,15 @@
 	let tagInput = $state('');
 	let tags = $state<string[]>([]);
 	let pdfName = $state('');
-	let pdfBlob = $state<Blob | undefined>(undefined);
+	// The OPFS ref that will be saved. originalPdfRef is a plain (non-reactive)
+	// snapshot of what was loaded, so save() can tell whether the PDF was
+	// replaced and clean up the old OPFS file only once the new ref is
+	// actually persisted - never before, or a cancelled edit would leave the
+	// row pointing at a file that no longer exists.
+	let pdfRef = $state<string | undefined>(undefined);
+	let originalPdfRef: string | undefined;
 	let isParsingPdf = $state(false);
+	let isViewingPdf = $state(false);
 	let appliedDateStr = $state(formatDateForInput());
 
 	// Load existing application data if editing
@@ -72,12 +80,14 @@
 			notes = application.notes;
 			tags = [...application.tags];
 			pdfName = application.pdfName || '';
-			pdfBlob = application.pdfBlob;
+			pdfRef = application.pdfRef;
+			originalPdfRef = application.pdfRef;
 			appliedDateStr = formatDateForInput(
 				application.appliedAt || application.createdAt || Date.now()
 			);
 		} else {
 			cardColor = undefined;
+			originalPdfRef = undefined;
 			appliedDateStr = formatDateForInput(Date.now());
 		}
 	});
@@ -100,8 +110,17 @@
 		if (!file) return;
 
 		isParsingPdf = true;
-		pdfName = file.name;
-		pdfBlob = file;
+
+		try {
+			pdfRef = await writePdfToOpfs(file);
+			pdfName = file.name;
+		} catch (err) {
+			console.error('Failed to store PDF:', err);
+			const message = err instanceof Error ? err.message : String(err);
+			alert('Fehler beim Speichern der PDF: ' + message);
+			isParsingPdf = false;
+			return;
+		}
 
 		try {
 			const text = await extractTextFromPdf(file);
@@ -120,6 +139,23 @@
 			alert('Fehler beim Scannen der PDF: ' + message);
 		} finally {
 			isParsingPdf = false;
+		}
+	}
+
+	async function viewPdf() {
+		if (!pdfRef) return;
+		isViewingPdf = true;
+		try {
+			const blob = await readPdfFromOpfs(pdfRef);
+			if (!blob) {
+				alert(t('application.pdf.viewError'));
+				return;
+			}
+			const url = URL.createObjectURL(blob);
+			window.open(url, '_blank', 'noopener,noreferrer');
+			setTimeout(() => URL.revokeObjectURL(url), 60_000);
+		} finally {
+			isViewingPdf = false;
 		}
 	}
 
@@ -149,7 +185,7 @@
 			cardColor: cardColor === 'none' ? undefined : cardColor,
 			notes: notes.trim(),
 			pdfName,
-			pdfBlob,
+			pdfRef,
 			appliedAt: parsedAppliedAt,
 			createdAt: application ? application.createdAt : now,
 			updatedAt: now,
@@ -165,6 +201,13 @@
 			await db.applications.update(application.id, $state.snapshot(appData));
 		} else {
 			await db.applications.add($state.snapshot(appData) as Application);
+		}
+
+		// Only now that the new pdfRef is persisted is it safe to remove the
+		// replaced file - if the row still referenced it (e.g. this write had
+		// failed), deleting it here would have orphaned live data.
+		if (originalPdfRef && originalPdfRef !== pdfRef) {
+			await deletePdfFromOpfs(originalPdfRef);
 		}
 
 		onsave();
@@ -232,6 +275,11 @@
 						{/if}
 					</span>
 				</label>
+				{#if pdfRef && !isParsingPdf}
+					<button type="button" class="btn-view-pdf" onclick={viewPdf} disabled={isViewingPdf}>
+						{t('application.pdf.view')}
+					</button>
+				{/if}
 			</div>
 
 			<div class="form-grid">
@@ -595,10 +643,14 @@
 	}
 
 	.form-section-pdf {
+		display: flex;
+		align-items: stretch;
+		gap: 10px;
 		margin-bottom: 20px;
 	}
 
 	.pdf-upload-box {
+		flex: 1;
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -611,6 +663,29 @@
 		transition:
 			border-color var(--duration-fast) ease,
 			background-color var(--duration-fast) ease;
+	}
+
+	.btn-view-pdf {
+		flex-shrink: 0;
+		padding: 0 16px;
+		background-color: var(--surface-2);
+		border: 1px solid var(--border-strong);
+		border-radius: var(--radius-lg);
+		color: var(--text-primary);
+		font-family: inherit;
+		font-size: 13px;
+		font-weight: 600;
+		cursor: pointer;
+		transition: background-color var(--duration-fast) ease;
+	}
+
+	.btn-view-pdf:hover:not(:disabled) {
+		background-color: var(--surface-3);
+	}
+
+	.btn-view-pdf:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
 	}
 
 	.pdf-upload-box:hover {

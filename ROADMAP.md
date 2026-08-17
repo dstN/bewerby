@@ -36,7 +36,7 @@ Nicht alles muss angefasst werden. Folgendes ist geprüft und in Ordnung:
 | 2   | ✅ Build-Gate reparieren und toten pdf.js-Ballast entfernen        | `bug` `dx` `v1-blocker`                     | [#2](https://github.com/dstN/bewerby/issues/2)   |
 | 3   | ✅ Service-Worker-Installation reparieren                          | `bug` `offline` `v1-blocker`                | [#3](https://github.com/dstN/bewerby/issues/3)   |
 | 4   | ✅ Statische App-Shell prerendern und Fehlergrenze einziehen       | `architecture` `offline` `v1-blocker`       | [#4](https://github.com/dstN/bewerby/issues/4)   |
-| 5   | PDFs nach OPFS auslagern (Dexie-Schema v2)                         | `architecture` `refactoring` `v1-blocker`   | [#5](https://github.com/dstN/bewerby/issues/5)   |
+| 5   | ✅ PDFs nach OPFS auslagern (Dexie-Schema v2)                      | `architecture` `refactoring` `v1-blocker`   | [#5](https://github.com/dstN/bewerby/issues/5)   |
 | 6   | Backup-Roundtrip: PDFs müssen Export und Import überleben          | `bug` `v1-blocker`                          | [#6](https://github.com/dstN/bewerby/issues/6)   |
 | 7   | Import darf den Datenbestand nicht mehr zerstören                  | `bug` `v1-blocker`                          | [#7](https://github.com/dstN/bewerby/issues/7)   |
 | 8   | Datenhaltbarkeit absichern (Persistenz, Quota, Schreibfehler)      | `architecture` `v1-blocker`                 | [#8](https://github.com/dstN/bewerby/issues/8)   |
@@ -81,6 +81,8 @@ Nicht alles muss angefasst werden. Folgendes ist geprüft und in Ordnung:
 **Soll:** `src/routes/+layout.ts` setzt `ssr = false` und `prerender = true`. Die App-Shell wird als statisches HTML gebaut, ist damit precachebar und offline aufrufbar. Ein `+error.svelte` fängt Laufzeitfehler ab und bietet einen Ausweg (Reset/Reload), statt die App unbenutzbar zu hinterlassen.
 
 ### 5 — PDFs nach OPFS auslagern (Dexie-Schema v2)
+
+**Status:** ✅ Erledigt (siehe [#5](https://github.com/dstN/bewerby/issues/5) für den schließenden Commit und Details). Dexie-Schema v2 mit `upgrade()`-Migration (`pdfBlob` → `pdfRef` + OPFS-Datei via `Dexie.waitFor`), `src/lib/utils/opfs.ts` als Zugriffsschicht, Orphan-Cleanup beim App-Start, Löschen der OPFS-Datei beim Löschen einer Bewerbung, und ein neuer „PDF anzeigen"-Button im Bearbeitungsdialog. Mit einem echten Browser (Playwright + System-Edge, temporär installiert) end-to-end verifiziert: eine v1-Zeile mit echtem `pdfBlob` migriert korrekt zu `pdfRef`, die OPFS-Datei enthält exakt den ursprünglichen Byte-Inhalt, das Board rendert die migrierte Karte ohne Fehler, und „Anzeigen" öffnet den korrekten Inhalt. Offene Anschlussstelle: Backup-Export enthält jetzt einen `pdfRef`-String statt eines kollabierenden Blobs — das eigentliche Wiederherstellen der Datei beim Import ist Aufgabe von #6.
 
 **Ist:** `pdfBlob?: Blob` liegt in derselben IndexedDB-Row wie die Board-Hot-Data (`src/lib/db/index.ts:29`). Jeder Board-Read, jede Analytics-Berechnung und jeder Reminder-Tick lädt `db.applications.toArray()` und deserialisiert damit sämtliche PDF-Blobs. Das Schema kennt nur `version(1)` — es gibt keinen Upgrade-Pfad für bestehende Nutzerdaten. OPFS wird nirgends verwendet, obwohl es die Projektvorgabe ist.
 

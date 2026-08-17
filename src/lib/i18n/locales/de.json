@@ -75,7 +75,9 @@
 		},
 		"pdf": {
 			"uploadText": "Stellenausschreibung hochladen (PDF) für Auto-Ausfüllen",
-			"scanning": "Scanne Ausschreibung..."
+			"scanning": "Scanne Ausschreibung...",
+			"view": "Anzeigen",
+			"viewError": "PDF konnte nicht geladen werden."
 		}
 	},
 	"datepicker": {

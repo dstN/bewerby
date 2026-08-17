@@ -9,10 +9,20 @@
 		registerPeriodicReminderCheck
 	} from '$lib/utils/reminders.js';
 	import { colorStore } from '$lib/stores/colors.svelte.js';
+	import { db } from '$lib/db/index.js';
+	import { cleanupOrphanedPdfs } from '$lib/utils/opfs.js';
 
 	let { children } = $props();
 
 	let sidebarCollapsed = $state(false);
+
+	async function cleanupOrphanedPdfsOnStartup() {
+		const applications = await db.applications.toArray();
+		const validRefs = new Set(
+			applications.map((app) => app.pdfRef).filter((ref): ref is string => !!ref)
+		);
+		await cleanupOrphanedPdfs(validRefs);
+	}
 
 	// Synchronize alerts with service worker and initialize locale when the page loads
 	$effect(() => {
@@ -20,6 +30,7 @@
 		colorStore.init();
 		syncRemindersToServiceWorker();
 		registerPeriodicReminderCheck();
+		cleanupOrphanedPdfsOnStartup();
 	});
 </script>
 
