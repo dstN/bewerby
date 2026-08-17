@@ -196,11 +196,17 @@
 			)
 		};
 
-		if (application?.id) {
-			// Update status history logs if status somehow changed (typically done on board drag)
-			await db.applications.update(application.id, $state.snapshot(appData));
-		} else {
-			await db.applications.add($state.snapshot(appData) as Application);
+		try {
+			if (application?.id) {
+				// Update status history logs if status somehow changed (typically done on board drag)
+				await db.applications.update(application.id, $state.snapshot(appData));
+			} else {
+				await db.applications.add($state.snapshot(appData) as Application);
+			}
+		} catch (err) {
+			console.error('Failed to save application:', err);
+			alert(t('errors.saveFailed'));
+			return; // keep the modal open with the user's input intact
 		}
 
 		// Only now that the new pdfRef is persisted is it safe to remove the

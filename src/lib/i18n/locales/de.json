@@ -168,6 +168,13 @@
 		"statusActive": "Aktiviert",
 		"statusInactive": "Deaktiviert",
 		"btnAllow": "Benachrichtigungen erlauben",
+		"storageTitle": "Speicher-Sicherheit",
+		"storageDesc": "Persistenter Speicher verhindert, dass der Browser deine Bewerbungsdaten bei Speicherplatzmangel automatisch löscht.",
+		"storagePersistedLabel": "Persistenz:",
+		"storagePersisted": "Aktiv",
+		"storageNotPersisted": "Nicht aktiv",
+		"btnRequestPersist": "Persistenz anfragen",
+		"storageUsageLabel": "Belegter Speicher",
 		"privacyTitle": "Sicherheit & Datenschutz",
 		"privacyItem1Title": "100% Client-Side",
 		"privacyItem1Desc": "Alle Daten (Jobtitel, Gehaltsvorstellungen, Notizen, PDFs) werden ausschließlich in der IndexedDB deines Browsers gespeichert.",
@@ -192,5 +199,11 @@
 		"message": "Ein unerwarteter Fehler ist aufgetreten. Deine Daten sind sicher — sie liegen weiterhin lokal auf diesem Gerät.",
 		"reload": "Neu laden",
 		"home": "Zum Kanban-Board"
+	},
+	"errors": {
+		"dbUnavailable": "Die lokale Datenbank konnte nicht geöffnet werden. Bitte lade die Seite neu oder prüfe, ob der private Modus deines Browsers Speicher blockiert.",
+		"saveFailed": "Speichern fehlgeschlagen. Bitte versuche es erneut.",
+		"deleteFailed": "Löschen fehlgeschlagen. Bitte versuche es erneut.",
+		"moveFailed": "Verschieben fehlgeschlagen. Bitte versuche es erneut."
 	}
 }

@@ -4,12 +4,42 @@
 		getNotificationPermissionState,
 		requestNotificationPermission
 	} from '$lib/utils/reminders.js';
+	import {
+		requestPersistentStorage,
+		isStoragePersisted,
+		getStorageEstimate,
+		type StorageEstimate
+	} from '$lib/utils/storage.js';
 
 	let permissionState = $derived(getNotificationPermissionState());
 
 	async function toggleNotifications() {
 		const result = await requestNotificationPermission();
 		permissionState = result;
+	}
+
+	let isPersisted = $state(false);
+	let storageEstimate = $state<StorageEstimate | null>(null);
+
+	$effect(() => {
+		isStoragePersisted().then((value) => (isPersisted = value));
+		getStorageEstimate().then((value) => (storageEstimate = value));
+	});
+
+	async function handleRequestPersist() {
+		isPersisted = await requestPersistentStorage();
+	}
+
+	function formatBytes(bytes: number): string {
+		if (bytes < 1024) return `${bytes} B`;
+		const units = ['KB', 'MB', 'GB'];
+		let value = bytes / 1024;
+		let unitIndex = 0;
+		while (value >= 1024 && unitIndex < units.length - 1) {
+			value /= 1024;
+			unitIndex++;
+		}
+		return `${value.toFixed(1)} ${units[unitIndex]}`;
 	}
 </script>
 
@@ -65,6 +95,52 @@
 					</button>
 				{/if}
 			</div>
+		</section>
+
+		<!-- Storage durability card -->
+		<section class="settings-card">
+			<h2 class="card-title">
+				<svg
+					width="20"
+					height="20"
+					viewBox="0 0 24 24"
+					fill="none"
+					aria-hidden="true"
+					class="card-icon"
+				>
+					<path
+						d="M4 7a8 3 0 1016 0 8 3 0 10-16 0zm0 0v10a8 3 0 0016 0V7"
+						stroke="currentColor"
+						stroke-width="1.5"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					/>
+				</svg>
+				{t('settings.storageTitle')}
+			</h2>
+			<p class="card-desc">{t('settings.storageDesc')}</p>
+
+			<div class="settings-control">
+				<div class="status-info">
+					<span class="status-label">{t('settings.storagePersistedLabel')}</span>
+					<span class="status-badge" class:granted={isPersisted}>
+						{isPersisted ? t('settings.storagePersisted') : t('settings.storageNotPersisted')}
+					</span>
+				</div>
+				{#if !isPersisted}
+					<button class="btn-primary" onclick={handleRequestPersist}>
+						{t('settings.btnRequestPersist')}
+					</button>
+				{/if}
+			</div>
+
+			{#if storageEstimate}
+				<p class="storage-usage">
+					{t('settings.storageUsageLabel')}: {formatBytes(storageEstimate.usageBytes)} / {formatBytes(
+						storageEstimate.quotaBytes
+					)}
+				</p>
+			{/if}
 		</section>
 
 		<!-- Privacy & Offline Info Card -->
@@ -222,6 +298,12 @@
 
 	.btn-primary:hover {
 		background-color: var(--color-accent-700);
+	}
+
+	.storage-usage {
+		font-size: 12px;
+		color: var(--text-tertiary);
+		margin: 0;
 	}
 
 	.info-list {

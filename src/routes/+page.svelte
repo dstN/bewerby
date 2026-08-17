@@ -121,12 +121,16 @@
 	}
 
 	async function deleteApp(id: number) {
-		if (confirm(t('kanban.confirmDelete'))) {
+		if (!confirm(t('kanban.confirmDelete'))) return;
+		try {
 			const app = await db.applications.get(id);
 			await db.applications.delete(id);
 			if (app?.pdfRef) {
 				await deletePdfFromOpfs(app.pdfRef);
 			}
+		} catch (err) {
+			console.error('Failed to delete application:', err);
+			alert(t('errors.deleteFailed'));
 		}
 	}
 
@@ -161,11 +165,16 @@
 			const now = Date.now();
 			const currentHistory = $state.snapshot(app.history) || [];
 			const updatedHistory = [...currentHistory, { status: targetStatus, timestamp: now }];
-			await db.applications.update(id, {
-				status: targetStatus,
-				updatedAt: now,
-				history: updatedHistory
-			});
+			try {
+				await db.applications.update(id, {
+					status: targetStatus,
+					updatedAt: now,
+					history: updatedHistory
+				});
+			} catch (err) {
+				console.error('Failed to move application:', err);
+				alert(t('errors.moveFailed'));
+			}
 		}
 	}
 

@@ -168,6 +168,13 @@
 		"statusActive": "Enabled",
 		"statusInactive": "Disabled",
 		"btnAllow": "Allow notifications",
+		"storageTitle": "Storage durability",
+		"storageDesc": "Persistent storage stops the browser from automatically clearing your application data when it runs low on space.",
+		"storagePersistedLabel": "Persistence:",
+		"storagePersisted": "Active",
+		"storageNotPersisted": "Not active",
+		"btnRequestPersist": "Request persistence",
+		"storageUsageLabel": "Storage used",
 		"privacyTitle": "Security & Privacy",
 		"privacyItem1Title": "100% Client-Side",
 		"privacyItem1Desc": "All data (job titles, salary expectations, notes, PDFs) are stored exclusively in your browser's IndexedDB.",
@@ -192,5 +199,11 @@
 		"message": "An unexpected error occurred. Your data is safe - it still lives locally on this device.",
 		"reload": "Reload",
 		"home": "Go to Kanban board"
+	},
+	"errors": {
+		"dbUnavailable": "The local database could not be opened. Please reload the page, or check whether your browser's private mode is blocking storage.",
+		"saveFailed": "Save failed. Please try again.",
+		"deleteFailed": "Delete failed. Please try again.",
+		"moveFailed": "Move failed. Please try again."
 	}
 }

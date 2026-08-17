@@ -11,10 +11,12 @@
 	import { colorStore } from '$lib/stores/colors.svelte.js';
 	import { db } from '$lib/db/index.js';
 	import { cleanupOrphanedPdfs } from '$lib/utils/opfs.js';
+	import { requestPersistentStorage } from '$lib/utils/storage.js';
 
 	let { children } = $props();
 
 	let sidebarCollapsed = $state(false);
+	let dbOpenError = $state(false);
 
 	async function cleanupOrphanedPdfsOnStartup() {
 		const applications = await db.applications.toArray();
@@ -31,6 +33,15 @@
 		syncRemindersToServiceWorker();
 		registerPeriodicReminderCheck();
 		cleanupOrphanedPdfsOnStartup();
+		requestPersistentStorage();
+
+		// Dexie opens lazily on first use; surface a failure (blocked upgrade,
+		// private-browsing restrictions, quota denial) instead of leaving every
+		// liveQuery-backed view silently empty with no explanation.
+		db.open().catch((err) => {
+			console.error('Failed to open database:', err);
+			dbOpenError = true;
+		});
 	});
 </script>
 
@@ -38,6 +49,12 @@
 	<title>{t('app.name')}</title>
 	<meta name="description" content={t('app.description')} />
 </svelte:head>
+
+{#if dbOpenError}
+	<div class="db-error-banner" role="alert">
+		{t('errors.dbUnavailable')}
+	</div>
+{/if}
 
 <div class="app-shell" class:sidebar-collapsed={sidebarCollapsed}>
 	<Sidebar collapsed={sidebarCollapsed} />
@@ -127,6 +144,18 @@
 </div>
 
 <style>
+	.db-error-banner {
+		position: sticky;
+		top: 0;
+		z-index: 200;
+		padding: 10px 20px;
+		background-color: var(--color-danger);
+		color: white;
+		font-size: 13px;
+		font-weight: 600;
+		text-align: center;
+	}
+
 	.app-shell {
 		display: grid;
 		grid-template-columns: 260px 1fr;

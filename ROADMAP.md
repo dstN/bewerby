@@ -39,7 +39,7 @@ Nicht alles muss angefasst werden. Folgendes ist geprüft und in Ordnung:
 | 5   | ✅ PDFs nach OPFS auslagern (Dexie-Schema v2)                      | `architecture` `refactoring` `v1-blocker`   | [#5](https://github.com/dstN/bewerby/issues/5)   |
 | 6   | ✅ Backup-Roundtrip: PDFs müssen Export und Import überleben       | `bug` `v1-blocker`                          | [#6](https://github.com/dstN/bewerby/issues/6)   |
 | 7   | ✅ Import darf den Datenbestand nicht mehr zerstören               | `bug` `v1-blocker`                          | [#7](https://github.com/dstN/bewerby/issues/7)   |
-| 8   | Datenhaltbarkeit absichern (Persistenz, Quota, Schreibfehler)      | `architecture` `v1-blocker`                 | [#8](https://github.com/dstN/bewerby/issues/8)   |
+| 8   | ✅ Datenhaltbarkeit absichern (Persistenz, Quota, Schreibfehler)   | `architecture` `v1-blocker`                 | [#8](https://github.com/dstN/bewerby/issues/8)   |
 | 9   | Status per Tastatur und Touch änderbar machen                      | `a11y` `enhancement` `v1-blocker`           | [#9](https://github.com/dstN/bewerby/issues/9)   |
 | 10  | Mobile Navigation und Board-Reflow                                 | `a11y` `enhancement` `v1-blocker`           | [#10](https://github.com/dstN/bewerby/issues/10) |
 | 11  | Reminder-Engine neu bauen                                          | `bug` `performance` `v1-blocker`            | [#11](https://github.com/dstN/bewerby/issues/11) |
@@ -105,6 +105,8 @@ Nicht alles muss angefasst werden. Folgendes ist geprüft und in Ordnung:
 **Soll:** Vollständige Schema-Validierung **vor** jedem Schreibzugriff. Der gesamte Import läuft in einer `db.transaction`, sodass ein Fehler zurückrollt statt zu zerstören. Der Nutzer wählt bewusst zwischen Zusammenführen und Ersetzen und bestätigt destruktive Varianten. Eine manipulierte Datei (fehlendes `tags`, fehlendes `history`, unbekannte `version`) führt zu einer klaren Meldung bei unverändertem Datenbestand.
 
 ### 8 — Datenhaltbarkeit absichern (Persistenz, Quota, Schreibfehler)
+
+**Status:** ✅ Erledigt (siehe [#8](https://github.com/dstN/bewerby/issues/8) für den schließenden Commit und Details). `src/lib/utils/storage.ts` mit `requestPersistentStorage`/`isStoragePersisted`/`getStorageEstimate`; Persistenz wird beim App-Start angefragt, Status + Speicherverbrauch sind in den Einstellungen sichtbar mit manuellem Anfrage-Button. `db.open()`-Fehler zeigen ein sichtbares Banner statt eine still leere App. Löschen, Verschieben (Drag) und Speichern haben jetzt alle einen `catch`-Pfad mit `alert()`-Feedback; ein fehlgeschlagenes Speichern lässt den Dialog mit den Eingaben des Nutzers offen statt sie zu verwerfen. Nicht mit Playwright verifiziert (mechanische, additive Änderungen ohne Happy-Path-Auswirkung) — nur Build/Typecheck/Lint.
 
 **Ist:** `navigator.storage.persist()` wird nie aufgerufen — der Browser darf die **einzige** Kopie der Nutzerdaten jederzeit evictieren. `db.open()` hat keinen Fehlerpfad (Private Browsing, blockiertes Upgrade, überschrittene Quota). Kein einziger Schreibzugriff hat eine Fehlerbehandlung: `src/lib/components/kanban/ApplicationModal.svelte:158`, `src/routes/+page.svelte:150` und `:115` laufen jeweils ohne `catch`, ein Quota-Fehler sieht für den Nutzer wie eine eingefrorene App aus.
 

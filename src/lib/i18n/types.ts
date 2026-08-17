@@ -174,6 +174,13 @@ export type TranslationKeys = {
 		statusActive: string;
 		statusInactive: string;
 		btnAllow: string;
+		storageTitle: string;
+		storageDesc: string;
+		storagePersistedLabel: string;
+		storagePersisted: string;
+		storageNotPersisted: string;
+		btnRequestPersist: string;
+		storageUsageLabel: string;
 		privacyTitle: string;
 		privacyItem1Title: string;
 		privacyItem1Desc: string;
@@ -198,5 +205,11 @@ export type TranslationKeys = {
 		message: string;
 		reload: string;
 		home: string;
+	};
+	errors: {
+		dbUnavailable: string;
+		saveFailed: string;
+		deleteFailed: string;
+		moveFailed: string;
 	};
 };
