@@ -127,6 +127,10 @@ export type TranslationKeys = {
 		cloudSyncDisabled: string;
 		manualTitle: string;
 		manualDesc: string;
+		importModeLabel: string;
+		importModeMerge: string;
+		importModeReplace: string;
+		confirmReplace: string;
 		localTitle: string;
 		localDesc: string;
 		localButton: string;

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { t } from '$lib/i18n/index.svelte.js';
 	import { SvelteMap } from 'svelte/reactivity';
-	import { db, type Application } from '$lib/db/index.js';
+	import { db, isValidApplication, type Application } from '$lib/db/index.js';
 	import { readPdfFromOpfs, writePdfToOpfs } from '$lib/utils/opfs.js';
 
 	const BACKUP_FORMAT_VERSION = 2;
@@ -66,6 +66,7 @@
 	let importStatus = $state('');
 	let importError = $state('');
 	let localDumpStatus = $state('');
+	let importMode = $state<'merge' | 'replace'>('merge');
 
 	// TIER 1: JSON Export
 	async function exportDatabase() {
@@ -106,14 +107,17 @@
 				return;
 			}
 
-			// Simple verification of keys
-			const appsToImport = data.applications as Application[];
-			const isValid = appsToImport.every(
-				(app) => typeof app.title === 'string' && typeof app.company === 'string'
-			);
-
-			if (!isValid) {
+			// Full structural validation of every row - not just title/company -
+			// so a malformed file is rejected up front instead of writing rows
+			// that later crash the board's or analytics' $derived computations.
+			const candidateApps = data.applications as unknown[];
+			if (!candidateApps.every(isValidApplication)) {
 				importError = 'backup.errorValidation';
+				return;
+			}
+			const appsToImport = candidateApps as Application[];
+
+			if (importMode === 'replace' && !confirm(t('backup.confirmReplace'))) {
 				return;
 			}
 
@@ -132,15 +136,26 @@
 				const newRef = await writePdfToOpfs(base64ToBlob(base64));
 				refRemap.set(oldRef, newRef);
 			}
-			const remappedApps = appsToImport.map((app) => ({
-				...app,
-				pdfRef: app.pdfRef ? (refRemap.get(app.pdfRef) ?? undefined) : undefined
-			}));
 
-			// Clear IndexedDB and bulk add
-			await db.applications.clear();
-			// Strip autoincrement ID if we want fresh insertions or preserve existing IDs
-			await db.applications.bulkAdd(remappedApps);
+			// Never trust a foreign export's autoincrement ids against this
+			// browser's live sequence - every imported row gets a fresh id
+			// regardless of import mode.
+			const rowsToInsert: Application[] = appsToImport.map((app) => {
+				const row: Application = { ...app };
+				delete row.id;
+				row.pdfRef = row.pdfRef ? refRemap.get(row.pdfRef) : undefined;
+				return row;
+			});
+
+			// The whole write happens in one transaction, so a failure partway
+			// through (e.g. a bulkAdd constraint error) rolls back completely
+			// instead of leaving the database half-cleared and half-imported.
+			await db.transaction('rw', db.applications, async () => {
+				if (importMode === 'replace') {
+					await db.applications.clear();
+				}
+				await db.applications.bulkAdd(rowsToInsert);
+			});
 
 			importStatus = 'backup.successImport';
 		} catch (err) {
@@ -200,6 +215,18 @@
 				<h2 class="card-title">{t('backup.manualTitle')}</h2>
 			</div>
 			<p class="card-desc">{t('backup.manualDesc')}</p>
+
+			<fieldset class="import-mode-group">
+				<legend>{t('backup.importModeLabel')}</legend>
+				<label class="import-mode-option">
+					<input type="radio" name="importMode" value="merge" bind:group={importMode} />
+					{t('backup.importModeMerge')}
+				</label>
+				<label class="import-mode-option">
+					<input type="radio" name="importMode" value="replace" bind:group={importMode} />
+					{t('backup.importModeReplace')}
+				</label>
+			</fieldset>
 
 			<div class="action-row">
 				<button class="btn-secondary" onclick={exportDatabase}>
@@ -361,6 +388,32 @@
 		line-height: 1.6;
 		color: var(--text-secondary);
 		margin: 0;
+	}
+
+	.import-mode-group {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+		border: 1px solid var(--border-default);
+		border-radius: var(--radius-lg);
+		padding: 12px 14px;
+		margin: 0;
+	}
+
+	.import-mode-group legend {
+		font-size: 12px;
+		font-weight: 600;
+		color: var(--text-secondary);
+		padding: 0 4px;
+	}
+
+	.import-mode-option {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		font-size: 13px;
+		color: var(--text-primary);
+		cursor: pointer;
 	}
 
 	.action-row {

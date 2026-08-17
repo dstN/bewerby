@@ -38,7 +38,7 @@ Nicht alles muss angefasst werden. Folgendes ist geprüft und in Ordnung:
 | 4   | ✅ Statische App-Shell prerendern und Fehlergrenze einziehen       | `architecture` `offline` `v1-blocker`       | [#4](https://github.com/dstN/bewerby/issues/4)   |
 | 5   | ✅ PDFs nach OPFS auslagern (Dexie-Schema v2)                      | `architecture` `refactoring` `v1-blocker`   | [#5](https://github.com/dstN/bewerby/issues/5)   |
 | 6   | ✅ Backup-Roundtrip: PDFs müssen Export und Import überleben       | `bug` `v1-blocker`                          | [#6](https://github.com/dstN/bewerby/issues/6)   |
-| 7   | Import darf den Datenbestand nicht mehr zerstören                  | `bug` `v1-blocker`                          | [#7](https://github.com/dstN/bewerby/issues/7)   |
+| 7   | ✅ Import darf den Datenbestand nicht mehr zerstören               | `bug` `v1-blocker`                          | [#7](https://github.com/dstN/bewerby/issues/7)   |
 | 8   | Datenhaltbarkeit absichern (Persistenz, Quota, Schreibfehler)      | `architecture` `v1-blocker`                 | [#8](https://github.com/dstN/bewerby/issues/8)   |
 | 9   | Status per Tastatur und Touch änderbar machen                      | `a11y` `enhancement` `v1-blocker`           | [#9](https://github.com/dstN/bewerby/issues/9)   |
 | 10  | Mobile Navigation und Board-Reflow                                 | `a11y` `enhancement` `v1-blocker`           | [#10](https://github.com/dstN/bewerby/issues/10) |
@@ -97,6 +97,8 @@ Nicht alles muss angefasst werden. Folgendes ist geprüft und in Ordnung:
 **Soll:** Ein Export enthält alle PDFs verlustfrei (Container-Format mit ausgelagerten Binärdaten oder Base64-kodiert), ist versioniert und lässt sich vollständig zurückspielen. Ein Roundtrip aus Bewerbung mit PDF → Export → Löschen → Import liefert das PDF öffenbar zurück.
 
 ### 7 — Import darf den Datenbestand nicht mehr zerstören
+
+**Status:** ✅ Erledigt (siehe [#7](https://github.com/dstN/bewerby/issues/7) für den schließenden Commit und Details). Vollständiger Struktur-Validator (`isValidApplication` in `src/lib/db/index.ts`) statt nur title/company, echte `db.transaction('rw', ...)` um clear()+bulkAdd(), Zusammenführen/Ersetzen-Wahl mit Bestätigungsdialog bei Ersetzen, importierte Zeilen bekommen immer frische IDs. Mit Playwright end-to-end verifiziert: ein Datensatz ohne `tags` wird abgelehnt und der Bestand bleibt unverändert; Zusammenführen behält bestehende Bewerbungen und ergänzt neue; Ersetzen fragt nach und leert den Bestand danach vollständig.
 
 **Ist:** `src/routes/backup/+page.svelte:64-66` ruft `db.applications.clear()` und danach `bulkAdd()` — ohne Transaktion und ohne Rückfrage. Die Validierung prüft nur `typeof app.title === 'string' && typeof app.company === 'string'` (`:56`). Ein Datensatz ohne `tags` crasht das Board dauerhaft (`src/routes/+page.svelte:37`), einer ohne `history` die Analytics (`src/routes/analytics/+page.svelte:31`). In Kombination mit dem fehlenden `+error.svelte` brickt eine einzige fehlerhafte Importdatei die App ohne Ausweg.
 

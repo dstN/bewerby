@@ -87,3 +87,54 @@ class BewerbyDatabase extends Dexie {
 }
 
 export const db = new BewerbyDatabase();
+
+const VALID_STATUSES = ['draft', 'sent', 'interview', 'accepted', 'rejected'] as const;
+const VALID_PRIORITIES = ['low', 'medium', 'high'] as const;
+const VALID_REMINDER_INTERVALS = ['10s', '24h', '48h', '7d', '14d', 'none'] as const;
+
+function isValidStatus(value: unknown): value is Application['status'] {
+	return typeof value === 'string' && (VALID_STATUSES as readonly string[]).includes(value);
+}
+
+function isValidStatusHistoryEntry(value: unknown): value is StatusHistory {
+	if (!value || typeof value !== 'object') return false;
+	const entry = value as Record<string, unknown>;
+	return isValidStatus(entry.status) && typeof entry.timestamp === 'number';
+}
+
+/**
+ * Full structural validation of an imported backup row - every field, not
+ * just title/company - so a malformed import fails cleanly up front instead
+ * of writing a row that later crashes the board's or analytics' $derived
+ * computations (e.g. a missing `tags` or `history`).
+ */
+export function isValidApplication(value: unknown): value is Application {
+	if (!value || typeof value !== 'object') return false;
+	const app = value as Record<string, unknown>;
+	return (
+		typeof app.title === 'string' &&
+		typeof app.company === 'string' &&
+		typeof app.url === 'string' &&
+		typeof app.salary === 'string' &&
+		typeof app.contactName === 'string' &&
+		typeof app.contactEmail === 'string' &&
+		typeof app.contactPhone === 'string' &&
+		typeof app.notes === 'string' &&
+		typeof app.priority === 'string' &&
+		(VALID_PRIORITIES as readonly string[]).includes(app.priority) &&
+		isValidStatus(app.status) &&
+		Array.isArray(app.tags) &&
+		app.tags.every((tag) => typeof tag === 'string') &&
+		(app.cardColor === undefined || typeof app.cardColor === 'string') &&
+		typeof app.reminderInterval === 'string' &&
+		(VALID_REMINDER_INTERVALS as readonly string[]).includes(app.reminderInterval) &&
+		(app.lastReminderSent === undefined || typeof app.lastReminderSent === 'number') &&
+		(app.appliedAt === undefined || typeof app.appliedAt === 'number') &&
+		typeof app.createdAt === 'number' &&
+		typeof app.updatedAt === 'number' &&
+		Array.isArray(app.history) &&
+		app.history.every(isValidStatusHistoryEntry) &&
+		(app.pdfName === undefined || typeof app.pdfName === 'string') &&
+		(app.pdfRef === undefined || typeof app.pdfRef === 'string')
+	);
+}
