@@ -59,6 +59,7 @@
 		"addCustomColor": "Eigene Farbe (+)",
 		"appliedAt": "Bewerbungsdatum",
 		"createdAt": "Erstellt am",
+		"confirmDiscard": "Es gibt ungespeicherte Änderungen. Wirklich verwerfen?",
 		"updatedAt": "Aktualisiert am",
 		"reminder": "Erinnerung",
 		"placeholderTitle": "z.B. Frontend Entwickler",

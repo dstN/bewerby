@@ -65,6 +65,7 @@ export type TranslationKeys = {
 		addCustomColor: string;
 		appliedAt: string;
 		createdAt: string;
+		confirmDiscard: string;
 		updatedAt: string;
 		reminder: string;
 		placeholderTitle: string;

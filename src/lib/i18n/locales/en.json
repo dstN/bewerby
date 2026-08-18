@@ -59,6 +59,7 @@
 		"addCustomColor": "Custom Color (+)",
 		"appliedAt": "Application date",
 		"createdAt": "Created at",
+		"confirmDiscard": "You have unsaved changes. Discard them?",
 		"updatedAt": "Updated at",
 		"reminder": "Reminder",
 		"placeholderTitle": "e.g. Frontend Developer",

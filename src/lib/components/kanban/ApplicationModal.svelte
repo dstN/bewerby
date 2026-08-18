@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount, untrack } from 'svelte';
 	import { t } from '$lib/i18n/index.svelte.js';
 	import { db, type Application } from '$lib/db/index.js';
 	import { extractTextFromPdf, parseJobDetailsFromText } from '$lib/utils/pdf.js';
@@ -65,6 +66,32 @@
 	let isParsingPdf = $state(false);
 	let isViewingPdf = $state(false);
 	let appliedDateStr = $state(formatDateForInput());
+	let dialogEl: HTMLDialogElement;
+	// Captured once the initial load below finishes, so isDirty only reflects
+	// actual user edits rather than the load effect's own field assignments.
+	let baselineSnapshot = $state('');
+
+	function snapshotFields(): string {
+		return JSON.stringify({
+			title,
+			company,
+			url,
+			salary,
+			contactName,
+			contactEmail,
+			contactPhone,
+			priority,
+			status,
+			reminderInterval,
+			cardColor,
+			notes,
+			tags,
+			appliedDateStr,
+			pdfRef
+		});
+	}
+
+	let isDirty = $derived(baselineSnapshot !== '' && snapshotFields() !== baselineSnapshot);
 
 	// Load existing application data if editing
 	$effect(() => {
@@ -94,7 +121,87 @@
 			originalPdfRef = undefined;
 			appliedDateStr = formatDateForInput(Date.now());
 		}
+		// untrack: reading every field here would make this load effect
+		// depend on them too, so any later edit would re-run it and quietly
+		// recapture the just-edited value as the new "clean" baseline.
+		baselineSnapshot = untrack(() => snapshotFields());
 	});
+
+	let justSaved = false;
+
+	onMount(() => {
+		const previouslyFocused = document.activeElement as HTMLElement | null;
+		const previousBodyOverflow = document.body.style.overflow;
+		document.body.style.overflow = 'hidden';
+		dialogEl.showModal();
+		return () => {
+			document.body.style.overflow = previousBodyOverflow;
+			previouslyFocused?.focus?.();
+		};
+	});
+
+	function requestClose() {
+		if (isDirty && !confirm(t('application.confirmDiscard'))) {
+			return;
+		}
+		dialogEl.close();
+	}
+
+	function handleCancelEvent(event: Event) {
+		// Fired on Escape before the dialog closes - block the automatic close
+		// so unsaved changes get the same confirmation as every other exit path.
+		if (isDirty) {
+			event.preventDefault();
+			if (confirm(t('application.confirmDiscard'))) {
+				dialogEl.close();
+			}
+		}
+	}
+
+	const FOCUSABLE_SELECTOR =
+		'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+	// Chromium's native <dialog> inert-containment stops Tab from reaching
+	// background content, but does not reliably wrap focus from the last
+	// element back to the first (it can fall through to <body>) - verified
+	// directly rather than assumed. This closes that gap manually.
+	function handleDialogKeydown(event: KeyboardEvent) {
+		if (event.key !== 'Tab') return;
+		const focusable = Array.from(dialogEl.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter(
+			(el) => el.offsetParent !== null || el === document.activeElement
+		);
+		if (focusable.length === 0) return;
+		const first = focusable[0];
+		const last = focusable[focusable.length - 1];
+		if (event.shiftKey && document.activeElement === first) {
+			event.preventDefault();
+			last.focus();
+		} else if (!event.shiftKey && document.activeElement === last) {
+			event.preventDefault();
+			first.focus();
+		}
+	}
+
+	function handleDialogClose() {
+		if (justSaved) {
+			onsave();
+		} else {
+			onclose();
+		}
+	}
+
+	function handleBackdropClick(event: MouseEvent) {
+		if (event.target !== dialogEl) return;
+		const rect = dialogEl.getBoundingClientRect();
+		const clickedInside =
+			event.clientX >= rect.left &&
+			event.clientX <= rect.right &&
+			event.clientY >= rect.top &&
+			event.clientY <= rect.bottom;
+		if (!clickedInside) {
+			requestClose();
+		}
+	}
 
 	function addTag() {
 		const clean = tagInput.trim().toLowerCase();
@@ -161,6 +268,11 @@
 		} finally {
 			isViewingPdf = false;
 		}
+	}
+
+	async function handleSubmit(event: SubmitEvent) {
+		event.preventDefault();
+		await save();
 	}
 
 	async function save() {
@@ -232,23 +344,29 @@
 			);
 		}
 
-		onsave();
+		justSaved = true;
+		dialogEl.close();
 	}
 </script>
 
-<div class="modal-backdrop" onclick={onclose} role="presentation">
-	<!-- svelte-ignore a11y_click_events_have_key_events -->
-	<div
-		class="modal-content"
-		tabindex="-1"
-		onclick={(e) => e.stopPropagation()}
-		role="dialog"
-		aria-modal="true"
-		aria-labelledby="modal-title"
-	>
+<dialog
+	bind:this={dialogEl}
+	class="modal-content"
+	aria-labelledby="modal-title"
+	onclose={handleDialogClose}
+	oncancel={handleCancelEvent}
+	onclick={handleBackdropClick}
+	onkeydown={handleDialogKeydown}
+>
+	<form onsubmit={handleSubmit}>
 		<header class="modal-header">
 			<h2 id="modal-title">{application ? t('kanban.actions.edit') : t('kanban.actions.add')}</h2>
-			<button class="btn-icon-close" onclick={onclose} aria-label={t('actions.cancel')}>
+			<button
+				type="button"
+				class="btn-icon-close"
+				onclick={requestClose}
+				aria-label={t('actions.cancel')}
+			>
 				<svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
 					<path
 						d="M18 6L6 18M6 6l12 12"
@@ -581,35 +699,33 @@
 		</div>
 
 		<footer class="modal-footer">
-			<button class="btn-flat" onclick={onclose}>{t('actions.cancel')}</button>
-			<button class="btn-primary" onclick={save} disabled={!title.trim() || !company.trim()}>
+			<button type="button" class="btn-flat" onclick={requestClose}>{t('actions.cancel')}</button>
+			<button type="submit" class="btn-primary" disabled={!title.trim() || !company.trim()}>
 				{t('actions.save')}
 			</button>
 		</footer>
-	</div>
-</div>
+	</form>
+</dialog>
 
 <style>
-	.modal-backdrop {
-		position: fixed;
-		inset: 0;
+	.modal-content::backdrop {
 		background-color: rgba(15, 23, 42, 0.4);
 		backdrop-filter: blur(4px);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		z-index: 100;
-		padding: 16px;
 	}
 
-	:root.dark .modal-backdrop {
+	:root.dark .modal-content::backdrop {
 		background-color: rgba(0, 0, 0, 0.6);
 	}
 
 	.modal-content {
+		position: fixed;
+		inset: 16px;
+		margin: auto;
 		width: 100%;
 		max-width: 640px;
 		max-height: 90dvh;
+		height: fit-content;
+		padding: 0;
 		background-color: var(--surface-0);
 		border: 1px solid var(--border-default);
 		border-radius: var(--radius-xl);
@@ -618,6 +734,10 @@
 		flex-direction: column;
 		overflow: hidden;
 		animation: modal-enter var(--duration-normal) var(--ease-out-expo);
+	}
+
+	.modal-content form {
+		display: contents;
 	}
 
 	@keyframes modal-enter {
