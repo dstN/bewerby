@@ -147,6 +147,10 @@
 
 	<div class="sidebar-footer">
 		{#if showLabels}
+			<nav class="legal-links" aria-label={t('legal.impressum.title')}>
+				<a href={resolve('/impressum')}>{t('nav.impressum')}</a>
+				<a href={resolve('/datenschutz')}>{t('nav.datenschutz')}</a>
+			</nav>
 			<span class="version-tag">v0.0.1</span>
 		{/if}
 	</div>
@@ -254,9 +258,28 @@
 	}
 
 	.sidebar-footer {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
 		padding: 12px 16px;
 		border-top: 1px solid var(--sidebar-border);
 		flex-shrink: 0;
+	}
+
+	.legal-links {
+		display: flex;
+		gap: 10px;
+	}
+
+	.legal-links a {
+		font-size: 11px;
+		color: var(--text-tertiary);
+		text-decoration: none;
+	}
+
+	.legal-links a:hover {
+		color: var(--sidebar-text-active);
+		text-decoration: underline;
 	}
 
 	.version-tag {

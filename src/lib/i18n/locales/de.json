@@ -8,7 +8,9 @@
 		"kanban": "Kanban-Board",
 		"analytics": "Statistiken",
 		"backup": "Backup & Sync",
-		"settings": "Einstellungen"
+		"settings": "Einstellungen",
+		"impressum": "Impressum",
+		"datenschutz": "Datenschutz"
 	},
 	"kanban": {
 		"columns": {
@@ -183,7 +185,53 @@
 		"privacyItem2Title": "Kein Server",
 		"privacyItem2Desc": "Es gibt keine zentrale Datenbank. Keine Registrierung notwendig.",
 		"privacyItem3Title": "Offline-First",
-		"privacyItem3Desc": "Bewerby funktioniert vollständig offline. Die Anwendung kann als PWA auf dem Desktop oder Smartphone installiert werden."
+		"privacyItem3Desc": "Bewerby funktioniert vollständig offline. Die Anwendung kann als PWA auf dem Desktop oder Smartphone installiert werden.",
+		"privacyPolicyLink": "Vollständige Datenschutzerklärung ansehen"
+	},
+	"legal": {
+		"placeholderBanner": "Platzhalter — vor einer öffentlichen Veröffentlichung ausfüllen. Diese Angaben wurden absichtlich nicht automatisch erzeugt: ein Impressum mit erfundenen Namen oder Adressen wäre irreführend und rechtlich unwirksam.",
+		"impressum": {
+			"title": "Impressum",
+			"infoTitle": "Angaben gemäß § 5 Digitale-Dienste-Gesetz (DDG)",
+			"namePlaceholder": "[Vollständiger Name bzw. Firmenname]",
+			"addressPlaceholder": "[Straße Hausnummer, PLZ Ort, Land]",
+			"contactTitle": "Kontakt",
+			"contactPlaceholder": "[Telefonnummer]\n[E-Mail-Adresse]",
+			"responsibleTitle": "Verantwortlich für den Inhalt nach § 18 Abs. 2 Medienstaatsvertrag (MStV)",
+			"responsiblePlaceholder": "[Name und Anschrift wie oben]"
+		},
+		"datenschutz": {
+			"title": "Datenschutzerklärung",
+			"intro": "Bewerby verarbeitet deine Bewerbungsdaten ausschließlich lokal auf diesem Gerät. Diese Erklärung beschreibt, welche Daten technisch anfallen, wo sie liegen und welche Rechte dir zustehen.",
+			"controllerTitle": "Verantwortlicher im Sinne der DSGVO",
+			"controllerPlaceholder": "[Name]\n[Anschrift]\n[E-Mail-Adresse]",
+			"principleTitle": "Grundprinzip: ausschließlich lokale Verarbeitung",
+			"principleBody": "Alle Inhalte, die du in bewerby einträgst — Jobtitel, Firmenname, Kontaktdaten, Gehaltsvorstellung, Notizen und hochgeladene PDF-Anschreiben — werden ausschließlich im lokalen Speicher deines Browsers abgelegt (IndexedDB und Origin Private File System). Es gibt keinen Server, an den diese Inhalte übertragen, der sie empfängt oder speichert. Ein Blick in den Quellcode oder die Netzwerkanalyse deines Browsers bestätigt das: bewerby stellt außer dem initialen Laden der Anwendung selbst keine Netzwerkverbindungen her.",
+			"storageTitle": "Wo welche Daten liegen",
+			"storageIndexedDbTitle": "IndexedDB (Datenbank „bewerby-db\")",
+			"storageIndexedDbDesc": "Enthält alle Bewerbungsdatensätze: Jobtitel, Firma, Kontaktdaten, Notizen, Priorität, Status, Tags, Termine und den Verlauf der Statusänderungen.",
+			"storageOpfsTitle": "Origin Private File System (OPFS)",
+			"storageOpfsDesc": "Enthält die Binärdaten hochgeladener PDF-Anschreiben. Jede Bewerbung verweist nur auf einen Dateinamen in diesem Speicher.",
+			"storageLocalTitle": "localStorage",
+			"storageLocalDesc": "Enthält ausschließlich technisch notwendige Einstellungen ohne Personenbezug: das gewählte Farbschema, die gewählte Sprache, benutzerdefinierte Farbmarkierungen und interne Markierungen, welche Erinnerungen bereits angezeigt wurden. Da diese Einträge rein funktional sind und keinem Tracking dienen, ist dafür keine Cookie-Einwilligung erforderlich.",
+			"storageTableKeyHeader": "Key",
+			"storageTablePurposeHeader": "Zweck",
+			"storageKeyThemeDesc": "Hell/Dunkel-Einstellung",
+			"storageKeyLocaleDesc": "Gewählte Sprache (de/en)",
+			"storageKeyColorsDesc": "Selbst angelegte Kartenfarben",
+			"storageKeyNotifiedDesc": "Interne Markierung bereits angezeigter Erinnerungen",
+			"noTrackingTitle": "Keine Cookies, kein Tracking, keine Drittanbieter",
+			"noTrackingBody": "bewerby bindet keine Analyse- oder Trackingdienste ein, setzt keine Cookies zu Werbe- oder Statistikzwecken und lädt keine Inhalte von Drittanbieter-Servern. Schriftarten sind lokal in der Anwendung enthalten statt von einem externen Font-Dienst geladen.",
+			"hostingTitle": "Serverprotokolle beim Hosting",
+			"hostingBody": "Beim Aufruf dieser Seite verarbeitet der Webserver des Hosting-Anbieters technisch unvermeidbare Zugriffsdaten (z. B. IP-Adresse, Zeitpunkt des Zugriffs, angeforderte Datei), wie bei jedem Website-Aufruf üblich. Diese Protokolldaten betreffen ausschließlich die Auslieferung der Anwendung selbst, nicht die Bewerbungsdaten, die du in der Anwendung einträgst.",
+			"hostingPlaceholder": "[Name und Anschrift des Hosting-Anbieters, Speicherdauer der Zugriffsprotokolle]",
+			"rightsTitle": "Deine Rechte",
+			"rightsBody": "Da alle Bewerbungsdaten ausschließlich auf deinem Gerät liegen, übst du deine Rechte auf Auskunft, Berichtigung und Löschung direkt in der Anwendung aus: Bewerbungen lassen sich jederzeit einsehen, bearbeiten und einzeln löschen. Über die Backup-Seite kannst du alle Daten als Datei exportieren (Recht auf Datenübertragbarkeit) und wieder importieren.",
+			"contactRightsTitle": "Kontakt für Anfragen",
+			"contactRightsPlaceholder": "[E-Mail-Adresse für datenschutzrechtliche Anfragen]",
+			"changesTitle": "Änderungen dieser Erklärung",
+			"changesBody": "Diese Erklärung wird angepasst, sobald sich an der tatsächlichen Datenverarbeitung etwas ändert."
+		}
 	},
 	"empty": {
 		"kanban": "Noch keine Bewerbungen vorhanden. Erstelle deine erste Bewerbung, um loszulegen.",

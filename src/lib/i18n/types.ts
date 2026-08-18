@@ -15,6 +15,8 @@ export type TranslationKeys = {
 		analytics: string;
 		backup: string;
 		settings: string;
+		impressum: string;
+		datenschutz: string;
 	};
 	kanban: {
 		columns: {
@@ -190,6 +192,52 @@ export type TranslationKeys = {
 		privacyItem2Desc: string;
 		privacyItem3Title: string;
 		privacyItem3Desc: string;
+		privacyPolicyLink: string;
+	};
+	legal: {
+		placeholderBanner: string;
+		impressum: {
+			title: string;
+			infoTitle: string;
+			namePlaceholder: string;
+			addressPlaceholder: string;
+			contactTitle: string;
+			contactPlaceholder: string;
+			responsibleTitle: string;
+			responsiblePlaceholder: string;
+		};
+		datenschutz: {
+			title: string;
+			intro: string;
+			controllerTitle: string;
+			controllerPlaceholder: string;
+			principleTitle: string;
+			principleBody: string;
+			storageTitle: string;
+			storageIndexedDbTitle: string;
+			storageIndexedDbDesc: string;
+			storageOpfsTitle: string;
+			storageOpfsDesc: string;
+			storageLocalTitle: string;
+			storageLocalDesc: string;
+			storageTableKeyHeader: string;
+			storageTablePurposeHeader: string;
+			storageKeyThemeDesc: string;
+			storageKeyLocaleDesc: string;
+			storageKeyColorsDesc: string;
+			storageKeyNotifiedDesc: string;
+			noTrackingTitle: string;
+			noTrackingBody: string;
+			hostingTitle: string;
+			hostingBody: string;
+			hostingPlaceholder: string;
+			rightsTitle: string;
+			rightsBody: string;
+			contactRightsTitle: string;
+			contactRightsPlaceholder: string;
+			changesTitle: string;
+			changesBody: string;
+		};
 	};
 	empty: {
 		kanban: string;

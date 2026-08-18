@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { t } from '$lib/i18n/index.svelte.js';
+	import { resolve } from '$app/paths';
 	import {
 		getNotificationPermissionState,
 		requestNotificationPermission
@@ -177,6 +178,7 @@
 					{t('settings.privacyItem3Desc')}
 				</li>
 			</ul>
+			<a class="privacy-link" href={resolve('/datenschutz')}>{t('settings.privacyPolicyLink')}</a>
 		</section>
 	</div>
 </div>
@@ -319,6 +321,19 @@
 		font-size: 13px;
 		line-height: 1.6;
 		color: var(--text-secondary);
+	}
+
+	.privacy-link {
+		display: inline-block;
+		margin-top: 4px;
+		font-size: 13px;
+		font-weight: 600;
+		color: var(--color-accent-600);
+		text-decoration: none;
+	}
+
+	.privacy-link:hover {
+		text-decoration: underline;
 	}
 
 	@media (max-width: 768px) {

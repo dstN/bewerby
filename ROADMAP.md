@@ -44,7 +44,7 @@ Nicht alles muss angefasst werden. Folgendes ist geprüft und in Ordnung:
 | 10  | ✅ Mobile Navigation und Board-Reflow                              | `a11y` `enhancement` `v1-blocker`           | [#10](https://github.com/dstN/bewerby/issues/10) |
 | 11  | ✅ Reminder-Engine neu bauen                                       | `bug` `performance` `v1-blocker`            | [#11](https://github.com/dstN/bewerby/issues/11) |
 | 12  | ✅ Security-Header und Content-Security-Policy                     | `security` `v1-blocker`                     | [#12](https://github.com/dstN/bewerby/issues/12) |
-| 13  | Impressum und Datenschutzerklärung                                 | `dsgvo` `documentation` `v1-blocker`        | [#13](https://github.com/dstN/bewerby/issues/13) |
+| 13  | ✅ Impressum und Datenschutzerklärung                              | `dsgvo` `documentation` `v1-blocker`        | [#13](https://github.com/dstN/bewerby/issues/13) |
 | 14  | Recht auf Löschung umsetzen                                        | `dsgvo` `enhancement` `v1-blocker`          | [#14](https://github.com/dstN/bewerby/issues/14) |
 | 15  | Deployment verifizieren und dokumentieren                          | `architecture` `documentation` `v1-blocker` | [#15](https://github.com/dstN/bewerby/issues/15) |
 
@@ -145,6 +145,8 @@ Nicht alles muss angefasst werden. Folgendes ist geprüft und in Ordnung:
 **Soll:** Eine strikte CSP ohne `unsafe-eval` (durch pdf.js 6 möglich), plus HSTS, `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `frame-ancestors` gegen Clickjacking und eine restriktive `Permissions-Policy`. Das Inline-Script trägt einen Nonce oder wandert in eine externe Datei. Die Header werden über `hooks.server.ts` gesetzt, damit sie unabhängig von der Apache-Konfiguration greifen.
 
 ### 13 — Impressum und Datenschutzerklärung
+
+**Status:** ✅ Erledigt (siehe [#13](https://github.com/dstN/bewerby/issues/13) für den schließenden Commit und Details). Neue Routen `/impressum` und `/datenschutz`, aus dem Sidebar-Footer sowie zusätzlich von der Einstellungsseite verlinkt, beide vollständig zweisprachig. Bewusste Design-Entscheidung: die identitätsbezogenen Felder (Name, Anschrift, Kontakt) sind als unübersehbar markierte Platzhalter umgesetzt statt automatisch erfundener Daten — ein Impressum mit Fantasienamen wäre irreführend und rechtlich unwirksam, und die tatsächliche Identität des Betreibers kann nicht aus dem Code erschlossen werden. Die Datenschutzerklärung selbst ist inhaltlich vollständig und technisch akkurat aus dem tatsächlichen Codeverhalten geschrieben (lokale Verarbeitung, IndexedDB/OPFS-Aufteilung, alle vier `localStorage`-Keys tabellarisch mit Zweck, kein Tracking, Rechte-Ausübung über bestehende Lösch-/Export-Funktionen). Mit Playwright verifiziert: beide Seiten laden vorgerendert, Platzhalter-Banner sichtbar, Verlinkung von Sidebar und Einstellungen funktioniert, Sprachumschaltung greift, keine CSP-Verstöße.
 
 **Ist:** Weder Impressum noch Datenschutzerklärung existieren. Die Einstellungsseite enthält lediglich drei statische Datenschutz-Stichpunkte (`src/routes/settings/+page.svelte:54-73`). Für einen öffentlich erreichbaren, aus Deutschland betriebenen Dienst sind beide zwingend (§ 5 DDG, Art. 13 DSGVO).
 
