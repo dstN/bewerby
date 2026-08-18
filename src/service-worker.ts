@@ -107,44 +107,6 @@ sw.addEventListener('fetch', (event) => {
 	);
 });
 
-/**
- * Local reminder notification check.
- * This runs entirely client-side with no server involved.
- * The main app will post messages to the SW with reminder data.
- */
-sw.addEventListener('message', (event) => {
-	if (event.data?.type === 'CHECK_REMINDERS') {
-		const reminders = event.data.reminders as Array<{
-			id: string;
-			title: string;
-			body: string;
-			dueAt: number;
-		}>;
-
-		const now = Date.now();
-
-		for (const reminder of reminders) {
-			if (reminder.dueAt <= now && reminder.dueAt > 0) {
-				sw.registration.showNotification(reminder.title, {
-					body: reminder.body,
-					icon: '/icons/apple-touch-icon.png',
-					tag: `reminder-${reminder.id}`,
-					data: { applicationId: reminder.id }
-				});
-			} else if (reminder.dueAt - now > 0 && reminder.dueAt - now <= 300000) {
-				setTimeout(() => {
-					sw.registration.showNotification(reminder.title, {
-						body: reminder.body,
-						icon: '/icons/apple-touch-icon.png',
-						tag: `reminder-${reminder.id}`,
-						data: { applicationId: reminder.id }
-					});
-				}, reminder.dueAt - now);
-			}
-		}
-	}
-});
-
 // Handle notification clicks
 sw.addEventListener('notificationclick', (event) => {
 	event.notification.close();

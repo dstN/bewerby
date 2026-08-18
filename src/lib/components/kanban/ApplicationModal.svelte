@@ -410,7 +410,6 @@
 					<label for="reminder">{t('application.reminder')}</label>
 					<select id="reminder" bind:value={reminderInterval}>
 						<option value="none">{t('reminders.none')}</option>
-						<option value="10s">{t('reminders.seconds10')}</option>
 						<option value="24h">{t('reminders.hours24')}</option>
 						<option value="48h">{t('reminders.hours48')}</option>
 						<option value="7d">{t('reminders.days7')}</option>

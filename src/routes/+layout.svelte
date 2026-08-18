@@ -6,10 +6,7 @@
 	import { afterNavigate } from '$app/navigation';
 	import { browser } from '$app/environment';
 	import Sidebar from '$lib/components/layout/Sidebar.svelte';
-	import {
-		syncRemindersToServiceWorker,
-		registerPeriodicReminderCheck
-	} from '$lib/utils/reminders.js';
+	import { startReminderEngine, registerBackgroundSyncBestEffort } from '$lib/utils/reminders.js';
 	import { colorStore } from '$lib/stores/colors.svelte.js';
 	import { db } from '$lib/db/index.js';
 	import { cleanupOrphanedPdfs } from '$lib/utils/opfs.js';
@@ -76,10 +73,9 @@
 	$effect(() => {
 		i18n.init();
 		colorStore.init();
-		syncRemindersToServiceWorker();
-		registerPeriodicReminderCheck();
 		cleanupOrphanedPdfsOnStartup();
 		requestPersistentStorage();
+		registerBackgroundSyncBestEffort();
 
 		// Dexie opens lazily on first use; surface a failure (blocked upgrade,
 		// private-browsing restrictions, quota denial) instead of leaving every
@@ -88,6 +84,9 @@
 			console.error('Failed to open database:', err);
 			dbOpenError = true;
 		});
+
+		const stopReminderEngine = startReminderEngine();
+		return () => stopReminderEngine();
 	});
 </script>
 

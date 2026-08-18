@@ -98,7 +98,6 @@ export type TranslationKeys = {
 		selectDate: string;
 	};
 	reminders: {
-		seconds10: string;
 		none: string;
 		hours24: string;
 		hours48: string;

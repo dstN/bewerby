@@ -20,7 +20,7 @@ export interface Application {
 	status: 'draft' | 'sent' | 'interview' | 'accepted' | 'rejected';
 	tags: string[];
 	cardColor?: string;
-	reminderInterval: '10s' | '24h' | '48h' | '7d' | '14d' | 'none';
+	reminderInterval: '24h' | '48h' | '7d' | '14d' | 'none';
 	lastReminderSent?: number;
 	appliedAt?: number;
 	createdAt: number;
@@ -90,7 +90,7 @@ export const db = new BewerbyDatabase();
 
 const VALID_STATUSES = ['draft', 'sent', 'interview', 'accepted', 'rejected'] as const;
 const VALID_PRIORITIES = ['low', 'medium', 'high'] as const;
-const VALID_REMINDER_INTERVALS = ['10s', '24h', '48h', '7d', '14d', 'none'] as const;
+const VALID_REMINDER_INTERVALS = ['24h', '48h', '7d', '14d', 'none'] as const;
 
 function isValidStatus(value: unknown): value is Application['status'] {
 	return typeof value === 'string' && (VALID_STATUSES as readonly string[]).includes(value);

@@ -92,7 +92,6 @@
 		"selectDate": "Kalender öffnen"
 	},
 	"reminders": {
-		"seconds10": "10s (Test)",
 		"none": "Keine",
 		"hours24": "24 Stunden",
 		"hours48": "48 Stunden",
@@ -166,7 +165,7 @@
 		"title": "Einstellungen",
 		"subtitle": "Konfiguriere bewerby für deinen Bewerbungsalltag.",
 		"remindersTitle": "Erinnerungen & Benachrichtigungen",
-		"remindersDesc": "Aktiviere Push-Mitteilungen auf deinem Gerät, um fällige Nachfragen zu deinen Bewerbungen nicht zu verpassen. Alle Daten bleiben privat auf diesem Gerät.",
+		"remindersDesc": "Aktiviere Benachrichtigungen auf deinem Gerät, um fällige Nachfragen zu deinen Bewerbungen nicht zu verpassen. Alle Daten bleiben privat auf diesem Gerät. Erinnerungen funktionieren nur, während bewerby in einem Browser-Tab geöffnet ist (auch im Hintergrund) — bei vollständig geschlossenem Browser können sie nicht zugestellt werden, da bewerby keinen Server nutzt.",
 		"statusLabel": "Status:",
 		"statusActive": "Aktiviert",
 		"statusInactive": "Deaktiviert",

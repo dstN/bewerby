@@ -7,6 +7,7 @@
 	import { colorStore } from '$lib/stores/colors.svelte.js';
 	import { deletePdfFromOpfs } from '$lib/utils/opfs.js';
 	import { announcer } from '$lib/stores/announcer.svelte.js';
+	import { getReminderDueAt } from '$lib/utils/reminders.js';
 
 	// Columns definition
 	const columns = [
@@ -77,26 +78,15 @@
 		return Array.from(tagsSet);
 	});
 
-	// Check due reminders (In-app startup check)
+	// Check due reminders (In-app startup check). Uses the same
+	// getReminderDueAt() the notification engine schedules against, so the
+	// banner and the actual notification can never disagree about what's due.
 	let activeAlerts = $derived.by(() => {
 		const list = $applicationsStore ?? [];
 		const now = Date.now();
 		return list.filter((app) => {
-			if (
-				app.reminderInterval === 'none' ||
-				app.status === 'accepted' ||
-				app.status === 'rejected'
-			) {
-				return false;
-			}
-			let intervalMs = 0;
-			if (app.reminderInterval === '24h') intervalMs = 24 * 60 * 60 * 1000;
-			else if (app.reminderInterval === '48h') intervalMs = 48 * 60 * 60 * 1000;
-			else if (app.reminderInterval === '7d') intervalMs = 7 * 24 * 60 * 60 * 1000;
-			else if (app.reminderInterval === '14d') intervalMs = 14 * 24 * 60 * 60 * 1000;
-
-			// If last updated + interval is in the past, a check-up reminder is due
-			return app.updatedAt + intervalMs <= now;
+			const dueAt = getReminderDueAt(app);
+			return dueAt !== null && dueAt <= now;
 		});
 	});
 

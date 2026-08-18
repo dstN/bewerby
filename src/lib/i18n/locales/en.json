@@ -92,7 +92,6 @@
 		"selectDate": "Open date picker"
 	},
 	"reminders": {
-		"seconds10": "10s (Test)",
 		"none": "None",
 		"hours24": "24 hours",
 		"hours48": "48 hours",
@@ -166,7 +165,7 @@
 		"title": "Settings",
 		"subtitle": "Configure bewerby for your daily application tracking.",
 		"remindersTitle": "Reminders & Notifications",
-		"remindersDesc": "Enable push notifications on your device to ensure you don't miss follow-ups. All data remains private on this device.",
+		"remindersDesc": "Enable notifications on your device to make sure you don't miss follow-ups. All data remains private on this device. Reminders only work while bewerby is open in a browser tab (foreground or backgrounded) - they can't be delivered while the browser is fully closed, since bewerby doesn't use a server.",
 		"statusLabel": "Status:",
 		"statusActive": "Enabled",
 		"statusInactive": "Disabled",
