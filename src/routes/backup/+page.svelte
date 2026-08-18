@@ -467,6 +467,14 @@
 		position: relative;
 	}
 
+	/* The real <input type="file"> inside is visually hidden (.sr-only), so a
+	   focus ring on the input itself would be imperceptible; show it on this
+	   label instead when the hidden input receives keyboard focus. */
+	.file-uploader:focus-within {
+		outline: 2px solid var(--color-accent-500);
+		outline-offset: 2px;
+	}
+
 	.status-msg {
 		font-size: 13px;
 		font-weight: 500;

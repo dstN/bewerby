@@ -178,7 +178,7 @@ Zusätzlich: `engines`-Feld in `package.json` ergänzt (gibt `.npmrc`s `engine-s
 
 | #   | Aufgabe                                                | Labels                             | Issue                                            |
 | :-- | :----------------------------------------------------- | :--------------------------------- | :----------------------------------------------- |
-| 16  | Fokus-Sichtbarkeit wiederherstellen                    | `a11y`                             | [#16](https://github.com/dstN/bewerby/issues/16) |
+| 16  | ✅ Fokus-Sichtbarkeit wiederherstellen                  | `a11y`                             | [#16](https://github.com/dstN/bewerby/issues/16) |
 | 17  | Kontrastverstöße beheben                               | `a11y`                             | [#17](https://github.com/dstN/bewerby/issues/17) |
 | 18  | Fokusmanagement im Bearbeitungsdialog                  | `a11y` `refactoring`               | [#18](https://github.com/dstN/bewerby/issues/18) |
 | 19  | DatePicker als bedienbares Kalender-Grid               | `a11y` `performance` `refactoring` | [#19](https://github.com/dstN/bewerby/issues/19) |
@@ -193,6 +193,8 @@ Zusätzlich: `engines`-Feld in `package.json` ergänzt (gibt `.npmrc`s `engine-s
 | 28  | Cloud-Sync-Platzhalter ehrlich und barrierefrei machen | `a11y`                             | [#28](https://github.com/dstN/bewerby/issues/28) |
 
 ### 16 — Fokus-Sichtbarkeit wiederherstellen
+
+**Status:** ✅ Erledigt (siehe [#16](https://github.com/dstN/bewerby/issues/16) für den schließenden Commit und Details). Alle vier `outline: none`-Überschreibungen entfernt (Board-Suchfeld/-Filter, Modal-Formularfelder, DatePicker-Trigger); Letzterer hatte den Ring sogar explizit für `:focus-visible` unterdrückt und bekommt jetzt eine eigene Regel mit echtem `outline: 2px solid`. Die drei `sr-only`-Inputs (PDF-Upload, Farbwähler, Backup-Import) stylen ihr sichtbares Label jetzt über `:focus-within`. `.btn-swatch-remove` ist nun zusätzlich zu `:hover` auch bei `:focus-visible` bzw. `:focus-within` auf dem Wrapper sichtbar. Mit Playwright verifiziert — entscheidend dabei: `:focus-visible` reagiert in Chromium nicht auf programmatisches `.focus()`, sondern nur auf echte Tastaturnavigation, daher wurden die entsprechenden Testfälle über tatsächliche `Tab`-Tastendrücke geprüft statt über direkte Fokus-Zuweisung.
 
 **Ist:** `src/app.css:184-188` definiert einen globalen `:focus-visible`-Ring, der an vier Stellen durch spezifischeres `outline: none` geschlagen wird: `src/routes/+page.svelte:482` und `:503` (Suchfeld und die vier Filter-Selects — letztere haben dadurch **gar keine** Fokusanzeige), `src/lib/components/kanban/ApplicationModal.svelte:565` (alle Formularfelder) und `src/lib/components/common/DatePicker.svelte:355` sowie `:364-370`, wo der Ring explizit auch für `:focus-visible` entfernt wird. Ersatz ist jeweils nur ein 1px-Randfarbwechsel, was WCAG 2.4.11 nicht genügt. Zusätzlich nehmen drei `sr-only`-Inputs (PDF-Upload `:186`, Farbwähler `:345`, Backup-Import `src/routes/backup/+page.svelte:136`) den Fokus, während sie unsichtbar sind, und `.btn-swatch-remove` ist mit `opacity: 0` nur per `:hover` sichtbar (`ApplicationModal.svelte:770`) — für Tastaturnutzer also ein fokussierbarer, unsichtbarer Button.
 

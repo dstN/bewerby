@@ -725,6 +725,16 @@
 		background-color: var(--surface-1);
 	}
 
+	/* The real <input type="file"> is visually hidden (.sr-only) so the label
+	   provides the click target; without this, a keyboard user tabbing to
+	   that input would see no focus indicator at all. */
+	.pdf-upload-box:focus-within {
+		outline: 2px solid var(--color-accent-500);
+		outline-offset: 2px;
+		border-color: var(--color-accent-500);
+		background-color: var(--surface-1);
+	}
+
 	.pdf-upload-box.parsing {
 		border-color: var(--color-warning);
 		background-color: var(--surface-1);
@@ -780,7 +790,6 @@
 		color: var(--text-primary);
 		font-family: inherit;
 		font-size: 14px;
-		outline: none;
 		transition: border-color var(--duration-fast) ease;
 	}
 
@@ -995,7 +1004,9 @@
 		transition: opacity var(--duration-fast) ease;
 	}
 
-	.custom-swatch-wrapper:hover .btn-swatch-remove {
+	.custom-swatch-wrapper:hover .btn-swatch-remove,
+	.custom-swatch-wrapper:focus-within .btn-swatch-remove,
+	.btn-swatch-remove:focus-visible {
 		opacity: 1;
 	}
 
@@ -1021,6 +1032,16 @@
 		border-color: var(--color-accent-500);
 		color: var(--color-accent-500);
 		transform: scale(1.1);
+	}
+
+	/* The real <input type="color"> is visually hidden (.hidden-color-input)
+	   so this button-styled label provides the visible target; without this,
+	   a keyboard user tabbing to that input would see no focus indicator. */
+	.btn-add-color:focus-within {
+		outline: 2px solid var(--color-accent-500);
+		outline-offset: 2px;
+		border-color: var(--color-accent-500);
+		color: var(--color-accent-500);
 	}
 
 	.hidden-color-input {

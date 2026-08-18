@@ -407,7 +407,6 @@
 		font-family: inherit;
 		box-shadow: none;
 		cursor: pointer;
-		outline: none;
 		transition: border-color var(--duration-fast) ease;
 	}
 
@@ -416,9 +415,15 @@
 		background-color: var(--surface-0);
 	}
 
-	.datepicker-trigger:focus-visible,
 	.datepicker-trigger.active {
-		outline: none;
+		border-color: var(--color-accent-500);
+		background-color: var(--surface-0);
+		box-shadow: none;
+	}
+
+	.datepicker-trigger:focus-visible {
+		outline: 2px solid var(--color-accent-500);
+		outline-offset: 2px;
 		border-color: var(--color-accent-500);
 		background-color: var(--surface-0);
 		box-shadow: none;
