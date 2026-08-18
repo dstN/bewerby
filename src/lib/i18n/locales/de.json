@@ -92,7 +92,9 @@
 		"daysAgo3": "Vor 3 Tagen",
 		"weekAgo1": "Vor 1 Woche",
 		"weeksAgo2": "Vor 2 Wochen",
-		"selectDate": "Kalender öffnen"
+		"selectDate": "Kalender öffnen",
+		"prevMonth": "Vorheriger Monat",
+		"nextMonth": "Nächster Monat"
 	},
 	"reminders": {
 		"none": "Keine",

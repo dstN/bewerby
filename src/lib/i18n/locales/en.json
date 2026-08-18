@@ -92,7 +92,9 @@
 		"daysAgo3": "3 days ago",
 		"weekAgo1": "1 week ago",
 		"weeksAgo2": "2 weeks ago",
-		"selectDate": "Open date picker"
+		"selectDate": "Open date picker",
+		"prevMonth": "Previous month",
+		"nextMonth": "Next month"
 	},
 	"reminders": {
 		"none": "None",

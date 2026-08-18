@@ -99,6 +99,8 @@ export type TranslationKeys = {
 		weekAgo1: string;
 		weeksAgo2: string;
 		selectDate: string;
+		prevMonth: string;
+		nextMonth: string;
 	};
 	reminders: {
 		none: string;

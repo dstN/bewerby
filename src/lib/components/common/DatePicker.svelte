@@ -1,6 +1,7 @@
 <script lang="ts">
-	import { scale } from 'svelte/transition';
+	import { tick } from 'svelte';
 	import { t, i18n } from '$lib/i18n/index.svelte.js';
+	import { announcer } from '$lib/stores/announcer.svelte.js';
 
 	let {
 		value = $bindable(''),
@@ -12,8 +13,24 @@
 		disabled?: boolean;
 	} = $props();
 
+	const uid = $props.id();
+	const popoverId = `datepicker-popup-${uid}`;
+	const anchorName = `--datepicker-anchor-${uid}`;
+
 	let isOpen = $state(false);
-	let containerRef = $state<HTMLElement | null>(null);
+	let popupEl: HTMLElement | undefined = $state();
+
+	function toDateStr(y: number, m: number, d: number): string {
+		return `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+	}
+
+	// Delegates overflow (day 32, day -2, ...) to the Date constructor instead
+	// of hand-rolled month/year carrying, anchored at noon so DST transitions
+	// never shift the result onto the wrong calendar day.
+	function addDays(y: number, m: number, d: number, delta: number) {
+		const dt = new Date(y, m, d + delta, 12, 0, 0);
+		return { year: dt.getFullYear(), month: dt.getMonth(), day: dt.getDate() };
+	}
 
 	// Parse initial or current value to initialize view state
 	function parseInitialParts(dateStr: string) {
@@ -28,22 +45,8 @@
 	let initial = parseInitialParts(value);
 	let viewYear = $state(initial.year);
 	let viewMonth = $state(initial.month);
-	let popupStyle = $state('');
-
-	function updatePosition() {
-		if (!containerRef || !isOpen) return;
-		const rect = containerRef.getBoundingClientRect();
-		const popupHeight = 340;
-		const spaceBelow = window.innerHeight - rect.bottom;
-
-		if (spaceBelow < popupHeight && rect.top > popupHeight) {
-			// Flip above
-			popupStyle = `position: fixed; bottom: ${window.innerHeight - rect.top + 8}px; left: ${rect.left}px; width: 19.5rem; z-index: 99999;`;
-		} else {
-			// Open below
-			popupStyle = `position: fixed; top: ${rect.bottom + 8}px; left: ${rect.left}px; width: 19.5rem; z-index: 99999;`;
-		}
-	}
+	// The single roving tab-stop within the day grid (WAI-ARIA grid pattern).
+	let focusedDateStr = $state(value || toDateStr(initial.year, initial.month, initial.day));
 
 	// Sync view month/year when value changes externally while closed
 	$effect(() => {
@@ -54,45 +57,25 @@
 		}
 	});
 
-	// Close popup on outside click or Escape, and track scroll/resize for fixed positioning
-	$effect(() => {
-		if (!isOpen) return;
-
-		updatePosition();
-
-		function handleOutsideClick(event: MouseEvent) {
-			if (containerRef && !containerRef.contains(event.target as Node)) {
-				// Check if click was inside fixed popover since it is fixed
-				const popupEl = document.querySelector('.datepicker-popup');
-				if (popupEl && popupEl.contains(event.target as Node)) {
-					return;
-				}
-				isOpen = false;
-			}
+	// Locale-aware first day of the week (ISO numbering: 1=Monday...7=Sunday).
+	// Current engines expose this via Intl.Locale#getWeekInfo(); a few expose
+	// it as a `weekInfo` getter instead. Monday is the fallback if neither
+	// exists, matching the previous hardcoded behavior.
+	function getWeekStartsOn(locale: string): number {
+		try {
+			const l = new Intl.Locale(locale) as Intl.Locale & {
+				weekInfo?: { firstDay: number };
+				getWeekInfo?: () => { firstDay: number };
+			};
+			const info = l.weekInfo ?? l.getWeekInfo?.();
+			if (info?.firstDay) return info.firstDay;
+		} catch {
+			// Intl.Locale unsupported here - fall through to the default below.
 		}
+		return 1;
+	}
 
-		function handleKeydown(event: KeyboardEvent) {
-			if (event.key === 'Escape') {
-				isOpen = false;
-			}
-		}
-
-		function handleScrollResize() {
-			updatePosition();
-		}
-
-		window.addEventListener('click', handleOutsideClick, true);
-		window.addEventListener('keydown', handleKeydown, true);
-		window.addEventListener('scroll', handleScrollResize, true);
-		window.addEventListener('resize', handleScrollResize, true);
-
-		return () => {
-			window.removeEventListener('click', handleOutsideClick, true);
-			window.removeEventListener('keydown', handleKeydown, true);
-			window.removeEventListener('scroll', handleScrollResize, true);
-			window.removeEventListener('resize', handleScrollResize, true);
-		};
-	});
+	let weekStartsOn = $derived(getWeekStartsOn(i18n.locale));
 
 	// Derived formatted display for trigger button
 	let formattedDisplay = $derived.by(() => {
@@ -117,12 +100,13 @@
 		});
 	});
 
-	// Derived localized weekday headers (starting on Monday: Mo, Di, Mi, Do, Fr, Sa, So)
+	// Derived localized weekday headers, starting on the locale's first day of the week
 	let weekdayHeaders = $derived.by(() => {
 		const headers: string[] = [];
-		// Jan 5, 2026 is a Monday
+		// Jan 5, 2026 is a Monday (ISO weekday 1); shift to the locale's start day.
+		const base = new Date(2026, 0, 5 + (weekStartsOn - 1), 12, 0, 0);
 		for (let i = 0; i < 7; i++) {
-			const d = new Date(2026, 0, 5 + i, 12, 0, 0);
+			const d = new Date(base.getFullYear(), base.getMonth(), base.getDate() + i, 12, 0, 0);
 			headers.push(d.toLocaleDateString(i18n.locale, { weekday: 'short' }));
 		}
 		return headers;
@@ -138,17 +122,17 @@
 		dateStr: string;
 	}
 
-	// Calculate 42-cell grid (6 weeks) for calendar view
+	// Calculate 42-cell grid (6 weeks) for calendar view, aligned to the locale's week start
 	let gridCells = $derived.by(() => {
 		const cells: DayCell[] = [];
 		const firstDayOfMonth = new Date(viewYear, viewMonth, 1, 12, 0, 0);
 		const lastDayOfMonth = new Date(viewYear, viewMonth + 1, 0, 12, 0, 0);
 
-		// Get weekday of first day (0=Sun, 1=Mon... -> convert to Mon=0...Sun=6)
-		let startOffset = (firstDayOfMonth.getDay() + 6) % 7;
+		const isoDay = firstDayOfMonth.getDay() === 0 ? 7 : firstDayOfMonth.getDay();
+		const startOffset = (isoDay - weekStartsOn + 7) % 7;
 
 		const now = new Date();
-		const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+		const todayStr = toDateStr(now.getFullYear(), now.getMonth(), now.getDate());
 
 		// Previous month tail days
 		const prevMonthLastDay = new Date(viewYear, viewMonth, 0, 12, 0, 0).getDate();
@@ -156,7 +140,7 @@
 			const d = prevMonthLastDay - i;
 			const m = viewMonth === 0 ? 11 : viewMonth - 1;
 			const y = viewMonth === 0 ? viewYear - 1 : viewYear;
-			const dateStr = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+			const dateStr = toDateStr(y, m, d);
 			cells.push({
 				day: d,
 				month: m,
@@ -170,7 +154,7 @@
 
 		// Current month days
 		for (let d = 1; d <= lastDayOfMonth.getDate(); d++) {
-			const dateStr = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+			const dateStr = toDateStr(viewYear, viewMonth, d);
 			cells.push({
 				day: d,
 				month: viewMonth,
@@ -187,7 +171,7 @@
 		for (let d = 1; d <= remaining; d++) {
 			const m = viewMonth === 11 ? 0 : viewMonth + 1;
 			const y = viewMonth === 11 ? viewYear + 1 : viewYear;
-			const dateStr = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+			const dateStr = toDateStr(y, m, d);
 			cells.push({
 				day: d,
 				month: m,
@@ -202,20 +186,55 @@
 		return cells;
 	});
 
+	// Grouped into weeks for role="row" grid semantics.
+	let weeks = $derived.by(() => {
+		const result: DayCell[][] = [];
+		for (let i = 0; i < gridCells.length; i += 7) {
+			result.push(gridCells.slice(i, i + 7));
+		}
+		return result;
+	});
+
+	// Full accessible name per cell (weekday, day, month, year) so a screen
+	// reader announces real date context instead of just a bare number.
+	function cellLabel(cell: DayCell): string {
+		const d = new Date(cell.year, cell.month, cell.day, 12, 0, 0);
+		const label = d.toLocaleDateString(i18n.locale, {
+			weekday: 'long',
+			day: 'numeric',
+			month: 'long',
+			year: 'numeric'
+		});
+		return cell.isToday ? `${label} (${t('datepicker.today')})` : label;
+	}
+
+	function pickFocusCandidate(): string {
+		const inView = (dateStr: string) =>
+			gridCells.some((c) => c.dateStr === dateStr && c.isCurrentMonth);
+		if (value && inView(value)) return value;
+		const now = new Date();
+		const todayStr = toDateStr(now.getFullYear(), now.getMonth(), now.getDate());
+		if (inView(todayStr)) return todayStr;
+		return (gridCells.find((c) => c.isCurrentMonth) ?? gridCells[0]).dateStr;
+	}
+
+	async function focusCell(dateStr: string) {
+		await tick();
+		popupEl?.querySelector<HTMLButtonElement>(`[data-date="${dateStr}"]`)?.focus();
+	}
+
 	function selectDate(dateStr: string) {
 		value = dateStr;
-		isOpen = false;
+		focusedDateStr = dateStr;
+		popupEl?.hidePopover();
 	}
 
 	function selectQuickDate(daysAgo: number) {
-		const target = new Date(Date.now() - daysAgo * 86400000);
-		const y = target.getFullYear();
-		const m = target.getMonth();
-		const d = target.getDate();
-		const dateStr = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-		viewYear = y;
-		viewMonth = m;
-		selectDate(dateStr);
+		const now = new Date();
+		const target = addDays(now.getFullYear(), now.getMonth(), now.getDate(), -daysAgo);
+		viewYear = target.year;
+		viewMonth = target.month;
+		selectDate(toDateStr(target.year, target.month, target.day));
 	}
 
 	function prevMonth() {
@@ -225,6 +244,8 @@
 		} else {
 			viewMonth -= 1;
 		}
+		focusedDateStr = pickFocusCandidate();
+		announcer.announce(headerMonthYear);
 	}
 
 	function nextMonth() {
@@ -234,25 +255,102 @@
 		} else {
 			viewMonth += 1;
 		}
+		focusedDateStr = pickFocusCandidate();
+		announcer.announce(headerMonthYear);
 	}
 
-	function toggleOpen() {
-		if (!disabled) {
-			isOpen = !isOpen;
+	// WAI-ARIA grid pattern: arrow keys move the roving tab-stop, Home/End
+	// jump to the start/end of the visible week, PageUp/PageDown (+Shift for
+	// a year) change month/year, Enter/Space select.
+	async function handleGridKeydown(event: KeyboardEvent, cell: DayCell) {
+		let deltaDays = 0;
+		let deltaMonths = 0;
+		let deltaYears = 0;
+
+		switch (event.key) {
+			case 'ArrowLeft':
+				deltaDays = -1;
+				break;
+			case 'ArrowRight':
+				deltaDays = 1;
+				break;
+			case 'ArrowUp':
+				deltaDays = -7;
+				break;
+			case 'ArrowDown':
+				deltaDays = 7;
+				break;
+			case 'Home': {
+				const isoDay = new Date(cell.year, cell.month, cell.day, 12).getDay() || 7;
+				deltaDays = -((isoDay - weekStartsOn + 7) % 7);
+				break;
+			}
+			case 'End': {
+				const isoDay = new Date(cell.year, cell.month, cell.day, 12).getDay() || 7;
+				deltaDays = 6 - ((isoDay - weekStartsOn + 7) % 7);
+				break;
+			}
+			case 'PageUp':
+				if (event.shiftKey) deltaYears = -1;
+				else deltaMonths = -1;
+				break;
+			case 'PageDown':
+				if (event.shiftKey) deltaYears = 1;
+				else deltaMonths = 1;
+				break;
+			case 'Enter':
+			case ' ':
+				event.preventDefault();
+				selectDate(cell.dateStr);
+				return;
+			default:
+				return;
+		}
+		event.preventDefault();
+
+		let target: { year: number; month: number; day: number };
+		if (deltaMonths !== 0 || deltaYears !== 0) {
+			// PageUp/PageDown only ever set one of these, never both.
+			const dt = new Date(cell.year + deltaYears, cell.month + deltaMonths, cell.day, 12, 0, 0);
+			target = { year: dt.getFullYear(), month: dt.getMonth(), day: dt.getDate() };
+		} else {
+			target = addDays(cell.year, cell.month, cell.day, deltaDays);
+		}
+
+		const monthChanged = target.year !== viewYear || target.month !== viewMonth;
+		viewYear = target.year;
+		viewMonth = target.month;
+		focusedDateStr = toDateStr(target.year, target.month, target.day);
+
+		if (monthChanged) {
+			announcer.announce(headerMonthYear);
+		}
+
+		await focusCell(focusedDateStr);
+	}
+
+	function handlePopoverToggle(event: Event) {
+		const newState = (event as Event & { newState?: string }).newState;
+		isOpen = newState === 'open';
+		if (isOpen) {
+			focusedDateStr = pickFocusCandidate();
+			focusCell(focusedDateStr);
 		}
 	}
 </script>
 
-<div class="datepicker-wrapper" bind:this={containerRef}>
-	<!-- Hidden native input to preserve exact form accessibility and bindability -->
-	<input {id} type="date" bind:value class="sr-only" {disabled} />
+<div class="datepicker-wrapper">
+	<!-- Value-mirror only, not an alternate tab stop - the trigger button below
+	     is the sole accessible entry point (see issue #19). -->
+	<input {id} type="date" bind:value class="sr-only" {disabled} tabindex="-1" aria-hidden="true" />
 
 	<button
 		type="button"
 		class="datepicker-trigger"
 		class:active={isOpen}
 		{disabled}
-		onclick={toggleOpen}
+		popovertarget={popoverId}
+		style:anchor-name={anchorName}
 		aria-haspopup="dialog"
 		aria-expanded={isOpen}
 		aria-label={t('datepicker.selectDate')}
@@ -302,87 +400,109 @@
 		</svg>
 	</button>
 
-	{#if isOpen}
-		<div
-			class="datepicker-popup"
-			style={popupStyle}
-			role="dialog"
-			aria-modal="true"
-			aria-label={t('datepicker.selectDate')}
-			transition:scale={{ duration: 180, start: 0.95 }}
-		>
-			<!-- Quick shortcuts pill bar -->
-			<div class="quick-shortcuts">
-				<button type="button" class="btn-quick" onclick={() => selectQuickDate(0)}
-					>{t('datepicker.today')}</button
-				>
-				<button type="button" class="btn-quick" onclick={() => selectQuickDate(1)}
-					>{t('datepicker.yesterday')}</button
-				>
-				<button type="button" class="btn-quick" onclick={() => selectQuickDate(3)}
-					>{t('datepicker.daysAgo3')}</button
-				>
-				<button type="button" class="btn-quick" onclick={() => selectQuickDate(7)}
-					>{t('datepicker.weekAgo1')}</button
-				>
-				<button type="button" class="btn-quick" onclick={() => selectQuickDate(14)}
-					>{t('datepicker.weeksAgo2')}</button
-				>
-			</div>
-
-			<!-- Month navigation bar -->
-			<header class="calendar-header">
-				<button type="button" class="btn-nav" onclick={prevMonth} aria-label="Vorheriger Monat">
-					<svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-						<path
-							d="M15 19l-7-7 7-7"
-							stroke="currentColor"
-							stroke-width="2"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-						/>
-					</svg>
-				</button>
-
-				<span class="header-title">{headerMonthYear}</span>
-
-				<button type="button" class="btn-nav" onclick={nextMonth} aria-label="Nächster Monat">
-					<svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-						<path
-							d="M9 5l7 7-7 7"
-							stroke="currentColor"
-							stroke-width="2"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-						/>
-					</svg>
-				</button>
-			</header>
-
-			<!-- Weekday headers -->
-			<div class="weekday-grid">
-				{#each weekdayHeaders as wday, i (i)}
-					<span class="weekday-cell">{wday}</span>
-				{/each}
-			</div>
-
-			<!-- Day grid -->
-			<div class="days-grid">
-				{#each gridCells as cell (cell.dateStr)}
-					<button
-						type="button"
-						class="day-cell"
-						class:current-month={cell.isCurrentMonth}
-						class:today={cell.isToday}
-						class:selected={cell.isSelected}
-						onclick={() => selectDate(cell.dateStr)}
-					>
-						{cell.day}
-					</button>
-				{/each}
-			</div>
+	<div
+		bind:this={popupEl}
+		id={popoverId}
+		popover="auto"
+		class="datepicker-popup"
+		style:position-anchor={anchorName}
+		role="dialog"
+		aria-label={t('datepicker.selectDate')}
+		ontoggle={handlePopoverToggle}
+	>
+		<!-- Quick shortcuts pill bar -->
+		<div class="quick-shortcuts">
+			<button type="button" class="btn-quick" onclick={() => selectQuickDate(0)}
+				>{t('datepicker.today')}</button
+			>
+			<button type="button" class="btn-quick" onclick={() => selectQuickDate(1)}
+				>{t('datepicker.yesterday')}</button
+			>
+			<button type="button" class="btn-quick" onclick={() => selectQuickDate(3)}
+				>{t('datepicker.daysAgo3')}</button
+			>
+			<button type="button" class="btn-quick" onclick={() => selectQuickDate(7)}
+				>{t('datepicker.weekAgo1')}</button
+			>
+			<button type="button" class="btn-quick" onclick={() => selectQuickDate(14)}
+				>{t('datepicker.weeksAgo2')}</button
+			>
 		</div>
-	{/if}
+
+		<!-- Month navigation bar -->
+		<header class="calendar-header">
+			<button
+				type="button"
+				class="btn-nav"
+				onclick={prevMonth}
+				aria-label={t('datepicker.prevMonth')}
+			>
+				<svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+					<path
+						d="M15 19l-7-7 7-7"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					/>
+				</svg>
+			</button>
+
+			<span class="header-title" id="{popoverId}-title">{headerMonthYear}</span>
+
+			<button
+				type="button"
+				class="btn-nav"
+				onclick={nextMonth}
+				aria-label={t('datepicker.nextMonth')}
+			>
+				<svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+					<path
+						d="M9 5l7 7-7 7"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					/>
+				</svg>
+			</button>
+		</header>
+
+		<!-- Weekday headers (decorative - each grid cell carries its own full
+		     weekday name in its accessible label, so this row is redundant for AT). -->
+		<div class="weekday-grid" aria-hidden="true">
+			{#each weekdayHeaders as wday, i (i)}
+				<span class="weekday-cell">{wday}</span>
+			{/each}
+		</div>
+
+		<!-- Day grid: WAI-ARIA grid pattern, one roving tab-stop, arrow-key navigation. -->
+		<div class="days-grid" role="grid" aria-labelledby="{popoverId}-title">
+			{#each weeks as week, wi (wi)}
+				<div class="grid-row" role="row">
+					{#each week as cell (cell.dateStr)}
+						<button
+							type="button"
+							role="gridcell"
+							class="day-cell"
+							class:current-month={cell.isCurrentMonth}
+							class:today={cell.isToday}
+							class:selected={cell.isSelected}
+							data-date={cell.dateStr}
+							tabindex={cell.dateStr === focusedDateStr ? 0 : -1}
+							aria-selected={cell.isSelected}
+							aria-current={cell.isToday ? 'date' : undefined}
+							aria-label={cellLabel(cell)}
+							onclick={() => selectDate(cell.dateStr)}
+							onkeydown={(e) => handleGridKeydown(e, cell)}
+						>
+							{cell.day}
+						</button>
+					{/each}
+				</div>
+			{/each}
+		</div>
+	</div>
 </div>
 
 <style>
@@ -454,13 +574,38 @@
 		transform: rotate(180deg);
 	}
 
-	/* Popover Card */
+	/* Popover Card - positioned via CSS anchor positioning against the trigger
+	   button (anchor-name/position-anchor above), so no JS position tracking
+	   or scroll/resize listeners are needed. position-try-fallbacks flips it
+	   above the trigger when there isn't room below. */
 	.datepicker-popup {
+		position: fixed;
+		position-area: bottom span-right;
+		position-try-fallbacks: flip-block;
+		margin: 0;
+		margin-top: 8px;
+		width: 19.5rem;
+		max-width: calc(100vw - 32px);
 		padding: 1rem;
 		background-color: var(--surface-0);
 		border: 1px solid var(--border-default);
 		border-radius: var(--radius-lg);
 		box-shadow: var(--shadow-lg);
+	}
+
+	.datepicker-popup:popover-open {
+		animation: modal-enter var(--duration-fast) var(--ease-out-expo);
+	}
+
+	@keyframes modal-enter {
+		from {
+			opacity: 0;
+			transform: scale(0.95);
+		}
+		to {
+			opacity: 1;
+			transform: scale(1);
+		}
 	}
 
 	/* Quick Shortcuts Pill Bar */
@@ -543,6 +688,11 @@
 
 	/* Days Grid */
 	.days-grid {
+		display: grid;
+		gap: 0.25rem;
+	}
+
+	.grid-row {
 		display: grid;
 		grid-template-columns: repeat(7, 1fr);
 		gap: 0.25rem;
