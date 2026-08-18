@@ -30,6 +30,8 @@
 		"dueAlerts": "Fällige Wiedervorlagen",
 		"requiresFollowUp": "erfordert Rückfragen",
 		"statusChangedAnnouncement": "{company} wurde zu \"{status}\" verschoben.",
+		"deletedAnnouncement": "Bewerbung bei {company} wurde gelöscht.",
+		"savedAnnouncement": "Bewerbung bei {company} wurde gespeichert.",
 		"changeStatus": "Status ändern für {company}",
 		"subtitle": "Verwalte deine Job-Bewerbungen offline und sicher.",
 		"searchPlaceholder": "Suchen nach Firma, Titel...",

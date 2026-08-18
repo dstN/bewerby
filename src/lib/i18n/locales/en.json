@@ -30,6 +30,8 @@
 		"dueAlerts": "Due reminders",
 		"requiresFollowUp": "requires follow-up",
 		"statusChangedAnnouncement": "{company} was moved to \"{status}\".",
+		"deletedAnnouncement": "The application at {company} was deleted.",
+		"savedAnnouncement": "The application at {company} was saved.",
 		"changeStatus": "Change status for {company}",
 		"subtitle": "Manage your job applications offline and securely.",
 		"searchPlaceholder": "Search by company, title...",

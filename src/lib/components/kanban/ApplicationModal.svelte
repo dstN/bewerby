@@ -342,6 +342,8 @@
 					.replace('{company}', company.trim())
 					.replace('{status}', t(`kanban.columns.${status}`))
 			);
+		} else {
+			announcer.announce(t('kanban.savedAnnouncement').replace('{company}', company.trim()));
 		}
 
 		justSaved = true;

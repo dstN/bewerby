@@ -111,7 +111,7 @@
 		selectedApp = null;
 	}
 
-	async function deleteApp(id: number) {
+	async function deleteApp(id: number, company: string) {
 		if (!confirm(t('kanban.confirmDelete'))) return;
 		try {
 			const app = await db.applications.get(id);
@@ -119,6 +119,7 @@
 			if (app?.pdfRef) {
 				await deletePdfFromOpfs(app.pdfRef);
 			}
+			announcer.announce(t('kanban.deletedAnnouncement').replace('{company}', company));
 		} catch (err) {
 			console.error('Failed to delete application:', err);
 			alert(t('errors.deleteFailed'));
@@ -331,9 +332,9 @@
 					</button>
 				</header>
 
-				<div class="cards-list">
+				<ul class="cards-list">
 					{#each columnApps as app (app.id)}
-						<div
+						<li
 							class="card"
 							class:specular-card={!!app.cardColor && app.cardColor !== 'none'}
 							style:--card-glow-color={app.cardColor && app.cardColor !== 'none'
@@ -342,18 +343,8 @@
 							draggable="true"
 							ondragstart={(e) => handleDragStart(e, app.id!)}
 							ondragend={handleDragEnd}
-							onclick={() => openEditModal(app)}
-							role="button"
-							tabindex="0"
-							onkeydown={(e) => {
-								if (e.key === 'Enter' || e.key === ' ') {
-									e.preventDefault();
-									openEditModal(app);
-								}
-							}}
-							aria-label={`${app.company}, ${app.title}`}
 						>
-							<div class="card-body">
+							<button type="button" class="card-open-btn" onclick={() => openEditModal(app)}>
 								<div class="card-top">
 									<div class="card-company-row">
 										{#if app.cardColor && app.cardColor !== 'none'}
@@ -370,7 +361,7 @@
 										class:priority-high={app.priority === 'high'}
 										class:priority-low={app.priority === 'low'}
 									>
-										{app.priority === 'high' ? '!!!' : app.priority === 'low' ? 'Low' : 'Mid'}
+										{t(`application.priorities.${app.priority}`)}
 									</span>
 								</div>
 								<h3 class="card-title">{app.title}</h3>
@@ -389,7 +380,7 @@
 										{/if}
 									</div>
 								{/if}
-							</div>
+							</button>
 
 							<footer class="card-footer">
 								<span class="card-date">
@@ -416,7 +407,7 @@
 									class="btn-card-delete"
 									onclick={(e) => {
 										e.stopPropagation();
-										deleteApp(app.id!);
+										deleteApp(app.id!, app.company);
 									}}
 									aria-label="Löschen"
 								>
@@ -431,9 +422,9 @@
 									</svg>
 								</button>
 							</footer>
-						</div>
+						</li>
 					{/each}
-				</div>
+				</ul>
 			</div>
 		{/each}
 	</div>
@@ -688,6 +679,9 @@
 		flex-direction: column;
 		gap: 8px;
 		min-height: 380px;
+		list-style: none;
+		margin: 0;
+		padding: 0;
 	}
 
 	.card {
@@ -703,6 +697,22 @@
 			transform var(--duration-fast) var(--ease-out-expo),
 			box-shadow var(--duration-fast) var(--ease-out-expo),
 			border-color var(--duration-fast) ease;
+	}
+
+	/* Opens the edit modal - wraps everything except the footer controls
+	   (status select, delete) so those stay independently reachable instead
+	   of nesting interactive elements inside this button (see issue #20). */
+	.card-open-btn {
+		display: block;
+		width: 100%;
+		background: none;
+		border: none;
+		padding: 0;
+		margin: 0;
+		font: inherit;
+		color: inherit;
+		text-align: left;
+		cursor: pointer;
 	}
 
 	.card:hover {

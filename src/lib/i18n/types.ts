@@ -36,6 +36,8 @@ export type TranslationKeys = {
 		dueAlerts: string;
 		requiresFollowUp: string;
 		statusChangedAnnouncement: string;
+		deletedAnnouncement: string;
+		savedAnnouncement: string;
 		changeStatus: string;
 		subtitle: string;
 		searchPlaceholder: string;
