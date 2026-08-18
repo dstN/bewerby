@@ -11,6 +11,7 @@
 		getStorageEstimate,
 		type StorageEstimate
 	} from '$lib/utils/storage.js';
+	import { eraseAllData } from '$lib/utils/eraseAllData.js';
 
 	let permissionState = $derived(getNotificationPermissionState());
 
@@ -41,6 +42,21 @@
 			unitIndex++;
 		}
 		return `${value.toFixed(1)} ${units[unitIndex]}`;
+	}
+
+	let isErasing = $state(false);
+
+	async function handleEraseAllData() {
+		if (!confirm(t('settings.eraseConfirm'))) return;
+		isErasing = true;
+		try {
+			await eraseAllData();
+			window.location.reload();
+		} catch (err) {
+			console.error('Failed to erase all data:', err);
+			alert(t('settings.eraseFailed'));
+			isErasing = false;
+		}
 	}
 </script>
 
@@ -142,6 +158,36 @@
 					)}
 				</p>
 			{/if}
+		</section>
+
+		<!-- Right to erasure -->
+		<section class="settings-card danger-card">
+			<h2 class="card-title">
+				<svg
+					width="20"
+					height="20"
+					viewBox="0 0 24 24"
+					fill="none"
+					aria-hidden="true"
+					class="card-icon danger-icon"
+				>
+					<path
+						d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+						stroke="currentColor"
+						stroke-width="1.5"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					/>
+				</svg>
+				{t('settings.eraseTitle')}
+			</h2>
+			<p class="card-desc">{t('settings.eraseDesc')}</p>
+			<div class="settings-control">
+				<a class="export-hint-link" href={resolve('/backup')}>{t('settings.eraseExportHint')}</a>
+				<button class="btn-danger" onclick={handleEraseAllData} disabled={isErasing}>
+					{isErasing ? t('settings.eraseInProgress') : t('settings.eraseButton')}
+				</button>
+			</div>
 		</section>
 
 		<!-- Privacy & Offline Info Card -->
@@ -300,6 +346,47 @@
 
 	.btn-primary:hover {
 		background-color: var(--color-accent-700);
+	}
+
+	.danger-card {
+		border-color: rgba(220, 38, 38, 0.3);
+	}
+
+	.danger-icon {
+		color: var(--color-danger) !important;
+	}
+
+	.export-hint-link {
+		font-size: 13px;
+		color: var(--color-accent-600);
+		text-decoration: none;
+	}
+
+	.export-hint-link:hover {
+		text-decoration: underline;
+	}
+
+	.btn-danger {
+		padding: 8px 16px;
+		background-color: var(--color-danger);
+		color: white;
+		border: none;
+		border-radius: var(--radius-md);
+		font-family: inherit;
+		font-size: 13px;
+		font-weight: 600;
+		cursor: pointer;
+		transition: background-color var(--duration-fast) ease;
+		white-space: nowrap;
+	}
+
+	.btn-danger:hover:not(:disabled) {
+		background-color: #b91c1c;
+	}
+
+	.btn-danger:disabled {
+		opacity: 0.6;
+		cursor: not-allowed;
 	}
 
 	.storage-usage {

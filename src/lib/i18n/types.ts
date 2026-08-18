@@ -185,6 +185,13 @@ export type TranslationKeys = {
 		storageNotPersisted: string;
 		btnRequestPersist: string;
 		storageUsageLabel: string;
+		eraseTitle: string;
+		eraseDesc: string;
+		eraseExportHint: string;
+		eraseButton: string;
+		eraseInProgress: string;
+		eraseConfirm: string;
+		eraseFailed: string;
 		privacyTitle: string;
 		privacyItem1Title: string;
 		privacyItem1Desc: string;

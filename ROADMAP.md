@@ -45,7 +45,7 @@ Nicht alles muss angefasst werden. Folgendes ist geprüft und in Ordnung:
 | 11  | ✅ Reminder-Engine neu bauen                                       | `bug` `performance` `v1-blocker`            | [#11](https://github.com/dstN/bewerby/issues/11) |
 | 12  | ✅ Security-Header und Content-Security-Policy                     | `security` `v1-blocker`                     | [#12](https://github.com/dstN/bewerby/issues/12) |
 | 13  | ✅ Impressum und Datenschutzerklärung                              | `dsgvo` `documentation` `v1-blocker`        | [#13](https://github.com/dstN/bewerby/issues/13) |
-| 14  | Recht auf Löschung umsetzen                                        | `dsgvo` `enhancement` `v1-blocker`          | [#14](https://github.com/dstN/bewerby/issues/14) |
+| 14  | ✅ Recht auf Löschung umsetzen                                     | `dsgvo` `enhancement` `v1-blocker`          | [#14](https://github.com/dstN/bewerby/issues/14) |
 | 15  | Deployment verifizieren und dokumentieren                          | `architecture` `documentation` `v1-blocker` | [#15](https://github.com/dstN/bewerby/issues/15) |
 
 ### 1 — Persönliche Bewerbungs-PDFs aus dem Auslieferungspfad entfernen
@@ -153,6 +153,8 @@ Nicht alles muss angefasst werden. Folgendes ist geprüft und in Ordnung:
 **Soll:** Eigene Routen für Impressum und Datenschutzerklärung, aus der Navigation verlinkt, in beiden Sprachen. Die Datenschutzerklärung beschreibt wahrheitsgemäß, was die App tatsächlich tut: rein lokale Verarbeitung, kein Server-Log personenbezogener Inhalte, welche `localStorage`-Keys zu welchem Zweck gesetzt werden, und wie Nutzer ihre Daten exportieren und löschen.
 
 ### 14 — Recht auf Löschung umsetzen
+
+**Status:** ✅ Erledigt (siehe [#14](https://github.com/dstN/bewerby/issues/14) für den schließenden Commit und Details). `src/lib/utils/eraseAllData.ts` löscht IndexedDB (via `db.delete()`), den kompletten OPFS-PDF-Ordner, sämtliche `localStorage`-Keys, alle Cache-Storage-Einträge und offene Notifications. Neue Karte in den Einstellungen mit Bestätigungsdialog, der explizit auf den Export hinweist, bevor gelöscht wird; nach erfolgreicher Löschung lädt die App neu. Mit Playwright end-to-end verifiziert (Bewerbung mit PDF, Theme-Änderung, Custom-Farbe, Notified-Marker als Ausgangszustand): nach der Löschung sind IndexedDB-Zeilen, OPFS-PDFs und `localStorage` vollständig leer, und die App bleibt danach voll funktionsfähig (Zustand einer Neuinstallation). Cache Storage füllt sich nach dem Reload normal mit der App-Shell neu — korrektes Service-Worker-Verhalten, da dort keine personenbezogenen Daten liegen.
 
 **Ist:** Es gibt keine Funktion, um alle eigenen Daten zu löschen. Der einzige Löschpfad ist das Entfernen einzelner Bewerbungen per `confirm()` (`src/routes/+page.svelte:113-117`). `localStorage` behält `bewerby-theme`, `bewerby-locale`, `bewerby_custom_colors` und beliebig viele `bewerby_notified_*`-Keys; Cache Storage und angezeigte Notifications bleiben ebenfalls bestehen.
 
