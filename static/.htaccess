@@ -1,0 +1,96 @@
+# This file ships as build/client/.htaccess (Vite copies everything under
+# static/ verbatim - see scripts/check-static.mjs) and applies to bewerby's
+# Document Root. Application-level Passenger directives belong in the
+# repository root's .htaccess (the Application Root) instead - see
+# DEPLOYMENT.md for the required two-root Apache setup and why it matters.
+
+# Security headers.
+#
+# Every route is prerendered (see src/routes/+layout.ts) and delivers most of
+# its Content-Security-Policy via a <meta http-equiv> tag that SvelteKit
+# generates automatically (script/style/img/etc., including a hash for the
+# inline FOUC-prevention script - see vite.config.ts's csp.directives). A meta
+# tag cannot carry frame-ancestors, report-uri or sandbox (browsers ignore
+# them there), so frame-ancestors is set here instead, as a real HTTP header
+# that Apache attaches regardless of how the Node backend served the request.
+# Multiple CSP sources apply additively (the effective policy is the
+# intersection), so this deliberately adds only the one directive the meta
+# tag cannot express rather than repeating the rest and risking a conflict.
+#
+# The remaining headers (nosniff, Referrer-Policy, X-Frame-Options,
+# Permissions-Policy, HSTS) are also set in src/hooks.server.ts for any
+# future non-prerendered route, but verified empirically that adapter-node
+# serves prerendered pages through a static-file path that never invokes that
+# hook - so for the app as it exists today, this file is what actually
+# reaches the browser.
+<IfModule mod_headers.c>
+	Header always set Content-Security-Policy "frame-ancestors 'none'"
+	Header always set X-Frame-Options "DENY"
+	Header always set X-Content-Type-Options "nosniff"
+	Header always set Referrer-Policy "strict-origin-when-cross-origin"
+	Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()"
+	# Ignored by browsers over plain HTTP, so safe to set unconditionally.
+	Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains"
+</IfModule>
+
+<IfModule mod_rewrite.c>
+	RewriteEngine On
+
+	# Serve pre-compressed assets (adapter-node's `precompress: true` writes a
+	# .br/.gz sibling next to every eligible file) when the client supports
+	# it, instead of paying for compression on every request or shipping
+	# uncompressed bytes despite already having done the work at build time.
+	RewriteCond %{HTTP:Accept-Encoding} br
+	RewriteCond %{REQUEST_FILENAME}\.br -f
+	RewriteRule ^(.*)$ $1.br [L]
+
+	RewriteCond %{HTTP:Accept-Encoding} gzip
+	RewriteCond %{REQUEST_FILENAME}\.gz -f
+	RewriteRule ^(.*)$ $1.gz [L]
+
+	# Marks fingerprinted build output (content-hashed filenames under
+	# _app/immutable/) so the Cache-Control block below can target it. Done
+	# via an env var + `Header ... env=` rather than <Location>/<If>, since
+	# those directives aren't valid inside .htaccess.
+	RewriteRule ^_app/immutable/ - [E=BEWERBY_IMMUTABLE:1]
+</IfModule>
+
+<IfModule mod_headers.c>
+	<FilesMatch "\.br$">
+		Header set Content-Encoding br
+		Header append Vary Accept-Encoding
+	</FilesMatch>
+	<FilesMatch "\.gz$">
+		Header set Content-Encoding gzip
+		Header append Vary Accept-Encoding
+	</FilesMatch>
+</IfModule>
+<IfModule mod_mime.c>
+	# Without this, Apache would serve the .br/.gz files it just rewrote to
+	# with a generic octet-stream type instead of the original asset's type.
+	AddType text/javascript .js.br .js.gz
+	AddType text/css .css.br .css.gz
+	AddType application/json .json.br .json.gz
+	AddType image/svg+xml .svg.br .svg.gz
+	AddType application/wasm .wasm.br .wasm.gz
+</IfModule>
+
+# Cache-Control: fingerprinted build output (filenames include a content
+# hash, e.g. _app/immutable/**) can be cached forever, since a change in
+# content always produces a new filename. Everything else - the prerendered
+# HTML shells, the manifest, fonts, icons - is NOT fingerprinted, so it must
+# be revalidated on every request, or a redeploy could leave visitors on a
+# stale HTML shell referencing since-deleted immutable assets.
+<IfModule mod_headers.c>
+	<FilesMatch "\.html$">
+		Header set Cache-Control "no-cache"
+	</FilesMatch>
+	Header set Cache-Control "public, max-age=31536000, immutable" env=BEWERBY_IMMUTABLE
+</IfModule>
+
+<IfModule mod_expires.c>
+	ExpiresActive On
+	ExpiresByType text/html "access plus 0 seconds"
+	ExpiresByType application/manifest+json "access plus 1 hour"
+	ExpiresByType text/plain "access plus 1 hour"
+</IfModule>

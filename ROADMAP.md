@@ -46,7 +46,7 @@ Nicht alles muss angefasst werden. Folgendes ist geprüft und in Ordnung:
 | 12  | ✅ Security-Header und Content-Security-Policy                     | `security` `v1-blocker`                     | [#12](https://github.com/dstN/bewerby/issues/12) |
 | 13  | ✅ Impressum und Datenschutzerklärung                              | `dsgvo` `documentation` `v1-blocker`        | [#13](https://github.com/dstN/bewerby/issues/13) |
 | 14  | ✅ Recht auf Löschung umsetzen                                     | `dsgvo` `enhancement` `v1-blocker`          | [#14](https://github.com/dstN/bewerby/issues/14) |
-| 15  | Deployment verifizieren und dokumentieren                          | `architecture` `documentation` `v1-blocker` | [#15](https://github.com/dstN/bewerby/issues/15) |
+| 15  | ✅ Deployment verifizieren und dokumentieren                       | `architecture` `documentation` `v1-blocker` | [#15](https://github.com/dstN/bewerby/issues/15) |
 
 ### 1 — Persönliche Bewerbungs-PDFs aus dem Auslieferungspfad entfernen
 
@@ -161,6 +161,10 @@ Nicht alles muss angefasst werden. Folgendes ist geprüft und in Ordnung:
 **Soll:** Eine bestätigungspflichtige Aktion in den Einstellungen räumt vollständig auf: IndexedDB, OPFS-Dateien, alle `localStorage`-Keys, Cache Storage und offene Notifications. Danach ist die App im Zustand einer Neuinstallation. Der Nutzer wird vorher auf den Export hingewiesen.
 
 ### 15 — Deployment verifizieren und dokumentieren
+
+**Status:** ✅ Erledigt (siehe [#15](https://github.com/dstN/bewerby/issues/15) für den schließenden Commit und Details). Per Recherche gegen Passengers offizielle Doku und Quellcode zwei bisher unerkannte, schwerwiegendere Befunde bestätigt statt der ursprünglich vermuteten: (1) Apache liefert physisch existierende Dateien unter `DocumentRoot` **immer direkt statisch aus und umgeht Passenger/Node komplett** — bei `DocumentRoot` = Repo-Root wären `package.json`, `.git/config` und `src/*` also tatsächlich öffentlich abrufbar, nicht nur theoretisch. Behoben durch die von Passenger selbst vorgeschriebene Zwei-Wurzel-Architektur (`DocumentRoot` → `build/client/`, `PassengerAppRoot` → Projekt-Root), dokumentiert in `DEPLOYMENT.md`. (2) Passengers Node-Loader lädt die Startdatei per `require()` — eine ESM-Datei (`"type": "module"`) crasht dort zwingend mit `ERR_REQUIRE_ESM`, unabhängig von der Node- oder Passenger-Version (verifiziert direkt im Passenger-Quellcode, ein Fix-Versuch 2021 wurde unmerged geschlossen). Behoben durch Umbenennung zu `app.cjs` mit dynamischem Import statt `import`-Statement — lokal mit `node app.cjs` getestet und läuft korrekt.
+
+Zusätzlich: `engines`-Feld in `package.json` ergänzt (gibt `.npmrc`s `engine-strict` erstmals Wirkung); `static/.htaccess` fließt jetzt automatisch nach `build/client/.htaccess` und trägt Security-Header, Cache-Control (Immutable für `_app/immutable/`, `no-cache` für HTML) sowie Ausspielung der von `precompress: true` erzeugten `.br`/`.gz`-Varianten. Verifiziert: der Build-Output ist vollständig self-contained (keine externen Paket-Referenzen in `build/index.js`) — `node_modules` wird auf dem Server gar nicht benötigt, was den Deploy-Fußabdruck deutlich verkleinert. **Bewusste Konsolidierung:** Das vollständige Runbook (`DEPLOYMENT.md`) entsteht hier statt in #32, da sich beide Issues beim Schreiben der Roadmap inhaltlich überschnitten hatten — #32 fokussiert stattdessen auf README-Neufassung und ein Architekturdokument. **Nicht gegen eine echte Netcup/Plesk-Instanz getestet** (keine verfügbar) — `DEPLOYMENT.md` benennt das explizit als Grenze.
 
 **Ist:** Die `.htaccess` liegt im Repository-Root und setzt `PassengerAppType node` / `PassengerStartupFile app.js`. Das greift nur, wenn Apaches DocumentRoot dieses Verzeichnis ist — dann wären aber `src/`, `node_modules/`, `.git/` und `static/data/` über HTTP erreichbar. `app.js` ist ein ES-Modul (`package.json` setzt `"type": "module"`, `app.js:13` nutzt Top-Level-`import`) ohne Node-Version-Pin: `.npmrc` setzt `engine-strict=true`, aber `package.json` hat **kein `engines`-Feld**. Unfingerprintete Assets (Fonts, Icons, Manifest) haben keine Cache-Control-Vorgabe. `adapter-node` erzeugt `precompress: true`-Varianten, deren Ausspielung ungeprüft ist. Ein Deploy-Runbook existiert nicht; die `README.md` ist noch das unveränderte `sv`-Template.
 
@@ -302,9 +306,11 @@ Nicht alles muss angefasst werden. Folgendes ist geprüft und in Ordnung:
 
 ### 32 — Dokumentation: README, Runbook, Architektur
 
-**Ist:** `README.md` ist unverändert das `sv`-Scaffold-Template und beschreibt das Projekt nicht. Es gibt kein Deploy-Runbook; die Passenger-Schritte stehen nur als Kommentar in `app.js:7-11`. Die Datenschutz- und Offline-Architektur ist nirgends dokumentiert.
+**Hinweis zur Konsolidierung:** Das Runbook ist bereits Teil von #15 entstanden (`DEPLOYMENT.md`), da sich die beiden Issues beim ursprünglichen Schreiben der Roadmap inhaltlich überschnitten hatten. #32 beschränkt sich daher auf die README-Neufassung und ein kurzes Architekturdokument; das bestehende `DEPLOYMENT.md` wird von dort aus verlinkt statt dupliziert.
 
-**Soll:** Die `README.md` beschreibt Zweck, Stack, lokale Entwicklung und Projektstruktur. Ein Runbook macht Build, Upload, Neustart und Rollback auf Netcup reproduzierbar. Ein kurzes Architekturdokument hält fest, wo Daten liegen, warum sie das Gerät nicht verlassen, und wie Offline-Fähigkeit und Reminder tatsächlich funktionieren — inklusive der Grenzen.
+**Ist:** `README.md` ist unverändert das `sv`-Scaffold-Template und beschreibt das Projekt nicht. Die Datenschutz- und Offline-Architektur ist nirgends dokumentiert.
+
+**Soll:** Die `README.md` beschreibt Zweck, Stack, lokale Entwicklung und Projektstruktur, und verlinkt `DEPLOYMENT.md` für den Deploy-Prozess. Ein kurzes Architekturdokument hält fest, wo Daten liegen, warum sie das Gerät nicht verlassen, und wie Offline-Fähigkeit und Reminder tatsächlich funktionieren — inklusive der Grenzen.
 
 ### 33 — Toten Code und Konfigurationsdrift entfernen
 

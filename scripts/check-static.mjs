@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 
 const STATIC_DIR = fileURLToPath(new URL('../static', import.meta.url));
 
-const ALLOWED_FILES = new Set(['.gitignore', 'manifest.json', 'robots.txt']);
+const ALLOWED_FILES = new Set(['.gitignore', '.htaccess', 'manifest.json', 'robots.txt']);
 const ALLOWED_DIRS = new Set(['fonts', 'icons']);
 
 function walk(dir, isRoot) {

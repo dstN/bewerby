@@ -1,36 +1,38 @@
-# Phusion Passenger Configuration for Netcup Webhosting
-# Adjust the Node.js path to match your server's installation
-# You can find this via: which node (in your server SSH terminal)
-
+# Phusion Passenger Configuration for Netcup/Plesk Webhosting
+#
+# IMPORTANT — two separate roots, do not point Document Root here:
+#
+#   Application Root (this directory) - contains package.json, app.js,
+#   node_modules/ and the build/ output. Passenger cds into this directory
+#   and runs app.js from it.
+#
+#   Document Root - must be build/client/ (a subdirectory OF this
+#   directory), NOT this directory itself. Apache serves any physically
+#   existing file under Document Root directly, bypassing Passenger/Node
+#   entirely ("static assets are accelerated" - see
+#   https://www.phusionpassenger.com/library/admin/apache/troubleshooting/nodejs/
+#   and the canonical Node.js deploy layout at
+#   https://www.phusionpassenger.com/library/deploy/apache/deploy/nodejs/,
+#   both of which set DocumentRoot to the app's public subdirectory while
+#   Passenger's application root stays one level up). If Document Root were
+#   set to this directory, requests like GET /package.json, GET /.git/config
+#   or GET /src/lib/db/index.ts would be served as plain static files -
+#   publishing source code and internals to every visitor. Full setup steps:
+#   see DEPLOYMENT.md.
+#
+# In Plesk's Node.js panel these are two distinct fields ("Application Root"
+# and "Document Root") rather than something configured through this file -
+# Plesk did not, as of this writing, warn if both are left identical
+# (https://talk.plesk.com/threads/add-warning-when-document-root-equals-application-root-in-node-js-apps.391992/),
+# so this is a real, easy-to-hit misconfiguration, not a hypothetical one.
+#
+# Adjust the Node.js path to match your server's installation:
+# find it via `which node` over SSH.
+#
+# Startup file is app.cjs, not app.js: Passenger's Node.js loader loads it
+# via require(), which cannot load an ES module ("type": "module" in
+# package.json makes plain .js files ESM) - see app.cjs's own comment for
+# the full explanation and citation.
 # PassengerNodejs /usr/bin/node
 PassengerAppType node
-PassengerStartupFile app.js
-
-# Security headers.
-#
-# Every route is prerendered (see src/routes/+layout.ts) and delivers most of
-# its Content-Security-Policy via a <meta http-equiv> tag that SvelteKit
-# generates automatically (script/style/img/etc., including a hash for the
-# inline FOUC-prevention script - see vite.config.ts's csp.directives). A meta
-# tag cannot carry frame-ancestors, report-uri or sandbox (browsers ignore
-# them there), so frame-ancestors is set here instead, as a real HTTP header
-# that Apache attaches regardless of how the Node backend served the request.
-# Multiple CSP sources apply additively (the effective policy is the
-# intersection), so this deliberately adds only the one directive the meta
-# tag cannot express rather than repeating the rest and risking a conflict.
-#
-# The remaining headers (nosniff, Referrer-Policy, X-Frame-Options,
-# Permissions-Policy, HSTS) are also set in src/hooks.server.ts for any
-# future non-prerendered route, but verified empirically that adapter-node
-# serves prerendered pages through a static-file path that never invokes that
-# hook - so for the app as it exists today, .htaccess is what actually reaches
-# the browser.
-<IfModule mod_headers.c>
-	Header always set Content-Security-Policy "frame-ancestors 'none'"
-	Header always set X-Frame-Options "DENY"
-	Header always set X-Content-Type-Options "nosniff"
-	Header always set Referrer-Policy "strict-origin-when-cross-origin"
-	Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()"
-	# Ignored by browsers over plain HTTP, so safe to set unconditionally.
-	Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains"
-</IfModule>
+PassengerStartupFile app.cjs
