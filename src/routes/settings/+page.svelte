@@ -322,12 +322,12 @@
 	}
 
 	.status-badge.granted {
-		background-color: rgba(22, 163, 74, 0.1);
+		background-color: var(--status-success-bg);
 		color: var(--color-success);
 	}
 
 	.status-badge.denied {
-		background-color: rgba(220, 38, 38, 0.1);
+		background-color: var(--status-danger-bg);
 		color: var(--color-danger);
 	}
 
@@ -368,7 +368,7 @@
 
 	.btn-danger {
 		padding: 8px 16px;
-		background-color: var(--color-danger);
+		background-color: var(--color-danger-solid);
 		color: white;
 		border: none;
 		border-radius: var(--radius-md);

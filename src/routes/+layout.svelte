@@ -223,7 +223,7 @@
 		top: 0;
 		z-index: 200;
 		padding: 10px 20px;
-		background-color: var(--color-danger);
+		background-color: var(--color-danger-solid);
 		color: white;
 		font-size: 13px;
 		font-weight: 600;

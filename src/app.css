@@ -65,11 +65,17 @@
 	--color-accent-800: #1e40af;
 	--color-accent-900: #1e3a8a;
 
-	/* Semantic colors */
+	/* Semantic colors (theme-tuned overrides for WCAG 4.5:1 live in :root/:root.dark below;
+	   these are the Tailwind-utility-generating defaults, e.g. .text-success/.text-danger) */
 	--color-success: #16a34a;
 	--color-warning: #d97706;
 	--color-danger: #dc2626;
 	--color-info: #2563eb;
+
+	/* Fixed red for solid fills paired with white/inverse text (delete buttons, error
+	   banners) - kept theme-independent because that contrast pairing only depends on
+	   this hue against white, not on the surrounding light/dark surface. */
+	--color-danger-solid: #dc2626;
 
 	/* Kanban column colors */
 	--color-kanban-draft: #6b7280;
@@ -109,13 +115,31 @@
 	/* Text */
 	--text-primary: #0f172a;
 	--text-secondary: #475569;
-	--text-tertiary: #94a3b8;
+	--text-tertiary: #56657a;
 	--text-inverse: #ffffff;
 
 	/* Borders */
 	--border-default: #e2e8f0;
 	--border-subtle: #f1f5f9;
 	--border-strong: #cbd5e1;
+
+	/* Semantic colors, darkened from the @theme defaults so they reach 4.5:1 as text
+	   on light surfaces (the @theme defaults are tuned for dark surfaces instead). */
+	--color-success: #15803d;
+	--color-warning: #b45309;
+
+	/* Accent blue used as body text/icon color (not as a fill) needs its own darker
+	   shade for 4.5:1 on light surfaces; --color-accent-500/600 stay unchanged since
+	   they're also relied on for borders/rings at the 3:1 non-text threshold. */
+	--color-accent-text: var(--color-accent-600);
+
+	/* Tinted status message backgrounds (success/error banners). Alpha is tuned per
+	   color, not shared, since red and green reach 4.5:1 text contrast at different
+	   tint strengths over a near-white background. */
+	--status-success-bg: rgba(21, 128, 61, 0.06);
+	--status-success-border: rgba(21, 128, 61, 0.25);
+	--status-danger-bg: rgba(220, 38, 38, 0.03);
+	--status-danger-border: rgba(220, 38, 38, 0.25);
 
 	/* Shadows — tinted to surface, never pure black */
 	--shadow-sm: 0 1px 2px rgb(15 23 42 / 0.04);
@@ -141,12 +165,27 @@
 
 	--text-primary: #f1f5f9;
 	--text-secondary: #94a3b8;
-	--text-tertiary: #64748b;
+	--text-tertiary: #8695ab;
 	--text-inverse: #0f172a;
 
 	--border-default: #252a36;
 	--border-subtle: #1a1e28;
 	--border-strong: #334155;
+
+	/* Restated at their @theme-default values (not just left unset): :root above
+	   already overrides these to darker light-mode values, and since :root.dark's
+	   higher specificity only wins for properties it actually declares, leaving
+	   these unset here would let the light-mode value leak through instead of
+	   falling back to the @theme default. */
+	--color-success: #16a34a;
+	--color-warning: #d97706;
+	--color-danger: #ef4444;
+	--color-accent-text: #60a5fa;
+
+	--status-success-bg: rgba(22, 163, 74, 0.1);
+	--status-success-border: rgba(22, 163, 74, 0.3);
+	--status-danger-bg: rgba(239, 68, 68, 0.1);
+	--status-danger-border: rgba(239, 68, 68, 0.3);
 
 	--shadow-sm: 0 1px 2px rgb(0 0 0 / 0.2);
 	--shadow-md: 0 2px 8px rgb(0 0 0 / 0.3), 0 1px 2px rgb(0 0 0 / 0.2);

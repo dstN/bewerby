@@ -484,15 +484,15 @@
 	}
 
 	.success-msg {
-		background-color: rgba(22, 163, 74, 0.1);
+		background-color: var(--status-success-bg);
 		color: var(--color-success);
-		border: 1px solid rgba(22, 163, 74, 0.2);
+		border: 1px solid var(--status-success-border);
 	}
 
 	.error-msg {
-		background-color: rgba(220, 38, 38, 0.1);
+		background-color: var(--status-danger-bg);
 		color: var(--color-danger);
-		border: 1px solid rgba(220, 38, 38, 0.2);
+		border: 1px solid var(--status-danger-border);
 	}
 
 	/* Disabled / Greyed out state (Cloud sync) */

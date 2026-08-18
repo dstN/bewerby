@@ -486,9 +486,9 @@
 	}
 
 	.btn-quick:hover {
-		background-color: var(--color-accent-500);
+		background-color: var(--color-accent-600);
 		color: #ffffff;
-		border-color: var(--color-accent-500);
+		border-color: var(--color-accent-600);
 	}
 
 	/* Calendar Header */
@@ -574,12 +574,12 @@
 
 	.day-cell.today:not(.selected) {
 		font-weight: 600;
-		color: var(--color-accent-500);
+		color: var(--color-accent-text);
 		border-color: var(--color-accent-500);
 	}
 
 	.day-cell.selected {
-		background-color: var(--color-accent-500);
+		background-color: var(--color-accent-600);
 		color: #ffffff;
 		font-weight: 600;
 		box-shadow: 0 2px 4px rgb(59 130 246 / 0.3);

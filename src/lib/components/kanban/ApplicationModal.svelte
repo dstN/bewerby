@@ -966,7 +966,7 @@
 
 	.swatch-none.active {
 		border-color: var(--color-accent-500);
-		color: var(--color-accent-500);
+		color: var(--color-accent-text);
 		box-shadow:
 			0 0 0 2px var(--surface-0),
 			0 0 0 4px var(--color-accent-500);
@@ -991,7 +991,7 @@
 		width: 16px;
 		height: 16px;
 		border-radius: 50%;
-		background-color: var(--color-danger);
+		background-color: var(--color-danger-solid);
 		color: #ffffff;
 		border: 1px solid var(--surface-0);
 		font-size: 11px;
@@ -1030,7 +1030,7 @@
 
 	.btn-add-color:hover {
 		border-color: var(--color-accent-500);
-		color: var(--color-accent-500);
+		color: var(--color-accent-text);
 		transform: scale(1.1);
 	}
 
@@ -1041,7 +1041,7 @@
 		outline: 2px solid var(--color-accent-500);
 		outline-offset: 2px;
 		border-color: var(--color-accent-500);
-		color: var(--color-accent-500);
+		color: var(--color-accent-text);
 	}
 
 	.hidden-color-input {

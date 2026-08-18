@@ -408,19 +408,19 @@
 		left: 0;
 		top: 0;
 		bottom: 0;
-		background-color: var(--border-strong);
-		opacity: 0.2;
+		background-color: var(--text-tertiary);
+		opacity: 0.8;
 		transition: width var(--duration-slow) var(--ease-out-expo);
 	}
 
 	.accent-bar {
 		background-color: var(--color-accent-500);
-		opacity: 0.3;
+		opacity: 1;
 	}
 
 	.success-bar {
 		background-color: var(--color-success);
-		opacity: 0.3;
+		opacity: 1;
 	}
 
 	.step-count {
@@ -429,6 +429,9 @@
 		position: relative;
 		z-index: 1;
 		color: var(--text-primary);
+		background-color: var(--surface-0);
+		padding: 1px 6px;
+		border-radius: var(--radius-pill);
 	}
 
 	.step-percentage {

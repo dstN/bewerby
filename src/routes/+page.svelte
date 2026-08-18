@@ -811,7 +811,7 @@
 	}
 
 	.card-priority.priority-high {
-		background-color: rgba(220, 38, 38, 0.1);
+		background-color: var(--status-danger-bg);
 		color: var(--color-danger);
 	}
 
@@ -900,7 +900,7 @@
 	}
 
 	.btn-card-delete:hover {
-		background-color: rgba(220, 38, 38, 0.1);
+		background-color: var(--status-danger-bg);
 		color: var(--color-danger);
 	}
 
