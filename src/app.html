@@ -16,6 +16,38 @@
 		<link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png" />
 		<link rel="manifest" href="/manifest.json" />
 
+		<!-- Preload the 4 actually-used Lexend weights (see issue #22) so they
+		     start fetching immediately instead of waiting on style/layout to
+		     discover the @font-face rules in app.css. -->
+		<link
+			rel="preload"
+			href="/fonts/lexend-regular.woff2"
+			as="font"
+			type="font/woff2"
+			crossorigin="anonymous"
+		/>
+		<link
+			rel="preload"
+			href="/fonts/lexend-500.woff2"
+			as="font"
+			type="font/woff2"
+			crossorigin="anonymous"
+		/>
+		<link
+			rel="preload"
+			href="/fonts/lexend-600.woff2"
+			as="font"
+			type="font/woff2"
+			crossorigin="anonymous"
+		/>
+		<link
+			rel="preload"
+			href="/fonts/lexend-700.woff2"
+			as="font"
+			type="font/woff2"
+			crossorigin="anonymous"
+		/>
+
 		<!-- Prevent FOUC on theme: apply .dark before first paint -->
 		<script>
 			(function () {

@@ -40,7 +40,44 @@
 	<div class="sidebar-header">
 		<a href={resolve('/')} class="logo-link" aria-label={t('app.name')}>
 			<div class="logo-mark" aria-hidden="true">
-				<img src="/icons/apple-touch-icon.png" alt="" width="24" height="24" />
+				<!-- Simplified vector reinterpretation of the app icon (see issue #22) -
+				     the real icon is a multi-gradient raster illustration unsuited for a
+				     hand-authored vector trace, so this captures the same folder+ring
+				     motif rather than reproducing it pixel-for-pixel. -->
+				<svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+					<rect width="24" height="24" rx="6" fill="#0c0f2b" />
+					<path
+						d="M6.5 7.2c0-.66.54-1.2 1.2-1.2h3.4l1.4 1.4h4.8c.66 0 1.2.54 1.2 1.2v6.6a3.6 3.6 0 01-3.6 3.6h-5.2a3.2 3.2 0 01-3.2-3.2V7.2z"
+						fill="url(#logo-mark-fold)"
+					/>
+					<circle cx="13.2" cy="13" r="3.5" fill="#0c0f2b" />
+					<circle cx="13.2" cy="13" r="2.15" fill="url(#logo-mark-ring)" />
+					<circle cx="13.2" cy="13" r="0.85" fill="#0c0f2b" />
+					<defs>
+						<linearGradient
+							id="logo-mark-fold"
+							x1="6.5"
+							y1="6"
+							x2="18.5"
+							y2="19"
+							gradientUnits="userSpaceOnUse"
+						>
+							<stop stop-color="#60a5fa" />
+							<stop offset="1" stop-color="#1d4ed8" />
+						</linearGradient>
+						<linearGradient
+							id="logo-mark-ring"
+							x1="11"
+							y1="10.85"
+							x2="15.4"
+							y2="15.15"
+							gradientUnits="userSpaceOnUse"
+						>
+							<stop stop-color="#93c5fd" />
+							<stop offset="1" stop-color="#3b82f6" />
+						</linearGradient>
+					</defs>
+				</svg>
 			</div>
 			{#if showLabels}
 				<span class="logo-text">bewerby</span>
@@ -191,12 +228,6 @@
 		flex-shrink: 0;
 		display: flex;
 		align-items: center;
-	}
-
-	.logo-mark img {
-		width: 24px;
-		height: 24px;
-		border-radius: 6px;
 	}
 
 	.logo-text {
