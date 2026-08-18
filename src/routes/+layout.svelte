@@ -12,6 +12,7 @@
 	import { db } from '$lib/db/index.js';
 	import { cleanupOrphanedPdfs } from '$lib/utils/opfs.js';
 	import { requestPersistentStorage } from '$lib/utils/storage.js';
+	import { announcer } from '$lib/stores/announcer.svelte.js';
 
 	let { children } = $props();
 
@@ -55,6 +56,9 @@
 		{t('errors.dbUnavailable')}
 	</div>
 {/if}
+
+<!-- App-wide live region for status-change announcements (see $lib/stores/announcer.svelte.ts) -->
+<div class="sr-only" aria-live="polite" aria-atomic="true">{announcer.message}</div>
 
 <div class="app-shell" class:sidebar-collapsed={sidebarCollapsed}>
 	<Sidebar collapsed={sidebarCollapsed} />

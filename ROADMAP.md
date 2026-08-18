@@ -40,7 +40,7 @@ Nicht alles muss angefasst werden. Folgendes ist geprüft und in Ordnung:
 | 6   | ✅ Backup-Roundtrip: PDFs müssen Export und Import überleben       | `bug` `v1-blocker`                          | [#6](https://github.com/dstN/bewerby/issues/6)   |
 | 7   | ✅ Import darf den Datenbestand nicht mehr zerstören               | `bug` `v1-blocker`                          | [#7](https://github.com/dstN/bewerby/issues/7)   |
 | 8   | ✅ Datenhaltbarkeit absichern (Persistenz, Quota, Schreibfehler)   | `architecture` `v1-blocker`                 | [#8](https://github.com/dstN/bewerby/issues/8)   |
-| 9   | Status per Tastatur und Touch änderbar machen                      | `a11y` `enhancement` `v1-blocker`           | [#9](https://github.com/dstN/bewerby/issues/9)   |
+| 9   | ✅ Status per Tastatur und Touch änderbar machen                   | `a11y` `enhancement` `v1-blocker`           | [#9](https://github.com/dstN/bewerby/issues/9)   |
 | 10  | Mobile Navigation und Board-Reflow                                 | `a11y` `enhancement` `v1-blocker`           | [#10](https://github.com/dstN/bewerby/issues/10) |
 | 11  | Reminder-Engine neu bauen                                          | `bug` `performance` `v1-blocker`            | [#11](https://github.com/dstN/bewerby/issues/11) |
 | 12  | Security-Header und Content-Security-Policy                        | `security` `v1-blocker`                     | [#12](https://github.com/dstN/bewerby/issues/12) |
@@ -113,6 +113,8 @@ Nicht alles muss angefasst werden. Folgendes ist geprüft und in Ordnung:
 **Soll:** Persistente Speicherung wird angefragt und ihr Status ist in den Einstellungen sichtbar. `db.open()`-Fehler führen zu einer verständlichen Meldung statt zu einer stummen leeren App. Jeder Schreibzugriff hat einen Fehlerpfad mit sichtbarem Feedback. Bei knapper Quota wird gewarnt, bevor Daten verloren gehen.
 
 ### 9 — Status per Tastatur und Touch änderbar machen
+
+**Status:** ✅ Erledigt (siehe [#9](https://github.com/dstN/bewerby/issues/9) für den schließenden Commit und Details). Echtes Status-Feld im Bearbeitungsdialog (native `<select>`, funktioniert auf Tastatur und Touch), zusätzlich ein kompakter Status-`<select>` direkt auf jeder Karte im Footer als „Aktionsmenü" — beide teilen sich dieselbe `moveApp()`-Logik wie Drag-and-Drop, das als Bequemlichkeit erhalten bleibt. Neuer app-weiter Live-Region-Store (`$lib/stores/announcer.svelte.ts`) sagt jede Statusänderung an, unabhängig vom Auslöser. Mit Playwright end-to-end verifiziert: Modal-Statusänderung, Karten-Select-Änderung (ohne Modal zu öffnen), Tastaturbedienbarkeit, und korrekte Live-Region-Ansagen für beide Pfade.
 
 **Ist:** Der Status einer Bewerbung lässt sich **ausschließlich** per HTML5-`DragEvent` ändern (`src/routes/+page.svelte:123-165`). Verifiziert: es gibt keine `pointerdown`/`touchstart`-Behandlung, und HTML5-Drag-and-Drop feuert auf Touch-Geräten nicht. Verifiziert zudem: `ApplicationModal` hat **überhaupt kein Status-Feld** — `currentStatus` wird aus `application.status` abgeleitet (`:129`) und ist nie editierbar. Der Kern-Workflow der App ist damit auf ihrem primären Zielgerät nicht ausführbar und für Tastaturnutzer ein WCAG-2.1.1- und 2.5.7-Verstoß.
 

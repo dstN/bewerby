@@ -33,6 +33,8 @@ export type TranslationKeys = {
 		confirmDelete: string;
 		dueAlerts: string;
 		requiresFollowUp: string;
+		statusChangedAnnouncement: string;
+		changeStatus: string;
 		subtitle: string;
 		searchPlaceholder: string;
 		allTags: string;
@@ -54,6 +56,7 @@ export type TranslationKeys = {
 		contact: string;
 		notes: string;
 		priority: string;
+		status: string;
 		tags: string;
 		cardColor: string;
 		colorNone: string;

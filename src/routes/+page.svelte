@@ -6,6 +6,7 @@
 	import ApplicationModal from '$lib/components/kanban/ApplicationModal.svelte';
 	import { colorStore } from '$lib/stores/colors.svelte.js';
 	import { deletePdfFromOpfs } from '$lib/utils/opfs.js';
+	import { announcer } from '$lib/stores/announcer.svelte.js';
 
 	// Columns definition
 	const columns = [
@@ -151,6 +152,32 @@
 		activeDragOverColumn = null;
 	}
 
+	// Shared by drag-and-drop and the card's keyboard/touch-friendly status
+	// select, so both mausfreie and mouse paths move a card identically.
+	async function moveApp(id: number, targetStatus: Status) {
+		const app = ($applicationsStore ?? []).find((a) => a.id === id);
+		if (!app || app.status === targetStatus) return;
+
+		const now = Date.now();
+		const currentHistory = $state.snapshot(app.history) || [];
+		const updatedHistory = [...currentHistory, { status: targetStatus, timestamp: now }];
+		try {
+			await db.applications.update(id, {
+				status: targetStatus,
+				updatedAt: now,
+				history: updatedHistory
+			});
+			announcer.announce(
+				t('kanban.statusChangedAnnouncement')
+					.replace('{company}', app.company)
+					.replace('{status}', t(`kanban.columns.${targetStatus}`))
+			);
+		} catch (err) {
+			console.error('Failed to move application:', err);
+			alert(t('errors.moveFailed'));
+		}
+	}
+
 	async function handleDrop(event: DragEvent, targetStatus: Status) {
 		event.preventDefault();
 		activeDragOverColumn = null;
@@ -158,24 +185,12 @@
 		const idStr = event.dataTransfer?.getData('text/plain') || draggedId?.toString();
 		if (!idStr) return;
 
-		const id = parseInt(idStr, 10);
-		const app = ($applicationsStore ?? []).find((a) => a.id === id);
+		await moveApp(parseInt(idStr, 10), targetStatus);
+	}
 
-		if (app && app.status !== targetStatus) {
-			const now = Date.now();
-			const currentHistory = $state.snapshot(app.history) || [];
-			const updatedHistory = [...currentHistory, { status: targetStatus, timestamp: now }];
-			try {
-				await db.applications.update(id, {
-					status: targetStatus,
-					updatedAt: now,
-					history: updatedHistory
-				});
-			} catch (err) {
-				console.error('Failed to move application:', err);
-				alert(t('errors.moveFailed'));
-			}
-		}
+	async function handleStatusSelect(event: Event, id: number) {
+		const target = event.target as HTMLSelectElement;
+		await moveApp(id, target.value as Status);
 	}
 
 	function handleDragOver(event: DragEvent, status: Status) {
@@ -393,6 +408,20 @@
 										{ day: 'numeric', month: 'short' }
 									)}
 								</span>
+								<select
+									class="card-status-select"
+									value={app.status}
+									onclick={(e) => e.stopPropagation()}
+									onchange={(e) => {
+										e.stopPropagation();
+										handleStatusSelect(e, app.id!);
+									}}
+									aria-label={t('kanban.changeStatus').replace('{company}', app.company)}
+								>
+									{#each columns as statusOption (statusOption.id)}
+										<option value={statusOption.id}>{t(statusOption.labelKey)}</option>
+									{/each}
+								</select>
 								<button
 									class="btn-card-delete"
 									onclick={(e) => {
@@ -843,15 +872,28 @@
 	.card-footer {
 		display: flex;
 		align-items: center;
-		justify-content: space-between;
+		gap: 6px;
 		border-top: 1px solid var(--border-subtle);
 		padding-top: 8px;
 		margin-top: 4px;
 	}
 
 	.card-date {
+		flex: 1;
 		font-size: 10px;
 		color: var(--text-tertiary);
+	}
+
+	.card-status-select {
+		font-size: 10px;
+		font-family: inherit;
+		color: var(--text-secondary);
+		background-color: var(--surface-2);
+		border: 1px solid var(--border-subtle);
+		border-radius: var(--radius-sm);
+		padding: 3px 4px;
+		max-width: 90px;
+		cursor: pointer;
 	}
 
 	.btn-card-delete {

@@ -5,6 +5,7 @@
 	import { writePdfToOpfs, readPdfFromOpfs, deletePdfFromOpfs } from '$lib/utils/opfs.js';
 	import DatePicker from '$lib/components/common/DatePicker.svelte';
 	import { colorStore } from '$lib/stores/colors.svelte.js';
+	import { announcer } from '$lib/stores/announcer.svelte.js';
 
 	let {
 		application = null,
@@ -47,6 +48,7 @@
 	let contactEmail = $state('');
 	let contactPhone = $state('');
 	let priority = $state<'low' | 'medium' | 'high'>('medium');
+	let status = $state<Application['status']>('draft');
 	let reminderInterval = $state<Application['reminderInterval']>('none');
 	let cardColor = $state<string | undefined>(undefined);
 	let notes = $state('');
@@ -75,6 +77,7 @@
 			contactEmail = application.contactEmail;
 			contactPhone = application.contactPhone;
 			priority = application.priority;
+			status = application.status;
 			reminderInterval = application.reminderInterval;
 			cardColor = application.cardColor;
 			notes = application.notes;
@@ -86,6 +89,7 @@
 				application.appliedAt || application.createdAt || Date.now()
 			);
 		} else {
+			status = initialStatus;
 			cardColor = undefined;
 			originalPdfRef = undefined;
 			appliedDateStr = formatDateForInput(Date.now());
@@ -165,10 +169,19 @@
 		}
 
 		const now = Date.now();
-		const currentStatus = application ? application.status : initialStatus;
+		const statusChanged = application ? application.status !== status : false;
 		const parsedAppliedAt = appliedDateStr
 			? parseDateInput(appliedDateStr)
 			: application?.appliedAt || application?.createdAt || now;
+
+		let history: Application['history'];
+		if (!application) {
+			history = [{ status, timestamp: status === 'sent' ? parsedAppliedAt : now }];
+		} else if (statusChanged) {
+			history = [...application.history, { status, timestamp: now }];
+		} else {
+			history = application.history;
+		}
 
 		const appData: Omit<Application, 'id'> = {
 			title: title.trim(),
@@ -179,7 +192,7 @@
 			contactEmail: contactEmail.trim(),
 			contactPhone: contactPhone.trim(),
 			priority,
-			status: currentStatus,
+			status,
 			tags: $state.snapshot(tags),
 			reminderInterval,
 			cardColor: cardColor === 'none' ? undefined : cardColor,
@@ -189,16 +202,11 @@
 			appliedAt: parsedAppliedAt,
 			createdAt: application ? application.createdAt : now,
 			updatedAt: now,
-			history: $state.snapshot(
-				application
-					? application.history
-					: [{ status: currentStatus, timestamp: currentStatus === 'sent' ? parsedAppliedAt : now }]
-			)
+			history: $state.snapshot(history)
 		};
 
 		try {
 			if (application?.id) {
-				// Update status history logs if status somehow changed (typically done on board drag)
 				await db.applications.update(application.id, $state.snapshot(appData));
 			} else {
 				await db.applications.add($state.snapshot(appData) as Application);
@@ -214,6 +222,14 @@
 		// failed), deleting it here would have orphaned live data.
 		if (originalPdfRef && originalPdfRef !== pdfRef) {
 			await deletePdfFromOpfs(originalPdfRef);
+		}
+
+		if (statusChanged) {
+			announcer.announce(
+				t('kanban.statusChangedAnnouncement')
+					.replace('{company}', company.trim())
+					.replace('{status}', t(`kanban.columns.${status}`))
+			);
 		}
 
 		onsave();
@@ -332,6 +348,17 @@
 						<option value="low">{t('application.priorities.low')}</option>
 						<option value="medium">{t('application.priorities.medium')}</option>
 						<option value="high">{t('application.priorities.high')}</option>
+					</select>
+				</div>
+
+				<div class="form-group col-span-2">
+					<label for="status">{t('application.status')}</label>
+					<select id="status" bind:value={status}>
+						<option value="draft">{t('kanban.columns.draft')}</option>
+						<option value="sent">{t('kanban.columns.sent')}</option>
+						<option value="interview">{t('kanban.columns.interview')}</option>
+						<option value="accepted">{t('kanban.columns.accepted')}</option>
+						<option value="rejected">{t('kanban.columns.rejected')}</option>
 					</select>
 				</div>
 
