@@ -41,7 +41,7 @@ Nicht alles muss angefasst werden. Folgendes ist geprüft und in Ordnung:
 | 7   | ✅ Import darf den Datenbestand nicht mehr zerstören               | `bug` `v1-blocker`                          | [#7](https://github.com/dstN/bewerby/issues/7)   |
 | 8   | ✅ Datenhaltbarkeit absichern (Persistenz, Quota, Schreibfehler)   | `architecture` `v1-blocker`                 | [#8](https://github.com/dstN/bewerby/issues/8)   |
 | 9   | ✅ Status per Tastatur und Touch änderbar machen                   | `a11y` `enhancement` `v1-blocker`           | [#9](https://github.com/dstN/bewerby/issues/9)   |
-| 10  | Mobile Navigation und Board-Reflow                                 | `a11y` `enhancement` `v1-blocker`           | [#10](https://github.com/dstN/bewerby/issues/10) |
+| 10  | ✅ Mobile Navigation und Board-Reflow                              | `a11y` `enhancement` `v1-blocker`           | [#10](https://github.com/dstN/bewerby/issues/10) |
 | 11  | Reminder-Engine neu bauen                                          | `bug` `performance` `v1-blocker`            | [#11](https://github.com/dstN/bewerby/issues/11) |
 | 12  | Security-Header und Content-Security-Policy                        | `security` `v1-blocker`                     | [#12](https://github.com/dstN/bewerby/issues/12) |
 | 13  | Impressum und Datenschutzerklärung                                 | `dsgvo` `documentation` `v1-blocker`        | [#13](https://github.com/dstN/bewerby/issues/13) |
@@ -121,6 +121,8 @@ Nicht alles muss angefasst werden. Folgendes ist geprüft und in Ordnung:
 **Soll:** Der Status ist auf mindestens zwei mausfreien Wegen änderbar: als Feld im Bearbeitungsdialog und über ein Aktionsmenü auf der Karte. Jede Statusänderung wird per Live-Region angesagt. Drag-and-Drop bleibt als zusätzliche Bequemlichkeit erhalten, ist aber nie der einzige Weg.
 
 ### 10 — Mobile Navigation und Board-Reflow
+
+**Status:** ✅ Erledigt (siehe [#10](https://github.com/dstN/bewerby/issues/10) für den schließenden Commit und Details). Sidebar wird unter 768px zum Off-Canvas-Drawer (Overlay + Backdrop + Escape-Schließen), vom bestehenden Hamburger-Button gesteuert, mit korrektem `aria-expanded`/`aria-controls` und `inert` auf dem geschlossenen Drawer. Board reflowt unter 768px auf eine einspaltige, vertikal gestapelte Ansicht ohne horizontales Overflow. Ein echter Bug unterwegs gefunden und behoben: die Kopplung von Desktop-„collapsed" und Mobile-„drawer offen" an denselben Button hätte in beide Richtungen falsche Zustände erzeugt (Labels fehlten im mobilen Drawer bzw. blieben fälschlich auf Desktop sichtbar) — gelöst, indem der Button je nach Viewport nur genau ein Konzept steuert. Mit Playwright bei echten 390×844- und 1280×800-Viewports verifiziert (21 Einzelprüfungen): Erreichbarkeit aller 4 Routen, Escape/Backdrop/Navigation schließen den Drawer, Labels korrekt sichtbar, Desktop-Verhalten unverändert.
 
 **Ist:** `src/lib/components/layout/Sidebar.svelte:212` setzt die Sidebar unter 768px auf `display: none`, ohne Ersatz. Der Hamburger-Button in `src/routes/+layout.svelte:37` schaltet nur zwischen 260px- und 72px-Grid-Spalten, die unter 768px beide auf `1fr` überschrieben sind (`:184-192`) — er tut also sichtbar nichts. Ergebnis: `/analytics`, `/backup` und `/settings` sind auf dem Telefon nicht erreichbar. Zusätzlich behält das Board unter 1024px eine harte Mindestbreite von 1264px (`src/routes/+page.svelte:794-798`: `repeat(5, 240px)`), und der 768px-Block fasst diese Regel nicht an.
 

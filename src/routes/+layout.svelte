@@ -3,6 +3,8 @@
 	import { theme } from '$lib/stores/theme.svelte.js';
 	import { i18n, t } from '$lib/i18n/index.svelte.js';
 	import { resolve } from '$app/paths';
+	import { afterNavigate } from '$app/navigation';
+	import { browser } from '$app/environment';
 	import Sidebar from '$lib/components/layout/Sidebar.svelte';
 	import {
 		syncRemindersToServiceWorker,
@@ -17,7 +19,50 @@
 	let { children } = $props();
 
 	let sidebarCollapsed = $state(false);
+	let mobileNavOpen = $state(false);
+	let isMobileViewport = $state(false);
 	let dbOpenError = $state(false);
+
+	// What the hamburger button's ARIA state describes depends on which
+	// concept the current viewport actually controls (see toggleNav below).
+	let navToggleExpanded = $derived(isMobileViewport ? mobileNavOpen : !sidebarCollapsed);
+
+	// collapsed (desktop icon-rail) and mobileNavOpen (mobile drawer) are
+	// deliberately never toggled together - the current viewport decides
+	// which single concept this button controls, so a mobile drawer opened
+	// after switching from desktop never accidentally inherits a collapsed,
+	// icon-only sidebar.
+	function toggleNav() {
+		if (isMobileViewport) {
+			mobileNavOpen = !mobileNavOpen;
+		} else {
+			sidebarCollapsed = !sidebarCollapsed;
+		}
+	}
+
+	function closeMobileNav() {
+		mobileNavOpen = false;
+	}
+
+	function handleShellKeydown(event: KeyboardEvent) {
+		if (event.key === 'Escape' && mobileNavOpen) {
+			closeMobileNav();
+		}
+	}
+
+	// Close the mobile drawer whenever a route actually changes (e.g. a nav
+	// link was activated), so it doesn't stay open over the next page.
+	afterNavigate(() => {
+		mobileNavOpen = false;
+	});
+
+	if (browser) {
+		const mql = window.matchMedia('(max-width: 768px)');
+		isMobileViewport = mql.matches;
+		mql.addEventListener('change', (e) => {
+			isMobileViewport = e.matches;
+		});
+	}
 
 	async function cleanupOrphanedPdfsOnStartup() {
 		const applications = await db.applications.toArray();
@@ -51,6 +96,8 @@
 	<meta name="description" content={t('app.description')} />
 </svelte:head>
 
+<svelte:window onkeydown={handleShellKeydown} />
+
 {#if dbOpenError}
 	<div class="db-error-banner" role="alert">
 		{t('errors.dbUnavailable')}
@@ -60,16 +107,26 @@
 <!-- App-wide live region for status-change announcements (see $lib/stores/announcer.svelte.ts) -->
 <div class="sr-only" aria-live="polite" aria-atomic="true">{announcer.message}</div>
 
+{#if mobileNavOpen}
+	<div class="mobile-nav-backdrop" onclick={closeMobileNav} role="presentation"></div>
+{/if}
+
 <div class="app-shell" class:sidebar-collapsed={sidebarCollapsed}>
-	<Sidebar collapsed={sidebarCollapsed} />
+	<Sidebar
+		collapsed={sidebarCollapsed}
+		mobileOpen={mobileNavOpen}
+		inert={isMobileViewport && !mobileNavOpen}
+	/>
 
 	<main id="main-content" class="main-content" tabindex="-1">
 		<header class="top-bar">
 			<div class="top-bar-left">
 				<button
 					class="sidebar-toggle"
-					onclick={() => (sidebarCollapsed = !sidebarCollapsed)}
-					aria-label={sidebarCollapsed ? t('a11y.openMenu') : t('a11y.closeMenu')}
+					onclick={toggleNav}
+					aria-expanded={navToggleExpanded}
+					aria-controls="mobile-sidebar"
+					aria-label={navToggleExpanded ? t('a11y.closeMenu') : t('a11y.openMenu')}
 				>
 					<svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
 						<path
@@ -148,6 +205,20 @@
 </div>
 
 <style>
+	.mobile-nav-backdrop {
+		display: none;
+	}
+
+	@media (max-width: 768px) {
+		.mobile-nav-backdrop {
+			display: block;
+			position: fixed;
+			inset: 0;
+			background-color: rgba(15, 23, 42, 0.4);
+			z-index: 250;
+		}
+	}
+
 	.db-error-banner {
 		position: sticky;
 		top: 0;

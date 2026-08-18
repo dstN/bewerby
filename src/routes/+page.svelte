@@ -942,5 +942,29 @@
 		.search-input-wrapper {
 			max-width: none;
 		}
+
+		.filter-dropdowns {
+			flex-wrap: wrap;
+		}
+
+		.filter-dropdowns select {
+			flex: 1;
+			min-width: 0;
+		}
+
+		/* Below tablet width the board reflows into a vertical stack of full-
+		   width columns instead of forcing horizontal overflow. */
+		.kanban-board {
+			grid-template-columns: 1fr;
+			overflow-x: visible;
+		}
+
+		.kanban-column {
+			min-height: 0;
+		}
+
+		.cards-list {
+			min-height: 0;
+		}
 	}
 </style>

@@ -3,7 +3,11 @@
 	import { resolve } from '$app/paths';
 	import { t } from '$lib/i18n/index.svelte.js';
 
-	let { collapsed = false }: { collapsed?: boolean } = $props();
+	let {
+		collapsed = false,
+		mobileOpen = false,
+		inert: isInert = false
+	}: { collapsed?: boolean; mobileOpen?: boolean; inert?: boolean } = $props();
 
 	const navItems = [
 		{ href: '/', labelKey: 'nav.kanban', icon: 'kanban' },
@@ -16,15 +20,29 @@
 		if (href === '/') return page.url.pathname === '/';
 		return page.url.pathname.startsWith(href);
 	}
+
+	// The 72px icon-rail ("collapsed") is a desktop-only concept. When the
+	// mobile drawer is open it must always show full labels regardless of
+	// that desktop toggle's current value - collapsed and mobileOpen are
+	// flipped by the same button, so without this a mobile drawer opened
+	// right after a desktop collapse would render icon-only.
+	let showLabels = $derived(!collapsed || mobileOpen);
 </script>
 
-<aside class="sidebar" class:collapsed aria-label="Navigation">
+<aside
+	class="sidebar"
+	class:collapsed
+	class:mobile-open={mobileOpen}
+	id="mobile-sidebar"
+	inert={isInert}
+	aria-label="Navigation"
+>
 	<div class="sidebar-header">
 		<a href={resolve('/')} class="logo-link" aria-label={t('app.name')}>
 			<div class="logo-mark" aria-hidden="true">
 				<img src="/icons/apple-touch-icon.png" alt="" width="24" height="24" />
 			</div>
-			{#if !collapsed}
+			{#if showLabels}
 				<span class="logo-text">bewerby</span>
 			{/if}
 		</a>
@@ -40,7 +58,7 @@
 						class="nav-item"
 						class:active
 						aria-current={active ? 'page' : undefined}
-						title={collapsed ? t(item.labelKey) : undefined}
+						title={showLabels ? undefined : t(item.labelKey)}
 					>
 						<span class="nav-icon" aria-hidden="true">
 							{#if item.icon === 'kanban'}
@@ -118,7 +136,7 @@
 								</svg>
 							{/if}
 						</span>
-						{#if !collapsed}
+						{#if showLabels}
 							<span class="nav-label">{t(item.labelKey)}</span>
 						{/if}
 					</a>
@@ -128,7 +146,7 @@
 	</nav>
 
 	<div class="sidebar-footer">
-		{#if !collapsed}
+		{#if showLabels}
 			<span class="version-tag">v0.0.1</span>
 		{/if}
 	</div>
@@ -247,25 +265,44 @@
 		font-weight: 400;
 	}
 
-	/* Collapsed state */
-	.collapsed .sidebar-header {
-		justify-content: center;
-		padding: 0;
-	}
+	/* Collapsed (72px icon rail) is a desktop-only concept - on mobile the
+	   drawer is always full-width with labels, either open or off-canvas. */
+	@media (min-width: 769px) {
+		.collapsed .sidebar-header {
+			justify-content: center;
+			padding: 0;
+		}
 
-	.collapsed .nav-item {
-		justify-content: center;
-		padding: 10px;
-	}
+		.collapsed .nav-item {
+			justify-content: center;
+			padding: 10px;
+		}
 
-	.collapsed .sidebar-footer {
-		display: flex;
-		justify-content: center;
+		.collapsed .sidebar-footer {
+			display: flex;
+			justify-content: center;
+		}
 	}
 
 	@media (max-width: 768px) {
 		.sidebar {
-			display: none;
+			position: fixed;
+			inset: 0 auto 0 0;
+			width: 260px;
+			z-index: 300;
+			transform: translateX(-100%);
+			transition: transform var(--duration-normal) var(--ease-out-expo);
+			box-shadow: var(--shadow-lg);
+		}
+
+		.sidebar.mobile-open {
+			transform: translateX(0);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.sidebar {
+			transition: none;
 		}
 	}
 </style>
