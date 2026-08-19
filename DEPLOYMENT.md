@@ -1,10 +1,11 @@
 # Deployment Runbook — Netcup / Plesk (Phusion Passenger)
 
 This describes how to get bewerby running on Netcup webhosting via Plesk's
-Node.js (Phusion Passenger) support. It has been written from the actual
-build output and from Phusion Passenger's own source/documentation, but has
-**not** been exercised against a live Netcup/Plesk instance — verify each
-step on first deploy and adjust if your panel's exact field names differ.
+Node.js (Phusion Passenger) support. It was originally written from Phusion
+Passenger's own source/documentation without a live instance to test
+against; it has since been exercised against the real bewerby.de host, and
+the sections below marked "verified live" reflect what that run actually
+found, not just what the docs predicted.
 
 ## Architecture: two roots, not one
 
@@ -89,9 +90,14 @@ replacement for it.
    enabled for the vhost — `build/client/.htaccess` (generated from
    `static/.htaccess`) depends on all four for security headers, the
    pre-compressed asset rewrite rules, and cache-control.
-3. If Plesk's panel doesn't directly expose a raw Node.js path, `.htaccess`'s
-   commented-out `PassengerNodejs` directive documents the fallback: find the
-   binary via `which node` over SSH.
+3. **Do not add `PassengerAppType`/`PassengerStartupFile`/`PassengerNodejs`
+   to the Application Root's `.htaccess`.** Verified live: Apache on this
+   Netcup/Plesk host rejects Passenger directives in a `.htaccess` file
+   (`[core:alert] ... PassengerAppType not allowed here`), which fails
+   `.htaccess` parsing entirely and 500s **every** request under the vhost,
+   including static files. The panel's Application Root/Document
+   Root/Application Startup File/Node.js version fields above are the only
+   place to configure this on this host — see "Known limitations" below.
 
 ## Build & deploy
 
@@ -141,11 +147,12 @@ without passing the environment's protection rules):
 | `DEPLOY_DOMAIN`       | `bewerby.de` - host only, for the post-deploy smoke test                                                                                                                                                               |
 | `DEPLOY_SSH_HOSTKEY`  | _Optional but recommended._ Output of `ssh-keyscan -t ed25519 bewerby.de`. Without it the deploy trusts whatever key it fetches at connect time, and with password auth a MITM would collect the password in cleartext |
 
-**Not yet exercised against the live host** - unlike the rest of this
-runbook, the deploy workflow has not run against a real Netcup/Plesk
-instance yet. Watch the first real run closely; if the smoke test's
-assumptions about what a successful response looks like don't match
-reality, fix the workflow rather than trusting a green run blindly.
+**Verified live**: the first real run against bewerby.de surfaced a genuine
+bug in this runbook, not in the workflow — see "Known limitations" below.
+Once `.htaccess` was corrected, the pipeline itself (build download, SSH
+upload, atomic activation, restart, smoke test) worked as designed. Keep
+watching new deploys for assumptions that don't hold; fix the workflow
+rather than trusting a green run blindly.
 
 ## Rollback
 
@@ -170,16 +177,28 @@ rolled-back `build/client/`.
 
 ## Known limitations of this runbook
 
-This has been verified against the actual build output and against
-Passenger's documented behavior and source code, but **not against a live
-Netcup/Plesk deployment** - no such instance was available while writing it.
-Specifically unverified:
+**Resolved, verified live (first production deploy):** the Application
+Root's `.htaccess` originally carried `PassengerAppType node` and
+`PassengerStartupFile app.cjs`, on the assumption (from Passenger's generic
+Apache docs, written before any live Plesk instance was available) that
+`.htaccess` was a valid place to set them as a fallback/documentation aid.
+It is not, on this host: Apache's error log showed
+`[core:alert] .../.htaccess: PassengerAppType not allowed here`, which
+means Apache failed to parse `.htaccess` at all and returned 500 for every
+request under the vhost — including static files like `/favicon.ico`, not
+just app routes. Plesk's Node.js panel (Application Root, Document Root,
+Application Startup File, Node.js version) already configures the
+equivalent Passenger settings at the vhost level; `.htaccess` must not
+duplicate them. Fixed by removing both directives from `.htaccess` — see
+the comment left in that file for the full explanation.
+
+Still unverified against the live host:
 
 - Exact Plesk UI field labels/locations may differ by Plesk version.
 - Whether Netcup's specific Passenger build enables `mod_rewrite`/
   `mod_expires` by default, or whether they need requesting from support.
-- The exact app-restart mechanism Netcup's Plesk exposes.
+- The exact app-restart mechanism Netcup's Plesk exposes beyond
+  `tmp/restart.txt`, which is confirmed to work.
 
 If any of these differ from what's documented here, please update this file
-once verified against the real environment - this is the last update to it
-before v1 uses whatever process actually works in production.
+once verified against the real environment.

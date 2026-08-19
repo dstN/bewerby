@@ -26,13 +26,18 @@
 # (https://talk.plesk.com/threads/add-warning-when-document-root-equals-application-root-in-node-js-apps.391992/),
 # so this is a real, easy-to-hit misconfiguration, not a hypothetical one.
 #
-# Adjust the Node.js path to match your server's installation:
-# find it via `which node` over SSH.
-#
-# Startup file is app.cjs, not app.js: Passenger's Node.js loader loads it
-# via require(), which cannot load an ES module ("type": "module" in
-# package.json makes plain .js files ESM) - see app.cjs's own comment for
-# the full explanation and citation.
-# PassengerNodejs /usr/bin/node
-PassengerAppType node
-PassengerStartupFile app.cjs
+# Passenger directives (PassengerAppType, PassengerStartupFile,
+# PassengerNodejs, ...) do NOT belong in this file on Plesk/Netcup hosting.
+# Verified live: having them here made Apache reject the whole .htaccess
+# with "[core:alert] PassengerAppType not allowed here", which broke EVERY
+# request under this vhost (500, including static files like favicon.ico) -
+# not just the app. Plesk generates the equivalent Passenger config at the
+# vhost level from its own Node.js panel (Application Root, Document Root,
+# Application Startup File, Node.js version), which is the only place these
+# settings should be changed. If you ever move off Plesk to a host where
+# Passenger IS configured via .htaccess, restore these two lines:
+#   PassengerAppType node
+#   PassengerStartupFile app.cjs
+# (app.cjs, not app.js: Passenger's Node.js loader loads it via require(),
+# which cannot load an ES module - "type": "module" in package.json makes
+# plain .js files ESM. See app.cjs's own comment for the full explanation.)
