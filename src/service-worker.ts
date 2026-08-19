@@ -9,12 +9,29 @@ const sw = self as unknown as ServiceWorkerGlobalScope;
 
 const CACHE_NAME = `bewerby-cache-${version}`;
 
-// Assets to precache: built JS/CSS bundles + static files.
+// Every prerendered route (see +layout.ts: ssr = false, prerender = true) -
+// `build`/`files` below cover only the client JS/CSS bundle and static/, not
+// these HTML documents. Without listing them explicitly, a route's document
+// only ever enters the cache the first time a *hard* (non-SPA) navigation to
+// it succeeds online - which normal in-app link-clicking never triggers,
+// since SvelteKit's client router swaps content without a real navigation.
+// A user who only ever clicked between routes, then went offline and hard-
+// reloaded one, would hit nothing but this worker's offline fallback.
+const PRERENDERED_ROUTES = [
+	'/',
+	'/analytics',
+	'/backup',
+	'/settings',
+	'/impressum',
+	'/datenschutz'
+];
+
+// Assets to precache: built JS/CSS bundles + static files + the above.
 // `files` mirrors static/ verbatim, including dotfiles (e.g. static/.gitignore) -
 // adapter-node serves those via sirv, which refuses dotfiles by default and
 // answers 404. A single 404 during install used to fail cache.addAll()
 // atomically, which meant the service worker never activated at all.
-const ASSETS = [...build, ...files].filter((path) => {
+const ASSETS = [...build, ...files, ...PRERENDERED_ROUTES].filter((path) => {
 	const basename = path.split('/').pop() ?? '';
 	return !basename.startsWith('.');
 });

@@ -76,6 +76,8 @@ Nicht alles muss angefasst werden. Folgendes ist geprüft und in Ordnung:
 
 **Status:** ✅ Erledigt in [1a7684e](https://github.com/dstN/bewerby/commit/1a7684e) (#4, geschlossen). Über die Roadmap-Formulierung hinaus zwei getrennte Fehlergrenzen eingebaut, da `+error.svelte` allein Render-Fehler in bereits gemounteten Routen nicht abfängt (siehe #7). Details im [Issue-Kommentar](https://github.com/dstN/bewerby/issues/4#issuecomment-5321130819).
 
+**Nachtrag aus #30:** Die in #3 vermerkte Grenze war nach diesem Commit noch nicht vollständig geschlossen. Prerendern legt die HTML-Dokumente nur auf die Platte (`build/prerendered/*.html`) — ob der Service Worker sie tatsächlich precacht, ist ein getrennter Mechanismus (`ASSETS` in `service-worker.ts`), der die Routen explizit auflisten muss. Das fehlte, was der neue Playwright-Offline-Test in #30 direkt aufdeckte: Da SvelteKits Client-Router bei normaler In-App-Navigation nie eine echte Seitennavigation auslöst, wurde ein Routendokument nur gecacht, wenn irgendwann zuvor online eine *harte* Navigation genau dorthin stattfand — im echten Nutzungsfluss (Klicks in der Sidebar) praktisch nie der Fall. Fix und Details unter #30.
+
 **Ist:** Es existiert kein einziges `+layout.ts`/`+page.ts`. SSR ist also aktiv und nichts wird prerendert, obwohl alle Daten aus Dexie (browser-only) kommen — jeder Cold Load ist ein Node/Passenger-Roundtrip für eine Seite, die serverseitig null Daten rendert. Weil kein HTML-Dokument prerendert wird, liegt auch keins im Precache, was Aufgabe 3 offline unlösbar macht. Zudem gibt es **kein `+error.svelte`** im ganzen Projekt.
 
 **Soll:** `src/routes/+layout.ts` setzt `ssr = false` und `prerender = true`. Die App-Shell wird als statisches HTML gebaut, ist damit precachebar und offline aufrufbar. Ein `+error.svelte` fängt Laufzeitfehler ab und bietet einen Ausweg (Reset/Reload), statt die App unbenutzbar zu hinterlassen.
@@ -339,7 +341,7 @@ Mit Playwright end-to-end verifiziert (16 Checks) — Karte hat volle Deckkraft 
 | #   | Aufgabe                                                   | Labels          | Issue                                            |
 | :-- | :-------------------------------------------------------- | :-------------- | :----------------------------------------------- |
 | 29  | ✅ Unit-Tests für die risikoreiche Logik                  | `dx`            | [#29](https://github.com/dstN/bewerby/issues/29) |
-| 30  | End-to-End-Smoketests                                     | `dx`            | [#30](https://github.com/dstN/bewerby/issues/30) |
+| 30  | ✅ End-to-End-Smoketests                                  | `dx`            | [#30](https://github.com/dstN/bewerby/issues/30) |
 | 31  | CI-Pipeline als Merge-Gate                                | `dx`            | [#31](https://github.com/dstN/bewerby/issues/31) |
 | 32  | Dokumentation: README, Runbook, Architektur               | `documentation` | [#32](https://github.com/dstN/bewerby/issues/32) |
 | 33  | Toten Code und Konfigurationsdrift entfernen              | `refactoring`   | [#33](https://github.com/dstN/bewerby/issues/33) |
@@ -371,6 +373,22 @@ Verifiziert: `npx vitest run` — 45 Tests in 5 Dateien, alle grün. `npm run ch
 **Soll:** Vitest ist eingerichtet. Abgedeckt sind: die PDF-Extraktionsheuristiken gegen echte Beispieldokumente (Fixtures außerhalb von `static/`, siehe Aufgabe 1), die Reminder-Fälligkeitslogik inklusive aller Intervallwerte, der Backup-Roundtrip mit PDF, die Analytics-Kennzahlen inklusive leerer Datenmenge, und die Dexie-v1-nach-v2-Migration.
 
 ### 30 — End-to-End-Smoketests
+
+**Status:** ✅ Erledigt (siehe [#30](https://github.com/dstN/bewerby/issues/30) für den schließenden Commit und Details).
+
+**Setup:** `@playwright/test` als permanente `devDependency`, nur Chromium (Smoketest, kein Cross-Browser-Anspruch; auf CI-Runnern ohne installiertes Edge portabler als der `channel: 'msedge'`-Ansatz früherer Ad-hoc-Verifikationen in dieser Session). `playwright.config.ts` startet als `webServer` den **echten Produktions-Einstiegspunkt** (`npm run build && node app.cjs`, dasselbe `app.cjs`, das Passenger auf Netcup startet) statt `vite preview` — SvelteKits eigene Dokumentation warnt, dass `vite preview` den Adapter-Server nicht zuverlässig nachbildet. Tests liegen unter `tests/e2e/` (nicht `e2e/`), damit sie vom generierten `.svelte-kit/tsconfig.json` automatisch mitgeprüft werden (`tests/**` ist dort vorkonfiguriert, `e2e/**` nicht) — `npm run check` deckt sie dadurch mit ab. `npm run test:e2e` neu in `package.json`. Test-PDFs entstehen zur Laufzeit über einen händisch gebauten Minimal-PDF-Generator (`tests/e2e/fixtures/make-pdf.ts`), keine Binärdatei im Repo nötig — dieselbe Technik, mit der frühere Ad-hoc-Verifikationen in #27/#28 bereits gearbeitet haben.
+
+**5 Spec-Dateien, 8 Tests, alle grün, 2× wiederholt ohne Flakes:**
+
+- `board-crud.spec.ts`: Bewerbung anlegen, bearbeiten, per Karten-Status-Select verschieben (die tastatur-/touchfreundliche Alternative zu HTML5-Drag-and-Drop, siehe #9) und löschen; Erstellung ohne Speichern abbrechen.
+- `modal-keyboard.spec.ts`: Fokus landet beim Öffnen im Dialog, Shift+Tab/Tab wickeln am ersten/letzten fokussierbaren Element um (das manuelle Focus-Trap-Fallback aus #18), Escape ohne ungespeicherte Änderungen schließt sofort und gibt den Fokus an den auslösenden Button zurück, Escape mit ungespeicherten Änderungen fragt nach.
+- `mobile-nav.spec.ts` (390×844): alle vier Routen über die Hamburger-Drawer-Navigation erreichbar, Drawer schließt nach Navigation automatisch, das Board läuft nicht horizontal über.
+- `offline.spec.ts`: nach aktivem Service Worker und `context.setOffline(true)` lädt ein harter Reload (kein SPA-Routing) auf alle sechs Routen (`/`, `/analytics`, `/backup`, `/settings`, `/impressum`, `/datenschutz`) erfolgreich.
+- `backup-roundtrip.spec.ts`: Bewerbung mit echtem PDF-Anhang anlegen, als JSON exportieren, über „Alle Daten unwiderruflich löschen" (#14) wirklich alles löschen, eine manipulierte Version der Exportdatei (fehlendes `tags`) wird mit der übersetzten Fehlermeldung abgelehnt und der (leere) Datenbestand bleibt unverändert, die echte Exportdatei stellt Bewerbung **und** PDF wieder her (Anzeigen-Button erscheint, belegt einen frisch vergebenen OPFS-Ref).
+
+**Echter Bug gefunden und behoben — der Offline-Test hat genau das getan, wofür er da ist:** `service-worker.ts`s `ASSETS`-Liste (`[...build, ...files]`) enthielt nie die vorgerenderten Routendokumente selbst — `build`/`files` decken nur das Client-JS/CSS-Bundle und `static/` ab. Ein Routendokument landete dadurch nur im Cache, wenn irgendwann zuvor *online* eine harte (Nicht-SPA-)Navigation genau dorthin erfolgte. Da SvelteKits Client-Router bei normalem Klicken in der Sidebar nie eine echte Navigation auslöst, wäre das im echten Nutzungsfluss so gut wie nie passiert — ein Nutzer, der nur zwischen Routen geklickt und dann offline neu geladen hätte, hätte auf jeder Route außer der zuletzt hart geladenen nur die Offline-Fallback-Meldung gesehen. Behoben durch eine explizite `PRERENDERED_ROUTES`-Liste (`/`, `/analytics`, `/backup`, `/settings`, `/impressum`, `/datenschutz`), die jetzt Teil von `ASSETS` ist. Betrifft rückwirkend #3/#4 (siehe Nachtrag dort) — beide blieben inhaltlich korrekt in dem, was sie taten, deckten diesen speziellen Fall aber nie ab, weil er nur mit einem echten browserbasierten Offline-Test auffällt, nicht mit Code-Review.
+
+**Bewusste Abgrenzung:** `playwright.config.ts` selbst ist von `svelte-check` nicht erfasst (liegt weder unter `src/` noch `tests/`, und eine Erweiterung der `include`-Liste in `tsconfig.json` müsste die vom `svelte-kit sync` generierten Einträge duplizieren und würde bei jeder Regenerierung brüchig). Playwright validiert die Datei ohnehin beim Testlauf selbst; das Risiko eines unentdeckten Typfehlers dort ist gering genug, um den Wartungsaufwand nicht zu rechtfertigen.
 
 **Ist:** Keine Browsertests. Genau die Pfade, die im Audit gebrochen waren (Offline-Reload, Mobile-Navigation, Tastaturbedienung des Dialogs, Import/Export), sind nur manuell prüfbar.
 
