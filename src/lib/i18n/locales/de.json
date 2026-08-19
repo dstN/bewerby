@@ -4,7 +4,6 @@
 		"description": "Dein DSGVO-konformer Bewerbungsmanager"
 	},
 	"nav": {
-		"dashboard": "Dashboard",
 		"kanban": "Kanban-Board",
 		"analytics": "Statistiken",
 		"backup": "Backup & Sync",
@@ -22,9 +21,7 @@
 		},
 		"actions": {
 			"add": "Bewerbung hinzufügen",
-			"edit": "Bearbeiten",
-			"delete": "Löschen",
-			"move": "Verschieben"
+			"edit": "Bearbeiten"
 		},
 		"confirmDelete": "Möchtest du diese Bewerbung wirklich löschen?",
 		"dueAlerts": "Fällige Wiedervorlagen",
@@ -65,9 +62,7 @@
 		"removeCustomColor": "Eigene Farbe entfernen",
 		"removeTag": "Tag {tag} löschen",
 		"appliedAt": "Bewerbungsdatum",
-		"createdAt": "Erstellt am",
 		"confirmDiscard": "Es gibt ungespeicherte Änderungen. Wirklich verwerfen?",
-		"updatedAt": "Aktualisiert am",
 		"reminder": "Erinnerung",
 		"placeholderTitle": "z.B. Frontend Entwickler",
 		"placeholderCompany": "z.B. ACME GmbH",
@@ -120,16 +115,10 @@
 	"actions": {
 		"save": "Speichern",
 		"cancel": "Abbrechen",
-		"confirm": "Bestätigen",
-		"export": "Exportieren",
-		"import": "Importieren",
-		"upload": "Hochladen",
 		"search": "Suchen",
 		"addTag": "Hinzufügen"
 	},
 	"theme": {
-		"light": "Hell",
-		"dark": "Dunkel",
 		"toggle": "Design wechseln"
 	},
 	"backup": {
@@ -137,8 +126,6 @@
 		"subtitle": "Sichere deine Daten lokal oder lade Backups hoch.",
 		"exportJson": "Als JSON exportieren",
 		"importJson": "JSON importieren",
-		"localDump": "Lokales Backup",
-		"cloudSync": "Cloud-Synchronisation",
 		"cloudSyncDisabled": "Diese Funktion ist für eine zukünftige Version geplant und noch nicht verfügbar. Es besteht aktuell keine Verbindung zu Google Drive, Dropbox oder einem anderen Cloud-Anbieter.",
 		"manualTitle": "Manueller JSON Import/Export",
 		"manualDesc": "Lade deine vollständige Datenbank als JSON-Datei herunter oder lade eine zuvor exportierte Datei hoch, um deinen Datenstand wiederherzustellen.",
@@ -151,8 +138,6 @@
 		"localButton": "Ordner auswählen & sichern",
 		"cloudTitle": "Cloud-Synchronisation",
 		"cloudDesc": "Hintergrund-Synchronisation mit Google Drive oder Dropbox.",
-		"inactive": "Inaktiv",
-		"active": "Aktiv",
 		"plannedFeature": "Geplant",
 		"successImport": "Datenbank erfolgreich wiederhergestellt!",
 		"errorFormat": "Ungültiges Dateiformat. Datenschema-Version wird nicht unterstützt.",
@@ -163,7 +148,6 @@
 		"errorSaveFail": "Ordner-Speicherung fehlgeschlagen."
 	},
 	"analytics": {
-		"title": "Statistiken",
 		"subtitle": "Verfolge deine Erfolgsquoten und Antwortzeiten.",
 		"statusOverview": "Status Übersicht",
 		"funnelTitle": "Bewerbungstrichter",
@@ -259,11 +243,9 @@
 		}
 	},
 	"empty": {
-		"kanban": "Noch keine Bewerbungen vorhanden. Erstelle deine erste Bewerbung, um loszulegen.",
 		"analytics": "Noch keine Daten vorhanden. Füge Bewerbungen hinzu, um Statistiken zu sehen."
 	},
 	"a11y": {
-		"skipToContent": "Zum Inhalt springen",
 		"openMenu": "Menü öffnen",
 		"closeMenu": "Menü schließen",
 		"toggleTheme": "Design wechseln",

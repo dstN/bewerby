@@ -196,7 +196,7 @@
 		</section>
 
 		<!-- Privacy & Offline Info Card -->
-		<section class="settings-card info-card">
+		<section class="settings-card">
 			<h2 class="card-title">
 				<svg
 					width="20"

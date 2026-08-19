@@ -4,7 +4,6 @@
 		"description": "Your GDPR-compliant application manager"
 	},
 	"nav": {
-		"dashboard": "Dashboard",
 		"kanban": "Kanban Board",
 		"analytics": "Analytics",
 		"backup": "Backup & Sync",
@@ -22,9 +21,7 @@
 		},
 		"actions": {
 			"add": "Add application",
-			"edit": "Edit",
-			"delete": "Delete",
-			"move": "Move"
+			"edit": "Edit"
 		},
 		"confirmDelete": "Do you really want to delete this application?",
 		"dueAlerts": "Due reminders",
@@ -65,9 +62,7 @@
 		"removeCustomColor": "Remove custom color",
 		"removeTag": "Remove tag {tag}",
 		"appliedAt": "Application date",
-		"createdAt": "Created at",
 		"confirmDiscard": "You have unsaved changes. Discard them?",
-		"updatedAt": "Updated at",
 		"reminder": "Reminder",
 		"placeholderTitle": "e.g. Frontend Developer",
 		"placeholderCompany": "e.g. ACME Ltd",
@@ -120,16 +115,10 @@
 	"actions": {
 		"save": "Save",
 		"cancel": "Cancel",
-		"confirm": "Confirm",
-		"export": "Export",
-		"import": "Import",
-		"upload": "Upload",
 		"search": "Search",
 		"addTag": "Add"
 	},
 	"theme": {
-		"light": "Light",
-		"dark": "Dark",
 		"toggle": "Toggle theme"
 	},
 	"backup": {
@@ -137,8 +126,6 @@
 		"subtitle": "Secure your data locally or upload backups.",
 		"exportJson": "Export as JSON",
 		"importJson": "Import JSON",
-		"localDump": "Local backup",
-		"cloudSync": "Cloud sync",
 		"cloudSyncDisabled": "This feature is planned for a future version and is not available yet. There is currently no connection to Google Drive, Dropbox, or any other cloud provider.",
 		"manualTitle": "Manual JSON Import/Export",
 		"manualDesc": "Download your complete database as a JSON file or upload a previously exported file to restore your data status.",
@@ -151,8 +138,6 @@
 		"localButton": "Select folder & save",
 		"cloudTitle": "Cloud Sync",
 		"cloudDesc": "Background sync with Google Drive or Dropbox.",
-		"inactive": "Inactive",
-		"active": "Active",
 		"plannedFeature": "Planned",
 		"successImport": "Database successfully restored!",
 		"errorFormat": "Invalid file format. Database schema version is not supported.",
@@ -163,7 +148,6 @@
 		"errorSaveFail": "Folder saving failed."
 	},
 	"analytics": {
-		"title": "Analytics",
 		"subtitle": "Track your success rates and response times.",
 		"statusOverview": "Status Overview",
 		"funnelTitle": "Application Funnel",
@@ -259,11 +243,9 @@
 		}
 	},
 	"empty": {
-		"kanban": "No applications yet. Create your first application to get started.",
 		"analytics": "No data available yet. Add applications to see statistics."
 	},
 	"a11y": {
-		"skipToContent": "Skip to content",
 		"openMenu": "Open menu",
 		"closeMenu": "Close menu",
 		"toggleTheme": "Toggle theme",

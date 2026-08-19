@@ -14,9 +14,6 @@ export default defineConfig({
 				out: 'build',
 				precompress: true
 			}),
-			alias: {
-				$i18n: 'src/lib/i18n'
-			},
 			prerender: {
 				// The skip-link in app.html targets #main-content, which is part of
 				// +layout.svelte - with ssr disabled (see +layout.ts) that element only

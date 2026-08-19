@@ -344,7 +344,7 @@ Mit Playwright end-to-end verifiziert (16 Checks) — Karte hat volle Deckkraft 
 | 30  | ✅ End-to-End-Smoketests                                  | `dx`            | [#30](https://github.com/dstN/bewerby/issues/30) |
 | 31  | ✅ CI-Pipeline als Merge-Gate                             | `dx`            | [#31](https://github.com/dstN/bewerby/issues/31) |
 | 32  | ✅ Dokumentation: README, Runbook, Architektur            | `documentation` | [#32](https://github.com/dstN/bewerby/issues/32) |
-| 33  | Toten Code und Konfigurationsdrift entfernen              | `refactoring`   | [#33](https://github.com/dstN/bewerby/issues/33) |
+| 33  | ✅ Toten Code und Konfigurationsdrift entfernen           | `refactoring`   | [#33](https://github.com/dstN/bewerby/issues/33) |
 | 34  | Manifest vervollständigen und Lighthouse 100 verifizieren | `performance`   | [#34](https://github.com/dstN/bewerby/issues/34) |
 | 35  | Versionsstände synchronisieren und v1.0.0 releasen        | `enhancement`   | [#35](https://github.com/dstN/bewerby/issues/35) |
 
@@ -425,6 +425,20 @@ Verifiziert: `npx vitest run` — 45 Tests in 5 Dateien, alle grün. `npm run ch
 **Soll:** Die `README.md` beschreibt Zweck, Stack, lokale Entwicklung und Projektstruktur, und verlinkt `DEPLOYMENT.md` für den Deploy-Prozess. Ein kurzes Architekturdokument hält fest, wo Daten liegen, warum sie das Gerät nicht verlassen, und wie Offline-Fähigkeit und Reminder tatsächlich funktionieren — inklusive der Grenzen.
 
 ### 33 — Toten Code und Konfigurationsdrift entfernen
+
+**Status:** ✅ Erledigt (siehe [#33](https://github.com/dstN/bewerby/issues/33) für den schließenden Commit und Details).
+
+**Vor der Umsetzung erneut geprüft (viel hat sich seit dem ursprünglichen Audit verändert):** Ein dedizierter Rechercheagent hat jeden der ursprünglichen Befunde gegen den _aktuellen_ Code nachgeprüft, bevor irgendetwas entfernt wurde. Ergebnis: sechs von sieben Punkten unverändert bestätigt, einer (Punkt 7, pdf.js-Typisierung) nur teilweise — siehe unten.
+
+**Umsetzung:**
+
+- `phosphor-svelte` per `npm uninstall` entfernt (bestätigt: kein einziger Import im gesamten `src/`).
+- `$i18n`-Alias aus `vite.config.ts` entfernt (kein einziger `from '$i18n...'`-Import irgendwo).
+- `skills-lock.json`: den `ui-ux-pro-max`-Eintrag entfernt, dessen Verzeichnis nirgends existiert.
+- `.info-card` aus `src/routes/settings/+page.svelte`s Klassenliste entfernt (Klasse hatte ohnehin keine einzige Regel in irgendeinem Stylesheet — reiner No-op).
+- **18 ungenutzte i18n-Keys** entfernt, aus `de.json`, `en.json` **und** `types.ts` gleichzeitig (Schlüsselzahl vorher/nachher programmatisch verglichen: beide Sprachdateien exakt 223 statt 241 Keys, weiterhin null Drift zwischen den Sprachen). Die ursprüngliche Liste im Ist war unvollständig — eine vollständige Gegenprüfung aller 241 Blattschlüssel gegen jede `t('...')`-Aufrufstelle im gesamten `src/` (inklusive der drei dynamischen Aufrufe mit Template-Literalen, `kanban.columns.${status}` u. Ä., die nicht mit einer einfachen Textsuche gefunden werden) förderte statt der ursprünglich sechs genannten insgesamt 18 tote Keys zutage: `nav.dashboard`, `kanban.actions.delete` (nicht zu verwechseln mit dem tatsächlich genutzten `kanban.deleteApplication`), `kanban.actions.move`, `application.createdAt`, `application.updatedAt`, `actions.confirm`, `actions.export`, `actions.import`, `actions.upload`, `theme.light`, `theme.dark`, `backup.localDump`, `backup.cloudSync`, `backup.inactive`, `backup.active`, `analytics.title`, `empty.kanban`, `a11y.skipToContent` (dessen deutscher/englischer Text zusätzlich als Literal in `app.html` dupliziert ist, weil der Skip-Link vor der i18n-Hydration existieren muss — der i18n-Key selbst bleibt trotzdem tot).
+- `I18nState`s leerer Konstruktor entfernt; sein einziger Inhalt war ein Kommentar, der jetzt stattdessen direkt am `locale`-Feld steht.
+- **pdf.js-Typisierung (Punkt 7): Befund bei der Nachprüfung bereits abgeschwächt, Verbesserungsversuch technisch gescheitert.** Die Nachprüfung ergab: die Ambient-Deklaration `declare module 'pdfjs-dist/build/pdf.min.mjs';` in `app.d.ts` existiert zwar noch, die einzige Verwendungsstelle (`pdf.ts`) tippt das Ergebnis aber bereits manuell auf `typeof import('pdfjs-dist')` — die pdf.js-API ist an der einzigen Stelle, an der sie genutzt wird, also bereits korrekt typisiert, nicht `any`. Ein Versuch, das sauberer zu lösen (die Ambient-Deklaration selbst so zu erweitern, dass sie die echten Typen von `pdfjs-dist` re-exportiert, `export * from 'pdfjs-dist'`) scheiterte an einer TypeScript-Eigenheit: eine Shorthand-Deklaration (`declare module 'x';` ohne Rumpf) überschreibt eine bereits real auf der Festplatte auflösbare Datei, eine Deklaration mit Rumpf dagegen nicht — sobald pdf.js' echte `.mjs`-Datei gefunden wird, wird der Rumpf einfach ignoriert und der Import bleibt implizit `any` (verifiziert: `npm run check` schlug mit genau diesem Fehler fehl, bis der Versuch zurückgerollt wurde). Die bestehende, funktionierende Lösung (`@ts-expect-error` + manueller Typ-Cast an der einzigen Aufrufstelle) bleibt bestehen, jetzt mit einem Kommentar in `app.d.ts`, der diesen Kompromiss erklärt, damit niemand denselben Umbauversuch wiederholt.
 
 **Ist:** `phosphor-svelte` ist als Abhängigkeit deklariert, wird aber nie importiert (alle Icons sind inline-SVG). Der `$i18n`-Alias in `vite.config.ts:19` wird nie genutzt. `skills-lock.json:40-45` deklariert die Skill `ui-ux-pro-max`, deren Verzeichnis nicht existiert. Die Klasse `.info-card` wird in `src/routes/settings/+page.svelte:55` gesetzt, aber nie definiert. Mehrere i18n-Keys sind ungenutzt (u. a. `nav.dashboard`, `kanban.actions.move`, `theme.light`, `theme.dark`, `analytics.title`, `empty.kanban`). `I18nState` hat einen leeren Konstruktor mit reinem Kommentarinhalt. `app.d.ts:13` deklariert pdf.js als untypisiertes Modul, wodurch die gesamte pdf.js-API `any` ist.
 

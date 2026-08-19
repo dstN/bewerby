@@ -44,6 +44,7 @@ function resolve(path: string, obj: Record<string, unknown>): string {
 }
 
 class I18nState {
+	// Starts at the 'de' fallback (not detectLocale()) to match SSR.
 	locale: Locale = $state('de');
 
 	init(): void {
@@ -51,10 +52,6 @@ class I18nState {
 			this.locale = detectLocale();
 			document.documentElement.lang = this.locale;
 		}
-	}
-
-	constructor() {
-		// Constructor starts with fallback 'de' to match SSR
 	}
 
 	/**

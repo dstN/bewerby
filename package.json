@@ -43,7 +43,6 @@
 	},
 	"dependencies": {
 		"dexie": "^4.4.4",
-		"pdfjs-dist": "^6.1.200",
-		"phosphor-svelte": "^3.1.0"
+		"pdfjs-dist": "^6.1.200"
 	}
 }

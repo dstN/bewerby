@@ -10,7 +10,6 @@ export type TranslationKeys = {
 		description: string;
 	};
 	nav: {
-		dashboard: string;
 		kanban: string;
 		analytics: string;
 		backup: string;
@@ -29,8 +28,6 @@ export type TranslationKeys = {
 		actions: {
 			add: string;
 			edit: string;
-			delete: string;
-			move: string;
 		};
 		confirmDelete: string;
 		dueAlerts: string;
@@ -71,9 +68,7 @@ export type TranslationKeys = {
 		removeCustomColor: string;
 		removeTag: string;
 		appliedAt: string;
-		createdAt: string;
 		confirmDiscard: string;
-		updatedAt: string;
 		reminder: string;
 		placeholderTitle: string;
 		placeholderCompany: string;
@@ -126,16 +121,10 @@ export type TranslationKeys = {
 	actions: {
 		save: string;
 		cancel: string;
-		confirm: string;
-		export: string;
-		import: string;
-		upload: string;
 		search: string;
 		addTag: string;
 	};
 	theme: {
-		light: string;
-		dark: string;
 		toggle: string;
 	};
 	backup: {
@@ -143,8 +132,6 @@ export type TranslationKeys = {
 		subtitle: string;
 		exportJson: string;
 		importJson: string;
-		localDump: string;
-		cloudSync: string;
 		cloudSyncDisabled: string;
 		manualTitle: string;
 		manualDesc: string;
@@ -157,8 +144,6 @@ export type TranslationKeys = {
 		localButton: string;
 		cloudTitle: string;
 		cloudDesc: string;
-		inactive: string;
-		active: string;
 		plannedFeature: string;
 		successImport: string;
 		errorFormat: string;
@@ -169,7 +154,6 @@ export type TranslationKeys = {
 		errorSaveFail: string;
 	};
 	analytics: {
-		title: string;
 		subtitle: string;
 		statusOverview: string;
 		funnelTitle: string;
@@ -265,11 +249,9 @@ export type TranslationKeys = {
 		};
 	};
 	empty: {
-		kanban: string;
 		analytics: string;
 	};
 	a11y: {
-		skipToContent: string;
 		openMenu: string;
 		closeMenu: string;
 		toggleTheme: string;
