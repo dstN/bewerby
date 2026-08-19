@@ -17,9 +17,10 @@ jobs:
     # Generous, but bounded: a transient runner-infra hang (e.g. apt-get
     # stalling against a mirror) should fail loudly within minutes, not burn
     # Actions minutes for hours with no visibility until manually cancelled.
-    # 20 (not 15): the Playwright install step below now retries internally,
-    # each attempt individually bounded, and needs headroom for that.
-    timeout-minutes: 20
+    # This is intentionally the ONLY layer that kills a hung apt-get - see
+    # the comment on the Playwright install step for why an in-job retry
+    # loop with its own `timeout` actively made this worse, not better.
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
 
@@ -48,20 +49,19 @@ jobs:
       - name: Build
         run: npm run build
 
-      # apt-get against the runner's mirror has twice now stalled for 15-30
-      # minutes instead of failing cleanly (observed on real runs, not
-      # hypothetical) - each attempt gets its own hard 4-minute cap via
-      # `timeout` so a hung apt-get is killed and retried instead of eating
-      # the whole job budget.
+      # apt-get against the runner's mirror has intermittently stalled for
+      # 15-30 minutes instead of failing cleanly (observed on real runs).
+      # A retry loop with its own `timeout` wrapper was tried here and made
+      # things worse: `timeout` only signals its direct child (npx), not the
+      # privileged `sudo apt-get` it spawns, which sudo does not forward
+      # signals to by default - so a killed attempt leaves apt-get running,
+      # holding the dpkg lock, and every subsequent retry in the *same* job
+      # fails instantly instead of ever getting a clean shot. The job-level
+      # timeout-minutes above is the only safety net that actually works
+      # here, since it tears down the whole runner VM rather than one
+      # subprocess - on a hang, re-running the job gets a clean machine.
       - name: Install Playwright browser
-        run: |
-          for attempt in 1 2 3; do
-            if timeout 240 npx playwright install --with-deps chromium; then
-              exit 0
-            fi
-            echo "Attempt $attempt failed or timed out, retrying..."
-          done
-          exit 1
+        run: npx playwright install --with-deps chromium
 
       - name: E2E smoke tests
         run: npm run test:e2e
