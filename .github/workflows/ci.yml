@@ -18,13 +18,14 @@ jobs:
       - uses: actions/checkout@v7
 
       # Matches package.json's engines field (enforced by .npmrc's
-      # engine-strict) - NOT the production server's Node version. pdfjs-dist
-      # requires Node >=22.13 to *install*, but the built output that
-      # actually runs on the server (see DEPLOYMENT.md) is a fully bundled,
-      # dependency-free artifact; the server itself only needs Node >=20.
+      # engine-strict) and current local dev - NOT the production server's
+      # Node version. pdfjs-dist only requires Node >=22.13 to *install*, but
+      # the built output that actually runs on the server (see DEPLOYMENT.md)
+      # is a fully bundled, dependency-free artifact; the server itself only
+      # needs Node >=20.
       - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 26
           cache: npm
 
       - run: npm ci

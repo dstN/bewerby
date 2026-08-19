@@ -4,7 +4,7 @@
 	"version": "0.0.1",
 	"type": "module",
 	"engines": {
-		"node": ">=22.13.0"
+		"node": ">=26.0.0"
 	},
 	"scripts": {
 		"dev": "vite dev",
@@ -26,7 +26,7 @@
 		"@sveltejs/adapter-node": "^5.5.4",
 		"@sveltejs/kit": "^2.63.0",
 		"@sveltejs/vite-plugin-svelte": "^7.1.2",
-		"@types/node": "^24",
+		"@types/node": "^26",
 		"eslint": "^10.4.1",
 		"eslint-config-prettier": "^10.1.8",
 		"eslint-plugin-svelte": "^3.19.0",
