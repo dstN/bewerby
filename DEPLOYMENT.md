@@ -78,7 +78,12 @@ replacement for it.
    - **Document Root**: `/bewerby/build/client` — a subdirectory of
      Application Root, never the same path
    - **Application Startup File**: `app.cjs`
-   - **Node.js version**: 20 or newer (see `package.json`'s `engines` field)
+   - **Node.js version**: 20 or newer. This is a separate requirement from
+     `package.json`'s `engines` field (`>=22.13.0`, needed only to `npm
+install`/build - see "Build & deploy" below): the server never runs npm
+     at all, only the already-bundled `build/handler.js`, which uses nothing
+     beyond Node's own built-in modules (see "What actually needs to be on
+     the server").
 2. Confirm `mod_headers`, `mod_rewrite`, `mod_expires` and `mod_mime` are
    enabled for the vhost — `build/client/.htaccess` (generated from
    `static/.htaccess`) depends on all four for security headers, the
@@ -91,6 +96,10 @@ replacement for it.
 
 ```sh
 # 1. Build locally (or in CI) - never build directly on the shared host.
+#    Requires Node >=22.13 (package.json's engines field, enforced by
+#    .npmrc's engine-strict) - that floor comes from pdfjs-dist and only
+#    applies here, not to the server itself (see the Node.js version note
+#    in "First-time setup" above).
 npm ci
 npm run lint && npm run check
 npm run build

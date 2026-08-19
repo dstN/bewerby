@@ -17,11 +17,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Matches production (see DEPLOYMENT.md: "Node.js version: 20 or newer")
-      # and package.json's engines field, enforced by .npmrc's engine-strict.
+      # Matches package.json's engines field (enforced by .npmrc's
+      # engine-strict) - NOT the production server's Node version. pdfjs-dist
+      # requires Node >=22.13 to *install*, but the built output that
+      # actually runs on the server (see DEPLOYMENT.md) is a fully bundled,
+      # dependency-free artifact; the server itself only needs Node >=20.
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - run: npm ci
