@@ -1,4 +1,11 @@
+import { readFileSync } from 'node:fs';
 import { test, expect } from '@playwright/test';
+
+test('the sidebar version tag matches package.json (single source of truth)', async ({ page }) => {
+	const pkg = JSON.parse(readFileSync('package.json', 'utf-8'));
+	await page.goto('/');
+	await expect(page.locator('.version-tag')).toHaveText(`v${pkg.version}`);
+});
 
 test.describe('Kanban board CRUD', () => {
 	test.beforeEach(({ page }) => {

@@ -188,7 +188,7 @@
 				<a href={resolve('/impressum')}>{t('nav.impressum')}</a>
 				<a href={resolve('/datenschutz')}>{t('nav.datenschutz')}</a>
 			</nav>
-			<span class="version-tag">v0.0.1</span>
+			<span class="version-tag">v{__APP_VERSION__}</span>
 		{/if}
 	</div>
 </aside>

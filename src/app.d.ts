@@ -8,6 +8,13 @@ declare global {
 		// interface PageState {}
 		// interface Platform {}
 	}
+
+	// Injected by vite.config.ts's define, from package.json's version field -
+	// the single source of truth for the version shown in Sidebar.svelte.
+	// Must live inside this `declare global` block, not just top-level in
+	// this file - `export {}` below makes the file a module, and a bare
+	// `declare const` at module scope would only be visible within it.
+	const __APP_VERSION__: string;
 }
 
 // pdfjs-dist ships no .d.ts next to this minified subpath (only the plain
