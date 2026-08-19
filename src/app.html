@@ -9,6 +9,35 @@
 			name="description"
 			content="bewerby - DSGVO-konformer Bewerbungsmanager. Verwalte deine Bewerbungen lokal und sicher im Browser."
 		/>
+
+		<!-- Link-preview cards (WhatsApp, Discord, Slack, Twitter/X, ...). This
+		     shell is shared by every prerendered route with no per-page values
+		     to fill in (app.html sits outside the Svelte component tree, before
+		     i18n initializes - same reason the description above is hardcoded
+		     German rather than translated), so these describe the app as a
+		     whole rather than the specific page being shared. og:image must be
+		     an absolute URL per the OG spec; the domain is hardcoded since this
+		     file is bewerby.de-specific, not portable template code. -->
+		<meta property="og:type" content="website" />
+		<meta property="og:site_name" content="bewerby" />
+		<meta property="og:title" content="bewerby – DSGVO-konformer Bewerbungsmanager" />
+		<meta
+			property="og:description"
+			content="Verwalte deine Bewerbungen lokal und sicher im Browser. Keine Konten, keine Server, keine Cloud."
+		/>
+		<meta property="og:url" content="https://bewerby.de/" />
+		<meta property="og:image" content="https://bewerby.de/screenshots/board-wide.png" />
+		<meta property="og:image:width" content="1280" />
+		<meta property="og:image:height" content="800" />
+		<meta property="og:locale" content="de_DE" />
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:title" content="bewerby – DSGVO-konformer Bewerbungsmanager" />
+		<meta
+			name="twitter:description"
+			content="Verwalte deine Bewerbungen lokal und sicher im Browser. Keine Konten, keine Server, keine Cloud."
+		/>
+		<meta name="twitter:image" content="https://bewerby.de/screenshots/board-wide.png" />
+
 		<meta name="apple-mobile-web-app-capable" content="yes" />
 		<meta name="apple-mobile-web-app-status-bar-style" content="default" />
 		<meta name="apple-mobile-web-app-title" content="bewerby" />

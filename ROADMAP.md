@@ -483,12 +483,23 @@ Verifiziert: `npx vitest run` — 45 Tests in 5 Dateien, alle grün. `npm run ch
 | #   | Aufgabe                                       | Labels        | Issue                                            |
 | :-- | :-------------------------------------------- | :------------ | :----------------------------------------------- |
 | 36  | Epic: Ende-zu-Ende-verschlüsselter Cloud-Sync | `enhancement` | [#36](https://github.com/dstN/bewerby/issues/36) |
+| 38  | ✅ Open Graph / Twitter Card Meta-Tags        | `enhancement` | [#38](https://github.com/dstN/bewerby/issues/38) |
 
 ### 36 — Epic: Ende-zu-Ende-verschlüsselter Cloud-Sync
 
 **Ist:** Die Tier-3-Karte auf der Backup-Seite kündigt Google-Drive- und Dropbox-Synchronisation an, ohne dass eine Implementierung existiert.
 
 **Soll:** Ein echter Synchronisationsweg, bei dem Daten das Gerät ausschließlich clientseitig verschlüsselt verlassen (WebCrypto, Zero-Knowledge gegenüber dem Anbieter). Braucht ein eigenes Krypto- und Schlüsselverwaltungskonzept — inklusive Antwort darauf, was bei Schlüsselverlust passiert — und wird deshalb bewusst nach v1 gelegt, um den Release nicht zu blockieren.
+
+Ein Vorschlag aus dieser Phase, das Ganze stattdessen per QR-Code zwischen zwei Browsern zu spiegeln, scheidet als Transportweg aus: ein QR-Code fasst realistisch nur wenige KB, IndexedDB-Zeilen mit angehängten PDFs sprengen das schon bei einer einzigen Bewerbung, und "immer gespiegelt" verlangt ohnehin einen fortlaufenden Kanal zwischen den Geräten (auch WebRTC braucht für den initialen Handshake einen Signaling-Server), nicht nur einen einmaligen Datentransfer. Läuft auf dasselbe Problem hinaus, das dieses Epic lösen soll.
+
+### 38 — Open Graph / Twitter Card Meta-Tags
+
+**Status:** ✅ Erledigt (siehe [#38](https://github.com/dstN/bewerby/issues/38) für den schließenden Commit und Details). `src/app.html` ergänzt um `og:type`/`og:site_name`/`og:title`/`og:description`/`og:url`/`og:image`(+`width`/`height`)/`og:locale` sowie `twitter:card`/`twitter:title`/`twitter:description`/`twitter:image`. Als Vorschaubild dient das bereits vorhandene `static/screenshots/board-wide.png` (1280×800, aus der Manifest-Screenshot-Ergänzung), referenziert als absolute `https://bewerby.de/...`-URL (von der OG-Spezifikation verlangt). Da `app.html` als statische Hülle vor der Svelte-Komponentenhierarchie und vor der i18n-Initialisierung liegt (derselbe Grund, aus dem die bestehende `description`-Meta-Angabe schon hartkodiertes Deutsch statt i18n ist), sind die Werte seitenweit identisch statt pro Route generiert — für die primäre Freigabe der Startseite ausreichend, eine Pro-Route-Individualisierung wäre ein separater Aufwand.
+
+**Ist:** Keine `og:*`- oder `twitter:*`-Tags irgendwo im Markup — geteilte Links in WhatsApp, Discord, Slack oder Twitter/X zeigten keine Vorschau.
+
+**Soll:** Eine funktionierende Linkvorschau mit Titel, Beschreibung und Bild in den gängigen Messengern/Plattformen.
 
 ---
 
