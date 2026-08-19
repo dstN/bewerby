@@ -480,10 +480,11 @@ Verifiziert: `npx vitest run` — 45 Tests in 5 Dateien, alle grün. `npm run ch
 
 ## Nach v1 (Backlog, ohne Milestone)
 
-| #   | Aufgabe                                       | Labels        | Issue                                            |
-| :-- | :-------------------------------------------- | :------------ | :----------------------------------------------- |
-| 36  | Epic: Ende-zu-Ende-verschlüsselter Cloud-Sync | `enhancement` | [#36](https://github.com/dstN/bewerby/issues/36) |
-| 38  | ✅ Open Graph / Twitter Card Meta-Tags        | `enhancement` | [#38](https://github.com/dstN/bewerby/issues/38) |
+| #   | Aufgabe                                           | Labels        | Issue                                            |
+| :-- | :------------------------------------------------ | :------------ | :----------------------------------------------- |
+| 36  | Epic: Ende-zu-Ende-verschlüsselter Cloud-Sync     | `enhancement` | [#36](https://github.com/dstN/bewerby/issues/36) |
+| 38  | ✅ Open Graph / Twitter Card Meta-Tags            | `enhancement` | [#38](https://github.com/dstN/bewerby/issues/38) |
+| 39  | ✅ PWA-Icons 404 live (`/icons/`-Alias-Kollision) | `bug`         | [#39](https://github.com/dstN/bewerby/issues/39) |
 
 ### 36 — Epic: Ende-zu-Ende-verschlüsselter Cloud-Sync
 
@@ -500,6 +501,16 @@ Ein Vorschlag aus dieser Phase, das Ganze stattdessen per QR-Code zwischen zwei 
 **Ist:** Keine `og:*`- oder `twitter:*`-Tags irgendwo im Markup — geteilte Links in WhatsApp, Discord, Slack oder Twitter/X zeigten keine Vorschau.
 
 **Soll:** Eine funktionierende Linkvorschau mit Titel, Beschreibung und Bild in den gängigen Messengern/Plattformen.
+
+**Nachtrag (zweisprachiger Text):** Auf Wunsch tragen `og:title`/`og:description`/`twitter:title`/`twitter:description` jetzt beide Sprachen in einem String (getrennt durch " / "), zusätzlich `og:locale:alternate` (`en_US`) neben dem primären `og:locale` (`de_DE`). Eine echte Sprachauswahl durch den Client ("der Roboter wählt die Sprache") ist mit einer einzelnen statischen `app.html`-Hülle ohne serverseitige Content-Negotiation nicht möglich — das bräuchte echte lokalisierte Routen (`/de/...`, `/en/...`) mit `hreflang`, ein eigenständiges, deutlich größeres i18n-Routing-Vorhaben, hier bewusst nicht mit angegangen.
+
+### 39 — PWA-Icons 404 live (`/icons/`-Alias-Kollision)
+
+**Status:** ✅ Erledigt (siehe [#39](https://github.com/dstN/bewerby/issues/39) für den schließenden Commit und Details). Live-Diagnose direkt nach dem ersten erfolgreichen Deploy: `/icons/apple-touch-icon.png` und die drei weiteren Dateien unter `static/icons/` lieferten 404, obwohl jede andere statische Datei (Fonts, `manifest.json`, `service-worker.js`, `static/screenshots/*`) im selben Deploy korrekt auslieferte. Der 404-Body war Plesks generische Standard-Fehlerseite (`/error_docs/styles.css`, Zeitstempel 2020) statt SvelteKits eigener gerenderter 404-Seite — die Anfrage erreichte Passenger/Node also nie. Deckt sich exakt mit Apaches verbreiteter, serverweiter `Alias /icons/`-Voreinstellung (Teil vieler Distributions-Apache-Configs für `mod_autoindex`s Verzeichnis-Icons), die diesen Pfad-Präfix hostweit abfängt, unabhängig vom vHost oder `.htaccess`-Inhalt. Behoben durch Umbenennung von `static/icons/` zu `static/app-icons/` (alle Referenzen in `app.html`, `reminders.ts` und `manifest.json` mitgezogen) statt eines riskanteren Eingriffs in die Server-Konfiguration.
+
+**Ist:** `static/icons/*` 404en live, obwohl die Dateien im Build und im Git-Tracking vorhanden sind.
+
+**Soll:** Alle vier PWA-Icon-Dateien sind live unter einem Pfad erreichbar, der nicht mit einer Apache-Standardvoreinstellung kollidiert.
 
 ---
 

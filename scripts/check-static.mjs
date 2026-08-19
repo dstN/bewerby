@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 const STATIC_DIR = fileURLToPath(new URL('../static', import.meta.url));
 
 const ALLOWED_FILES = new Set(['.gitignore', '.htaccess', 'manifest.json', 'robots.txt']);
-const ALLOWED_DIRS = new Set(['fonts', 'icons', 'screenshots']);
+const ALLOWED_DIRS = new Set(['fonts', 'app-icons', 'screenshots']);
 
 function walk(dir, isRoot) {
 	const violations = [];

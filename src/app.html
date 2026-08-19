@@ -15,34 +15,51 @@
 		     to fill in (app.html sits outside the Svelte component tree, before
 		     i18n initializes - same reason the description above is hardcoded
 		     German rather than translated), so these describe the app as a
-		     whole rather than the specific page being shared. og:image must be
-		     an absolute URL per the OG spec; the domain is hardcoded since this
-		     file is bewerby.de-specific, not portable template code. -->
+		     whole rather than the specific page being shared. A single static
+		     response can't content-negotiate by Accept-Language the way the
+		     in-app i18n does, so title/description carry both languages in one
+		     string rather than picking just one. og:image must be an absolute
+		     URL per the OG spec; the domain is hardcoded since this file is
+		     bewerby.de-specific, not portable template code. -->
 		<meta property="og:type" content="website" />
 		<meta property="og:site_name" content="bewerby" />
-		<meta property="og:title" content="bewerby – DSGVO-konformer Bewerbungsmanager" />
+		<meta
+			property="og:title"
+			content="bewerby – DSGVO-konformer Bewerbungsmanager / GDPR-compliant Job Application Tracker"
+		/>
 		<meta
 			property="og:description"
-			content="Verwalte deine Bewerbungen lokal und sicher im Browser. Keine Konten, keine Server, keine Cloud."
+			content="Verwalte deine Bewerbungen lokal und sicher im Browser. Keine Konten, keine Server, keine Cloud. / Manage your job applications locally and securely in the browser. No accounts, no servers, no cloud."
 		/>
 		<meta property="og:url" content="https://bewerby.de/" />
 		<meta property="og:image" content="https://bewerby.de/screenshots/board-wide.png" />
 		<meta property="og:image:width" content="1280" />
 		<meta property="og:image:height" content="800" />
 		<meta property="og:locale" content="de_DE" />
+		<meta property="og:locale:alternate" content="en_US" />
 		<meta name="twitter:card" content="summary_large_image" />
-		<meta name="twitter:title" content="bewerby – DSGVO-konformer Bewerbungsmanager" />
+		<meta
+			name="twitter:title"
+			content="bewerby – DSGVO-konformer Bewerbungsmanager / GDPR-compliant Job Application Tracker"
+		/>
 		<meta
 			name="twitter:description"
-			content="Verwalte deine Bewerbungen lokal und sicher im Browser. Keine Konten, keine Server, keine Cloud."
+			content="Verwalte deine Bewerbungen lokal und sicher im Browser. Keine Konten, keine Server, keine Cloud. / Manage your job applications locally and securely in the browser. No accounts, no servers, no cloud."
 		/>
 		<meta name="twitter:image" content="https://bewerby.de/screenshots/board-wide.png" />
 
 		<meta name="apple-mobile-web-app-capable" content="yes" />
 		<meta name="apple-mobile-web-app-status-bar-style" content="default" />
 		<meta name="apple-mobile-web-app-title" content="bewerby" />
-		<link rel="icon" type="image/png" href="/icons/apple-touch-icon.png" />
-		<link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png" />
+		<!-- Deliberately /app-icons/, not /icons/: Apache ships a server-wide
+		     `Alias /icons/` (mod_autoindex's built-in icon library, used for
+		     directory-listing icons) that intercepts that exact path prefix
+		     ahead of any vhost's Document Root. Verified live on bewerby.de -
+		     these files 404'd from a stock Plesk error page (never reaching
+		     Passenger/Node at all) while every sibling static asset outside
+		     /icons/ served correctly. -->
+		<link rel="icon" type="image/png" href="/app-icons/apple-touch-icon.png" />
+		<link rel="apple-touch-icon" sizes="180x180" href="/app-icons/apple-touch-icon.png" />
 		<link rel="manifest" href="/manifest.json" />
 
 		<!-- Preload the 4 actually-used Lexend weights (see issue #22) so they

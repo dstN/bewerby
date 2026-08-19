@@ -94,7 +94,7 @@ async function showReminderNotification(app: Application): Promise<boolean> {
 	const body = `Es ist Zeit, bei ${app.company} bezüglich deiner Bewerbung als ${app.title} nachzufragen.`;
 	const options: NotificationOptions = {
 		body,
-		icon: '/icons/apple-touch-icon.png',
+		icon: '/app-icons/apple-touch-icon.png',
 		tag: `reminder-${app.id}`,
 		data: { applicationId: app.id }
 	};
