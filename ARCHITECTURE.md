@@ -12,18 +12,26 @@ short. Written for whoever next touches this code, including future me.
 | Attached PDFs                                                  | OPFS (Origin Private File System), via `src/lib/utils/opfs.ts`     | An application row stores only a `pdfRef` (a random filename), not the PDF bytes. Keeping large blobs out of IndexedDB rows means every board/analytics/reminder read - which touches _every_ row - stays cheap regardless of how many or how large the attached PDFs are. Each application row's `pdfRef` points at exactly one file under `application-pdfs/`. |
 
 Nothing else exists: no server database, no account, no first-party or
-third-party analytics. The entire codebase has exactly one `fetch()` call
-(the service worker's own asset fetches) and no `sendBeacon`, no remote
-`<script>`, no `@import url()`. This is a deliberate, verified property, not
-an accident - see the codebase audit referenced in [ROADMAP.md](ROADMAP.md).
+third-party analytics. Application data (rows, PDFs, settings) never leaves
+the device: no `sendBeacon`, no remote `<script>`, no `@import url()`, and
+`dependencies` in `package.json` covers exactly three packages (Dexie,
+pdf.js, and one currently-unused icon library), none of which do network
+I/O. This is a deliberate, verified property, not an accident - see the
+codebase audit referenced in [ROADMAP.md](ROADMAP.md).
 
-### Why data never leaves the device
+There are exactly two `fetch()` call sites, both unrelated to application
+data: the service worker's own asset fetches, and the contact form at
+`/kontakt` (`src/routes/kontakt/+page.svelte`), which posts only what the
+visitor types into that form - name, email, message - to
+`https://contact.yinside.de/phpmailer.php`. That's a mail relay on separate
+infrastructure operated by the same person as bewerby.de, not a third-party
+processor, but it is a genuine cross-origin request; the CSP's `connect-src`
+(`vite.config.ts`) explicitly allowlists that one origin, and the
+Datenschutzerklärung (`/datenschutz`) discloses it. No other route makes
+this - or any - network call.
 
-There is nothing to configure to keep it that way - there is no code path
-that could send it anywhere. `dependencies` in `package.json` covers exactly
-three packages (Dexie, pdf.js, and one currently-unused icon library), none
-of which do network I/O. The `Tier 3` "Cloud Sync" card on the Backup page is
-an honest, clearly-labeled placeholder for a _planned_, not yet implemented,
+The `Tier 3` "Cloud Sync" card on the Backup page is an honest,
+clearly-labeled placeholder for a _planned_, not yet implemented,
 end-to-end-encrypted sync feature - see the Backlog section of
 [ROADMAP.md](ROADMAP.md).
 

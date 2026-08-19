@@ -9,7 +9,9 @@
 		"backup": "Backup & Sync",
 		"settings": "Settings",
 		"impressum": "Legal Notice",
-		"datenschutz": "Privacy Policy"
+		"datenschutz": "Privacy Policy",
+		"nutzungsbedingungen": "Terms of Use",
+		"kontakt": "Contact"
 	},
 	"kanban": {
 		"columns": {
@@ -203,6 +205,8 @@
 			"infoTitle": "Information pursuant to § 5 German Digital Services Act (DDG)",
 			"contactTitle": "Contact",
 			"contactEmailLabel": "Email",
+			"formHint": "Alternatively, reach us via our",
+			"formLink": "contact form",
 			"responsibleTitle": "Responsible for content pursuant to § 18 (2) German Interstate Media Treaty (MStV)"
 		},
 		"datenschutz": {
@@ -210,7 +214,7 @@
 			"intro": "bewerby processes your application data exclusively on this device. This policy describes what data technically arises, where it lives, and what rights you have.",
 			"controllerTitle": "Data controller under the GDPR",
 			"principleTitle": "Core principle: strictly local processing",
-			"principleBody": "Everything you enter into bewerby - job title, company name, contact details, salary expectations, notes, and uploaded cover-letter PDFs - is stored exclusively in your browser's local storage (IndexedDB and the Origin Private File System). There is no server this content is sent to, received by, or stored on. Inspecting the source code or your browser's network activity confirms this: aside from the initial load of the application itself, bewerby makes no network connections at all.",
+			"principleBody": "Everything you enter into bewerby - job title, company name, contact details, salary expectations, notes, and uploaded cover-letter PDFs - is stored exclusively in your browser's local storage (IndexedDB and the Origin Private File System). There is no server this content is sent to, received by, or stored on. The one exception is the contact form (see below): if you actively use it, exactly the contact details you enter there are transmitted in that request - otherwise bewerby makes no network connections at all beyond the application's initial load.",
 			"storageTitle": "Where each kind of data lives",
 			"storageIndexedDbTitle": "IndexedDB (database \"bewerby-db\")",
 			"storageIndexedDbDesc": "Holds every application record: job title, company, contact details, notes, priority, status, tags, dates, and the history of status changes.",
@@ -230,9 +234,45 @@
 			"hostingBody": "When you load this page, the hosting provider's web server processes technically unavoidable access data (e.g. IP address, time of access, requested file), as is standard for any website visit. These log entries concern only the delivery of the application itself, not the application data you enter within it. The retention period for these access logs is governed by the hosting provider's own terms.",
 			"rightsTitle": "Your rights",
 			"rightsBody": "Since all application data lives exclusively on your device, you exercise your rights to access, rectification, and erasure directly within the application: applications can be viewed, edited, and individually deleted at any time. Settings also lets you permanently delete all data in one click (right to erasure). The backup page lets you export all data as a file (right to data portability) and import it again.",
+			"contactFormTitle": "Contact form",
+			"contactFormBody": "If you use the contact form, your name, email address, and message are forwarded by email to the controller. This is processed by a script on infrastructure the controller also operates themselves - not by a third party. It is not stored in a database, only delivered by email. The legal basis is Art. 6(1)(f) GDPR (legitimate interest in responding to your inquiry).",
 			"contactRightsTitle": "Contact for inquiries",
 			"changesTitle": "Changes to this policy",
 			"changesBody": "This policy will be updated whenever the actual data processing changes."
+		},
+		"nutzungsbedingungen": {
+			"title": "Terms of Use",
+			"intro": "These terms of use apply to using bewerby. By using the application, you agree to them.",
+			"scopeTitle": "1. Scope",
+			"scopeBody": "bewerby is a free, personal project for managing job application documents. There is no contractual relationship and no entitlement to any particular availability or functionality.",
+			"serviceTitle": "2. Service description",
+			"serviceBody": "bewerby runs entirely in the browser and processes all application data exclusively on the user's own device (see the Privacy Policy). It is not a cloud service with user accounts.",
+			"dataResponsibilityTitle": "3. Responsibility for your own backups",
+			"dataResponsibilityBody": "Since all application data is stored exclusively in the local browser, it is irrecoverably lost if browser data is cleared or a device is changed or fails, unless backed up beforehand. Creating your own backups via the Backup page is the user's own responsibility.",
+			"availabilityTitle": "4. Availability",
+			"availabilityBody": "There is no entitlement to continuous availability, error-free operation, or continued development of bewerby. Access may be restricted or discontinued at any time without notice.",
+			"liabilityTitle": "5. Limitation of liability",
+			"liabilityBody": "Use of bewerby is at your own risk. No liability is assumed for data loss, missed application opportunities, or other damages arising from use of the application, to the extent permitted by law. This does not apply to damages arising from injury to life, body, or health, or damages based on intent or gross negligence.",
+			"changesTitle": "6. Changes to these terms",
+			"changesBody": "These terms of use may be updated if bewerby's scope of features changes. The current version is always available on this page.",
+			"lawTitle": "7. Governing law",
+			"lawBody": "German law applies."
+		},
+		"kontakt": {
+			"title": "Contact",
+			"subtitle": "Questions, feedback, or comments about bewerby? Feel free to write to us.",
+			"name": "Name",
+			"namePlaceholder": "Your name",
+			"email": "Email",
+			"emailPlaceholder": "your@email.com",
+			"message": "Message",
+			"messagePlaceholder": "Your message...",
+			"send": "Send",
+			"sending": "Sending …",
+			"success": "Your message was sent successfully.",
+			"error": "Message could not be sent. Please try again, or email the address above directly.",
+			"validationError": "Please fill in all fields correctly.",
+			"formHint": "Alternatively, reach us directly at the email address above."
 		}
 	},
 	"empty": {

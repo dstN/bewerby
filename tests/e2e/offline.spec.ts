@@ -1,6 +1,15 @@
 import { test, expect } from '@playwright/test';
 
-const ROUTES = ['/', '/analytics', '/backup', '/settings', '/impressum', '/datenschutz'];
+const ROUTES = [
+	'/',
+	'/analytics',
+	'/backup',
+	'/settings',
+	'/impressum',
+	'/datenschutz',
+	'/nutzungsbedingungen',
+	'/kontakt'
+];
 
 test.describe('Offline hard reload', () => {
 	test('every route still renders after the service worker is active and the network is cut', async ({

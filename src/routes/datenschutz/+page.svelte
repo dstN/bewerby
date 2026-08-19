@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { t } from '$lib/i18n/index.svelte.js';
+	import { resolve } from '$app/paths';
 	import ObfuscatedEmail from '$lib/components/common/ObfuscatedEmail.svelte';
 </script>
 
@@ -96,8 +97,13 @@
 	</section>
 
 	<section class="legal-card">
+		<h2>{t('legal.datenschutz.contactFormTitle')}</h2>
+		<p>{t('legal.datenschutz.contactFormBody')}</p>
+	</section>
+
+	<section class="legal-card">
 		<h2>{t('legal.datenschutz.contactRightsTitle')}</h2>
-		<p><ObfuscatedEmail /></p>
+		<p><ObfuscatedEmail /> · <a href={resolve('/kontakt')}>{t('nav.kontakt')}</a></p>
 	</section>
 
 	<section class="legal-card">
@@ -207,5 +213,9 @@
 		line-height: 1.7;
 		font-style: normal;
 		color: var(--text-secondary);
+	}
+
+	.legal-card a {
+		color: var(--color-accent-text);
 	}
 </style>

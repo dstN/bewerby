@@ -9,7 +9,9 @@
 		"backup": "Backup & Sync",
 		"settings": "Einstellungen",
 		"impressum": "Impressum",
-		"datenschutz": "Datenschutz"
+		"datenschutz": "Datenschutz",
+		"nutzungsbedingungen": "Nutzungsbedingungen",
+		"kontakt": "Kontakt"
 	},
 	"kanban": {
 		"columns": {
@@ -203,6 +205,8 @@
 			"infoTitle": "Angaben gemäß § 5 Digitale-Dienste-Gesetz (DDG)",
 			"contactTitle": "Kontakt",
 			"contactEmailLabel": "E-Mail",
+			"formHint": "Alternativ erreichst du uns über unser",
+			"formLink": "Kontaktformular",
 			"responsibleTitle": "Verantwortlich für den Inhalt nach § 18 Abs. 2 Medienstaatsvertrag (MStV)"
 		},
 		"datenschutz": {
@@ -210,7 +214,7 @@
 			"intro": "Bewerby verarbeitet deine Bewerbungsdaten ausschließlich lokal auf diesem Gerät. Diese Erklärung beschreibt, welche Daten technisch anfallen, wo sie liegen und welche Rechte dir zustehen.",
 			"controllerTitle": "Verantwortlicher im Sinne der DSGVO",
 			"principleTitle": "Grundprinzip: ausschließlich lokale Verarbeitung",
-			"principleBody": "Alle Inhalte, die du in bewerby einträgst — Jobtitel, Firmenname, Kontaktdaten, Gehaltsvorstellung, Notizen und hochgeladene PDF-Anschreiben — werden ausschließlich im lokalen Speicher deines Browsers abgelegt (IndexedDB und Origin Private File System). Es gibt keinen Server, an den diese Inhalte übertragen, der sie empfängt oder speichert. Ein Blick in den Quellcode oder die Netzwerkanalyse deines Browsers bestätigt das: bewerby stellt außer dem initialen Laden der Anwendung selbst keine Netzwerkverbindungen her.",
+			"principleBody": "Alle Inhalte, die du in bewerby einträgst — Jobtitel, Firmenname, Kontaktdaten, Gehaltsvorstellung, Notizen und hochgeladene PDF-Anschreiben — werden ausschließlich im lokalen Speicher deines Browsers abgelegt (IndexedDB und Origin Private File System). Es gibt keinen Server, an den diese Inhalte übertragen, der sie empfängt oder speichert. Die einzige Ausnahme ist das Kontaktformular (siehe unten): Nutzt du es aktiv, werden genau die von dir eingegebenen Kontaktdaten per Anfrage übertragen — sonst stellt bewerby außer dem initialen Laden der Anwendung keine Netzwerkverbindungen her.",
 			"storageTitle": "Wo welche Daten liegen",
 			"storageIndexedDbTitle": "IndexedDB (Datenbank „bewerby-db\")",
 			"storageIndexedDbDesc": "Enthält alle Bewerbungsdatensätze: Jobtitel, Firma, Kontaktdaten, Notizen, Priorität, Status, Tags, Termine und den Verlauf der Statusänderungen.",
@@ -230,9 +234,45 @@
 			"hostingBody": "Beim Aufruf dieser Seite verarbeitet der Webserver des Hosting-Anbieters technisch unvermeidbare Zugriffsdaten (z. B. IP-Adresse, Zeitpunkt des Zugriffs, angeforderte Datei), wie bei jedem Website-Aufruf üblich. Diese Protokolldaten betreffen ausschließlich die Auslieferung der Anwendung selbst, nicht die Bewerbungsdaten, die du in der Anwendung einträgst. Für die Speicherdauer dieser Zugriffsprotokolle gelten die Angaben des Hosting-Anbieters.",
 			"rightsTitle": "Deine Rechte",
 			"rightsBody": "Da alle Bewerbungsdaten ausschließlich auf deinem Gerät liegen, übst du deine Rechte auf Auskunft, Berichtigung und Löschung direkt in der Anwendung aus: Bewerbungen lassen sich jederzeit einsehen, bearbeiten und einzeln löschen. In den Einstellungen kannst du zudem mit einem Klick alle Daten vollständig und unwiderruflich löschen (Recht auf Löschung). Über die Backup-Seite kannst du alle Daten als Datei exportieren (Recht auf Datenübertragbarkeit) und wieder importieren.",
+			"contactFormTitle": "Kontaktformular",
+			"contactFormBody": "Wenn du das Kontaktformular nutzt, werden Name, E-Mail-Adresse und Nachrichtentext per E-Mail an den Verantwortlichen weitergeleitet. Diese Daten werden dabei von einem Skript auf demselben Server verarbeitet, der auch diese Seite ausliefert — nicht von einem Drittanbieter. Sie werden nicht in einer Datenbank gespeichert, sondern ausschließlich per E-Mail zugestellt. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an der Beantwortung deiner Anfrage).",
 			"contactRightsTitle": "Kontakt für Anfragen",
 			"changesTitle": "Änderungen dieser Erklärung",
 			"changesBody": "Diese Erklärung wird angepasst, sobald sich an der tatsächlichen Datenverarbeitung etwas ändert."
+		},
+		"nutzungsbedingungen": {
+			"title": "Nutzungsbedingungen",
+			"intro": "Diese Nutzungsbedingungen gelten für die Verwendung von bewerby. Mit der Nutzung der Anwendung erklärst du dich mit ihnen einverstanden.",
+			"scopeTitle": "1. Geltungsbereich",
+			"scopeBody": "bewerby ist ein kostenloses, privates Projekt zur Verwaltung von Bewerbungsunterlagen. Es besteht kein Vertragsverhältnis und kein Anspruch auf eine bestimmte Verfügbarkeit oder Funktionalität.",
+			"serviceTitle": "2. Leistungsbeschreibung",
+			"serviceBody": "bewerby läuft vollständig im Browser und verarbeitet alle Bewerbungsdaten ausschließlich lokal auf dem Gerät der Nutzerin bzw. des Nutzers (siehe Datenschutzerklärung). Es handelt sich nicht um einen Cloud-Dienst mit Benutzerkonten.",
+			"dataResponsibilityTitle": "3. Eigenverantwortung für die Datensicherung",
+			"dataResponsibilityBody": "Da alle Bewerbungsdaten ausschließlich lokal im Browser gespeichert werden, gehen sie beim Löschen der Browserdaten, einem Gerätewechsel oder -defekt ohne vorherige Sicherung unwiederbringlich verloren. Für die Erstellung eigener Backups über die Backup-Seite ist die Nutzerin bzw. der Nutzer selbst verantwortlich.",
+			"availabilityTitle": "4. Verfügbarkeit",
+			"availabilityBody": "Es besteht kein Anspruch auf ständige Verfügbarkeit, Fehlerfreiheit oder Weiterentwicklung von bewerby. Der Zugriff kann jederzeit ohne Vorankündigung eingeschränkt oder eingestellt werden.",
+			"liabilityTitle": "5. Haftungsausschluss",
+			"liabilityBody": "Die Nutzung von bewerby erfolgt auf eigene Verantwortung. Es wird keine Haftung übernommen für Datenverluste, entgangene Bewerbungschancen oder sonstige Schäden, die im Zusammenhang mit der Nutzung der Anwendung entstehen, soweit gesetzlich zulässig. Dies gilt nicht für Schäden aus der Verletzung des Lebens, des Körpers oder der Gesundheit sowie für Schäden, die auf Vorsatz oder grober Fahrlässigkeit beruhen.",
+			"changesTitle": "6. Änderungen dieser Nutzungsbedingungen",
+			"changesBody": "Diese Nutzungsbedingungen können angepasst werden, wenn sich der Funktionsumfang von bewerby ändert. Die jeweils aktuelle Fassung ist auf dieser Seite abrufbar.",
+			"lawTitle": "7. Anwendbares Recht",
+			"lawBody": "Es gilt deutsches Recht."
+		},
+		"kontakt": {
+			"title": "Kontakt",
+			"subtitle": "Fragen, Feedback oder Anmerkungen zu bewerby? Schreib uns gerne.",
+			"name": "Name",
+			"namePlaceholder": "Dein Name",
+			"email": "E-Mail",
+			"emailPlaceholder": "deine@email.de",
+			"message": "Nachricht",
+			"messagePlaceholder": "Deine Nachricht...",
+			"send": "Absenden",
+			"sending": "Wird gesendet …",
+			"success": "Deine Nachricht wurde erfolgreich gesendet.",
+			"error": "Nachricht konnte nicht gesendet werden. Bitte versuche es erneut oder schreibe direkt an die oben genannte E-Mail-Adresse.",
+			"validationError": "Bitte fülle alle Felder korrekt aus.",
+			"formHint": "Alternativ erreichst du uns direkt über die oben genannte E-Mail-Adresse."
 		}
 	},
 	"empty": {

@@ -23,7 +23,9 @@ const PRERENDERED_ROUTES = [
 	'/backup',
 	'/settings',
 	'/impressum',
-	'/datenschutz'
+	'/datenschutz',
+	'/nutzungsbedingungen',
+	'/kontakt'
 ];
 
 // Assets to precache: built JS/CSS bundles + static files + the above.

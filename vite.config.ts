@@ -48,7 +48,10 @@ export default defineConfig({
 					'style-src': ['self', 'unsafe-inline'],
 					'img-src': ['self'],
 					'font-src': ['self'],
-					'connect-src': ['self'],
+					// The contact form (see /kontakt) posts to a mail relay on separate
+					// infrastructure the same person operates - not a third-party
+					// service - documented in ARCHITECTURE.md and the Datenschutzerklärung.
+					'connect-src': ['self', 'https://contact.yinside.de'],
 					'worker-src': ['self'],
 					'manifest-src': ['self'],
 					'object-src': ['none'],

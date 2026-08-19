@@ -187,6 +187,8 @@
 			<nav class="legal-links" aria-label={t('legal.impressum.title')}>
 				<a href={resolve('/impressum')}>{t('nav.impressum')}</a>
 				<a href={resolve('/datenschutz')}>{t('nav.datenschutz')}</a>
+				<a href={resolve('/nutzungsbedingungen')}>{t('nav.nutzungsbedingungen')}</a>
+				<a href={resolve('/kontakt')}>{t('nav.kontakt')}</a>
 			</nav>
 			<span class="version-tag">v{__APP_VERSION__}</span>
 		{/if}
@@ -299,7 +301,8 @@
 
 	.legal-links {
 		display: flex;
-		gap: 10px;
+		flex-wrap: wrap;
+		gap: 6px 10px;
 	}
 
 	.legal-links a {

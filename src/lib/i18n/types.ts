@@ -16,6 +16,8 @@ export type TranslationKeys = {
 		settings: string;
 		impressum: string;
 		datenschutz: string;
+		nutzungsbedingungen: string;
+		kontakt: string;
 	};
 	kanban: {
 		columns: {
@@ -209,6 +211,8 @@ export type TranslationKeys = {
 			infoTitle: string;
 			contactTitle: string;
 			contactEmailLabel: string;
+			formHint: string;
+			formLink: string;
 			responsibleTitle: string;
 		};
 		datenschutz: {
@@ -236,9 +240,45 @@ export type TranslationKeys = {
 			hostingBody: string;
 			rightsTitle: string;
 			rightsBody: string;
+			contactFormTitle: string;
+			contactFormBody: string;
 			contactRightsTitle: string;
 			changesTitle: string;
 			changesBody: string;
+		};
+		nutzungsbedingungen: {
+			title: string;
+			intro: string;
+			scopeTitle: string;
+			scopeBody: string;
+			serviceTitle: string;
+			serviceBody: string;
+			dataResponsibilityTitle: string;
+			dataResponsibilityBody: string;
+			availabilityTitle: string;
+			availabilityBody: string;
+			liabilityTitle: string;
+			liabilityBody: string;
+			changesTitle: string;
+			changesBody: string;
+			lawTitle: string;
+			lawBody: string;
+		};
+		kontakt: {
+			title: string;
+			subtitle: string;
+			name: string;
+			namePlaceholder: string;
+			email: string;
+			emailPlaceholder: string;
+			message: string;
+			messagePlaceholder: string;
+			send: string;
+			sending: string;
+			success: string;
+			error: string;
+			validationError: string;
+			formHint: string;
 		};
 	};
 	empty: {
