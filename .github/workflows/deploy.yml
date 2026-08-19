@@ -1,0 +1,266 @@
+name: Deploy
+
+on:
+  workflow_run:
+    workflows: [CI]
+    branches: [master]
+    types: [completed]
+
+jobs:
+  deploy:
+    name: Deploy to Netcup
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    # The environment must exist in repo Settings → Environments for its protection
+    # rules to apply. If it does not, GitHub silently auto-creates an UNPROTECTED one
+    # on first run - so an absent `production` environment means no approval gate.
+    # Keep the DEPLOY_* secrets as ENVIRONMENT secrets on this environment, not
+    # repository secrets: repo secrets are readable by any workflow on any branch,
+    # which would bypass the approval gate entirely.
+    environment:
+      name: production
+
+    env:
+      # Netcup's SSH is a chrooted /bin/bash whose root IS the subscription root
+      # (see the sibling GourMerge repo's docs/SECRETS.md, same hosting provider),
+      # so this is what `pwd` shows over SSH, not a /var/www/vhosts/... path.
+      REMOTE_PATH: ${{ secrets.DEPLOY_PATH }}
+      REMOTE: ${{ secrets.DEPLOY_SSH_USER }}@${{ secrets.DEPLOY_SSH_HOST }}
+
+    steps:
+      - name: Preflight — required secrets are configured
+        env:
+          DEPLOY_SSH_HOST: ${{ secrets.DEPLOY_SSH_HOST }}
+          DEPLOY_SSH_USER: ${{ secrets.DEPLOY_SSH_USER }}
+          DEPLOY_SSH_PASSWORD: ${{ secrets.DEPLOY_SSH_PASSWORD }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+          DEPLOY_DOMAIN: ${{ secrets.DEPLOY_DOMAIN }}
+        run: |
+          missing=''
+          for name in DEPLOY_SSH_HOST DEPLOY_SSH_USER DEPLOY_SSH_PASSWORD DEPLOY_PATH DEPLOY_DOMAIN; do
+            # Indirect expansion, so multi-line values stay intact.
+            if [ -z "${!name:-}" ]; then
+              missing="$missing $name"
+            fi
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::Deploy aborted — unset secrets:$missing"
+            echo "Add them as ENVIRONMENT secrets under Settings → Environments → production."
+            exit 1
+          fi
+          echo "All required deploy secrets are present."
+
+      # Check out the exact commit CI built, not master's tip - otherwise a push
+      # landing mid-deploy would ship source that doesn't match the artifact.
+      - name: Checkout the built commit
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: bewerby-build-${{ github.event.workflow_run.head_sha }}
+          path: build/
+          # artifact is uploaded by the CI workflow for the same commit
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      # Everything remote is done with plain ssh + sshpass rather than a
+      # marketplace action: the webspace login is a password (Netcup exposes no
+      # key auth in the panel), so it must not be handed to a third-party action
+      # behind a mutable tag like @v1.
+      - name: Set up SSH (password auth + host key)
+        env:
+          DEPLOY_SSH_HOST: ${{ secrets.DEPLOY_SSH_HOST }}
+          DEPLOY_SSH_HOSTKEY: ${{ secrets.DEPLOY_SSH_HOSTKEY }}
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq sshpass
+          mkdir -p ~/.ssh
+          if [ -n "${DEPLOY_SSH_HOSTKEY:-}" ]; then
+            printf '%s\n' "$DEPLOY_SSH_HOSTKEY" > ~/.ssh/known_hosts_deploy
+            echo "Host key pinned from DEPLOY_SSH_HOSTKEY."
+          else
+            ssh-keyscan -t ed25519,rsa "$DEPLOY_SSH_HOST" > ~/.ssh/known_hosts_deploy 2>/dev/null
+            echo "::warning::DEPLOY_SSH_HOSTKEY is not set, so the deploy trusts whatever"
+            echo "::warning::key ssh-keyscan just fetched. With password auth an attacker in"
+            echo "::warning::the path would receive the account password in cleartext. Pin it:"
+            echo "::warning::  ssh-keyscan -t ed25519 ${DEPLOY_SSH_HOST}"
+            echo "::warning::and store the output line as the DEPLOY_SSH_HOSTKEY secret."
+          fi
+          chmod 600 ~/.ssh/known_hosts_deploy
+
+      # rsync/gzip are not assumed to exist in the chroot (GourMerge's deploy,
+      # same hosting, confirms only tar/sh/mv/touch/mkdir there) - the artifact
+      # is streamed as an uncompressed tar over ssh (Compression=yes handles it
+      # in the SSH transport instead) into a staging directory, so the live
+      # `build/` is never a half-written tree.
+      - name: Upload release to staging directory
+        env:
+          SSHPASS: ${{ secrets.DEPLOY_SSH_PASSWORD }}
+        run: |
+          set -euo pipefail
+          # Deliberately unquoted below: these are separate ssh arguments.
+          SSH_OPTS="-o UserKnownHostsFile=$HOME/.ssh/known_hosts_deploy -o StrictHostKeyChecking=yes -o PubkeyAuthentication=no -o Compression=yes"
+
+          # `sshpass -e` takes the password from $SSHPASS; `-p` would expose it in
+          # the process list.
+          sshpass -e ssh $SSH_OPTS "$REMOTE" sh -s "$REMOTE_PATH" <<'REMOTE'
+          set -eu
+          rm -rf "$1/build.new"
+          mkdir -p "$1/build.new"
+          REMOTE
+
+          # pipefail matters here: without it a failing tar would be masked by a
+          # successful ssh and we would activate an incomplete release.
+          tar cf - -C build . \
+            | sshpass -e ssh $SSH_OPTS "$REMOTE" "tar xf - -C '$REMOTE_PATH/build.new'"
+
+          # Passenger's startup file, the Application-Root .htaccess (Passenger
+          # directives - not static/.htaccess, which ships inside build/client/
+          # already), and package.json (Passenger reads it for app metadata).
+          # All three are tiny and rarely change, so streamed in place rather
+          # than staged.
+          sshpass -e ssh $SSH_OPTS "$REMOTE" "cat > '$REMOTE_PATH/app.cjs'" < app.cjs
+          sshpass -e ssh $SSH_OPTS "$REMOTE" "cat > '$REMOTE_PATH/.htaccess'" < .htaccess
+          sshpass -e ssh $SSH_OPTS "$REMOTE" "cat > '$REMOTE_PATH/package.json'" < package.json
+
+          echo "Artifact staged in $REMOTE_PATH/build.new"
+
+      # Directory renames are near-instant, so the window where `build` is
+      # absent is far smaller than a full upload. The outgoing release is kept
+      # as build.prev - that is what the rollback repoints to.
+      - name: Activate release and restart Passenger
+        env:
+          SSHPASS: ${{ secrets.DEPLOY_SSH_PASSWORD }}
+        run: |
+          set -euo pipefail
+          SSH_OPTS="-o UserKnownHostsFile=$HOME/.ssh/known_hosts_deploy -o StrictHostKeyChecking=yes -o PubkeyAuthentication=no"
+
+          sshpass -e ssh $SSH_OPTS "$REMOTE" sh -s "$REMOTE_PATH" <<'REMOTE'
+          set -eu
+          cd "$1"
+
+          test -d build.new || { echo "staged release missing"; exit 1; }
+          test -f build.new/handler.js || { echo "staged release looks incomplete"; exit 1; }
+          test -d build.new/client || { echo "staged release missing client/"; exit 1; }
+
+          rm -rf build.prev
+          if [ -d build ]; then
+            mv build build.prev
+          fi
+          mv build.new build
+
+          mkdir -p tmp
+          touch tmp/restart.txt
+
+          echo "Release activated (previous kept in build.prev)."
+          REMOTE
+
+      - name: Smoke test
+        id: smoke
+        run: |
+          # bewerby has no server API and no database: every route is
+          # prerendered and served as a static file straight out of Document
+          # Root (build/client/), bypassing Passenger entirely for the happy
+          # path (see DEPLOYMENT.md). So unlike a typical SSR app, a
+          # Passenger-specific health endpoint isn't the meaningful check here
+          # - "does / return the real page, and did the client bundle actually
+          # land" is what a failed upload or a wrong DEPLOY_PATH would break.
+          ok=0
+          for i in $(seq 1 8); do
+            sleep 10
+            BODY=$(curl -s -m 20 "https://${{ secrets.DEPLOY_DOMAIN }}/" || true)
+            STATUS=$(curl -s -m 20 -o /dev/null -w "%{http_code}" "https://${{ secrets.DEPLOY_DOMAIN }}/" || true)
+            if [ "$STATUS" = "200" ] && printf '%s' "$BODY" | grep -qi 'bewerby'; then
+              echo "Root page OK (HTTP $STATUS) after $((i * 10))s"
+              ok=1
+              break
+            fi
+            echo "Attempt $i/8 ($((i * 10))s): / returned $STATUS"
+          done
+          if [ "$ok" != 1 ]; then
+            echo "::error::/ never returned the expected page after 80s (last status: $STATUS)."
+            echo "::error::404/403 usually means DEPLOY_PATH isn't Plesk's Node.js Application"
+            echo "::error::Root, or Document Root isn't set to build/client/ - see DEPLOYMENT.md."
+            exit 1
+          fi
+
+          # Confirm the client bundle - not just the shell HTML - actually made it.
+          for path in /manifest.json /service-worker.js /robots.txt; do
+            CODE=$(curl -s -m 20 -o /dev/null -w '%{http_code}' "https://${{ secrets.DEPLOY_DOMAIN }}$path")
+            if [ "$CODE" != "200" ]; then
+              echo "::error::$path returned $CODE, expected 200 - static asset upload looks incomplete."
+              exit 1
+            fi
+          done
+          echo "Static assets OK."
+
+      # Application Root (package.json, app.cjs, the root .htaccess, and - if
+      # ever accidentally uploaded - src/, .git/) must never be reachable over
+      # HTTP; only Document Root (build/client/) may be. DEPLOYMENT.md calls
+      # this out as a real, easy-to-hit Plesk misconfiguration (Application
+      # Root and Document Root left identical), not a hypothetical one.
+      - name: Verify the Application Root is not web-readable
+        if: steps.smoke.outcome == 'success'
+        run: |
+          set -uo pipefail
+          fail=0
+          for path in /package.json /app.cjs /.htaccess /src/lib/db/index.ts /.git/config; do
+            code=$(curl -s -m 20 -o /dev/null -w '%{http_code}' "https://${{ secrets.DEPLOY_DOMAIN }}$path" || true)
+            if [ "$code" = "200" ]; then
+              echo "::error::$path is web-readable (HTTP 200) - Document Root may be pointing at"
+              echo "::error::the Application Root instead of build/client/. See DEPLOYMENT.md."
+              fail=1
+            else
+              echo "ok   $path → $code"
+            fi
+          done
+          [ "$fail" = 0 ] || exit 1
+
+      # The retained release only earns its keep if a bad deploy is actually
+      # reverted. Runs only when the smoke test failed.
+      - name: Roll back to previous release
+        if: failure() && steps.smoke.outcome == 'failure'
+        env:
+          SSHPASS: ${{ secrets.DEPLOY_SSH_PASSWORD }}
+        run: |
+          set -euo pipefail
+          SSH_OPTS="-o UserKnownHostsFile=$HOME/.ssh/known_hosts_deploy -o StrictHostKeyChecking=yes -o PubkeyAuthentication=no"
+
+          sshpass -e ssh $SSH_OPTS "$REMOTE" sh -s "$REMOTE_PATH" <<'REMOTE'
+          set -eu
+          cd "$1"
+
+          if [ ! -d build.prev ]; then
+            echo "No build.prev to roll back to (first deploy?) — leaving as-is."
+            exit 1
+          fi
+
+          rm -rf build.failed
+          mv build build.failed
+          mv build.prev build
+
+          mkdir -p tmp
+          touch tmp/restart.txt
+
+          echo "Rolled back to the previous release (bad build kept in build.failed)."
+          REMOTE
+
+          # A rollback that is never checked is a guess. build.prev only means
+          # "what was there before", not "what worked" - on the very first
+          # deploy it won't exist at all, so restoring it can leave the site
+          # more broken than the release that just failed. Say which of the
+          # two happened, in the log, at the time.
+          sleep 10
+          BACK=$(curl -s -o /dev/null -w "%{http_code}" "https://${{ secrets.DEPLOY_DOMAIN }}/" || true)
+          if [ "$BACK" = "200" ]; then
+            echo "Rollback verified: the site is serving again (HTTP $BACK)."
+          else
+            echo "::error::Rollback did NOT restore a working site (/ → $BACK)."
+            echo "::error::The site is down. build.failed holds the release that was just"
+            echo "::error::rejected and build the one restored - neither answers. Fix on the"
+            echo "::error::host; do not re-run this workflow expecting it to recover."
+          fi

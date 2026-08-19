@@ -65,3 +65,16 @@ jobs:
 
       - name: E2E smoke tests
         run: npm run test:e2e
+
+      # This artifact IS the release - deploy.yml downloads exactly this
+      # build and ships it, rather than re-running `npm run build` in the
+      # deploy job, so what gets deployed is provably what CI just tested.
+      # Master-only: feature branches and PRs never deploy, so there is
+      # nothing to gain from uploading their build output.
+      - name: Upload build artifact
+        if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+        uses: actions/upload-artifact@v7
+        with:
+          name: bewerby-build-${{ github.sha }}
+          path: build/
+          retention-days: 7

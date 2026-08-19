@@ -117,7 +117,42 @@ npm run build
 #    response headers include Content-Security-Policy and X-Frame-Options.
 ```
 
+## Automated deploy (CI/CD)
+
+`.github/workflows/deploy.yml` runs the steps above automatically on every
+successful `CI` run on `master`: it downloads the exact build artifact CI
+just tested, uploads it to a staging directory over SSH, activates it with
+an atomic directory rename, restarts Passenger, runs a smoke test (the root
+page returns real content, `manifest.json`/`service-worker.js`/`robots.txt`
+are reachable), verifies the Application Root itself isn't web-readable
+(the exact misconfiguration warned about above), and rolls back
+automatically if the smoke test fails.
+
+**Secrets** (GitHub → Settings → Environments → `production` - environment
+secrets, not repository secrets, so a pushed branch can never read them
+without passing the environment's protection rules):
+
+| Secret                | Value                                                                                                                                                                                                                  |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DEPLOY_SSH_HOST`     | `bewerby.de`                                                                                                                                                                                                           |
+| `DEPLOY_SSH_USER`     | The Plesk system user for this subscription                                                                                                                                                                            |
+| `DEPLOY_SSH_PASSWORD` | That user's password (Netcup exposes no key auth in the panel)                                                                                                                                                         |
+| `DEPLOY_PATH`         | `/bewerby.de` - the Application Root. Netcup's SSH is chrooted with the subscription root as `/`, so this is exactly what `pwd` shows after login, not a `/var/www/vhosts/...` path                                    |
+| `DEPLOY_DOMAIN`       | `bewerby.de` - host only, for the post-deploy smoke test                                                                                                                                                               |
+| `DEPLOY_SSH_HOSTKEY`  | _Optional but recommended._ Output of `ssh-keyscan -t ed25519 bewerby.de`. Without it the deploy trusts whatever key it fetches at connect time, and with password auth a MITM would collect the password in cleartext |
+
+**Not yet exercised against the live host** - unlike the rest of this
+runbook, the deploy workflow has not run against a real Netcup/Plesk
+instance yet. Watch the first real run closely; if the smoke test's
+assumptions about what a successful response looks like don't match
+reality, fix the workflow rather than trusting a green run blindly.
+
 ## Rollback
+
+The automated deploy above rolls back on a failed smoke test by itself
+(swapping back to `build.prev`) - the steps below are the manual fallback,
+e.g. if a bad release passed the smoke test but broke something the smoke
+test doesn't check.
 
 Keep the previous `build/` output and `app.cjs` (e.g. as a dated tarball)
 before overwriting them on the server. To roll back:
