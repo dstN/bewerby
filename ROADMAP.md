@@ -352,7 +352,7 @@ Mit Playwright end-to-end verifiziert (16 Checks) — Karte hat volle Deckkraft 
 | 32  | ✅ Dokumentation: README, Runbook, Architektur               | `documentation` | [#32](https://github.com/dstN/bewerby/issues/32) |
 | 33  | ✅ Toten Code und Konfigurationsdrift entfernen              | `refactoring`   | [#33](https://github.com/dstN/bewerby/issues/33) |
 | 34  | ✅ Manifest vervollständigen und Lighthouse 100 verifizieren | `performance`   | [#34](https://github.com/dstN/bewerby/issues/34) |
-| 35  | Versionsstände synchronisieren und v1.0.0 releasen           | `enhancement`   | [#35](https://github.com/dstN/bewerby/issues/35) |
+| 35  | ✅ Versionsstände synchronisieren und v1.0.0 releasen        | `enhancement`   | [#35](https://github.com/dstN/bewerby/issues/35) |
 
 ### 29 — Unit-Tests für die risikoreiche Logik
 
@@ -472,7 +472,9 @@ Verifiziert: `npx vitest run` — 45 Tests in 5 Dateien, alle grün. `npm run ch
 
 ### 35 — Versionsstände synchronisieren und v1.0.0 releasen
 
-**Ist:** `src/lib/components/layout/Sidebar.svelte:79` zeigt ein hartcodiertes `v0.0.1`, das unabhängig von `package.json` driftet.
+**Status:** ✅ Erledigt (siehe [#35](https://github.com/dstN/bewerby/issues/35) für den schließenden Commit und Details). `package.json`/`package-lock.json` auf `1.0.0`, als Git-Tag `v1.0.0` und GitHub-Release veröffentlicht. Alle 39 Aufgaben dieser Roadmap (Milestones 1–3 sowie die zusätzlichen, während des ersten Live-Deploys gefundenen Punkte #15-Nachtrag/#38/#39) sind zu diesem Zeitpunkt abgeschlossen und gegen die echte bewerby.de-Instanz verifiziert — inklusive des Fixes für die live entdeckte `.htaccess`-Passenger-Direktive und die `/icons/`-Alias-Kollision, die vor diesem Release nicht bekannt sein konnten, da noch nie zuvor gegen den echten Host deployt worden war.
+
+**Ist:** `src/lib/components/layout/Sidebar.svelte:79` zeigte ein hartcodiertes `v0.0.1`, das unabhängig von `package.json` driftete.
 
 **Soll:** Die angezeigte Version stammt aus einer einzigen Quelle. `package.json` steht auf `1.0.0`, der Release ist getaggt, und alle Verifikationsschritte dieser Roadmap sind nachweislich erfüllt.
 
