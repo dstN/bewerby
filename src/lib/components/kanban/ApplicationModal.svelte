@@ -668,6 +668,7 @@
 							<input
 								type="color"
 								class="hidden-color-input"
+								aria-label={t('application.addCustomColor')}
 								onchange={(e) => {
 									const input = e.currentTarget as HTMLInputElement;
 									if (input && input.value) {

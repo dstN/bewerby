@@ -363,7 +363,10 @@
 
 	.export-hint-link {
 		font-size: 13px;
-		color: var(--color-accent-600);
+		/* --color-accent-600 only clears 4.5:1 as text on a light surface; this
+		   card's dark-theme background needs the dedicated text-role token
+		   instead (see issue #17). */
+		color: var(--color-accent-text);
 		text-decoration: none;
 	}
 
@@ -420,7 +423,8 @@
 		margin-top: 4px;
 		font-size: 13px;
 		font-weight: 600;
-		color: var(--color-accent-600);
+		/* See .export-hint-link above - same dark-theme contrast fix. */
+		color: var(--color-accent-text);
 		text-decoration: none;
 	}
 

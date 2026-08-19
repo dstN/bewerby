@@ -14,6 +14,10 @@ concurrency:
 jobs:
   ci:
     runs-on: ubuntu-latest
+    # Generous, but bounded: a transient runner-infra hang (e.g. apt-get
+    # stalling against a mirror) should fail loudly within minutes, not burn
+    # Actions minutes for hours with no visibility until manually cancelled.
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
 

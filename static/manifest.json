@@ -1,8 +1,10 @@
 {
+	"id": "/",
 	"name": "bewerby",
 	"short_name": "bewerby",
 	"description": "DSGVO-konformer Bewerbungsmanager. Verwalte deine Bewerbungen lokal und sicher im Browser.",
 	"start_url": "/",
+	"scope": "/",
 	"display": "standalone",
 	"background_color": "#ffffff",
 	"theme_color": "#2563eb",
@@ -34,6 +36,40 @@
 			"sizes": "512x512",
 			"type": "image/png",
 			"purpose": "maskable"
+		}
+	],
+	"screenshots": [
+		{
+			"src": "/screenshots/board-wide.png",
+			"sizes": "1280x800",
+			"type": "image/png",
+			"form_factor": "wide",
+			"label": "Kanban-Board mit Spalten für jeden Bewerbungsstatus"
+		},
+		{
+			"src": "/screenshots/board-narrow.png",
+			"sizes": "390x844",
+			"type": "image/png",
+			"form_factor": "narrow",
+			"label": "Kanban-Board auf einem Smartphone"
+		}
+	],
+	"shortcuts": [
+		{
+			"name": "Neue Bewerbung",
+			"short_name": "Neu",
+			"url": "/?new=1",
+			"icons": [{ "src": "/icons/web-app-manifest-192x192.png", "sizes": "192x192" }]
+		},
+		{
+			"name": "Statistiken",
+			"url": "/analytics",
+			"icons": [{ "src": "/icons/web-app-manifest-192x192.png", "sizes": "192x192" }]
+		},
+		{
+			"name": "Backup & Sync",
+			"url": "/backup",
+			"icons": [{ "src": "/icons/web-app-manifest-192x192.png", "sizes": "192x192" }]
 		}
 	]
 }

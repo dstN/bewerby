@@ -149,7 +149,7 @@
 				<button
 					class="toolbar-btn"
 					onclick={() => i18n.setLocale(i18n.locale === 'de' ? 'en' : 'de')}
-					aria-label={t('a11y.switchLanguage')}
+					aria-label={`${i18n.locale.toUpperCase()} – ${t('a11y.switchLanguage')}`}
 					title={t('a11y.switchLanguage')}
 				>
 					<span class="locale-label">{i18n.locale.toUpperCase()}</span>

@@ -62,4 +62,14 @@ test.describe('Kanban board CRUD', () => {
 		await expect(dialog).toBeHidden();
 		await expect(page.locator('.card', { hasText: 'Wird verworfen' })).toHaveCount(0);
 	});
+
+	test('the manifest "New application" shortcut (?new=1) opens the add dialog and cleans the URL', async ({
+		page
+	}) => {
+		await page.goto('/?new=1');
+		const dialog = page.locator('dialog.modal-content');
+		await expect(dialog).toBeVisible();
+		await expect(page).toHaveURL(/\/(\?.*)?$/);
+		await expect(page).not.toHaveURL(/new=1/);
+	});
 });

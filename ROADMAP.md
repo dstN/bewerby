@@ -338,15 +338,15 @@ Mit Playwright end-to-end verifiziert (16 Checks) — Karte hat volle Deckkraft 
 
 **Ziel:** Das Erreichte gegen Regression absichern und den Release ausliefern.
 
-| #   | Aufgabe                                                   | Labels          | Issue                                            |
-| :-- | :-------------------------------------------------------- | :-------------- | :----------------------------------------------- |
-| 29  | ✅ Unit-Tests für die risikoreiche Logik                  | `dx`            | [#29](https://github.com/dstN/bewerby/issues/29) |
-| 30  | ✅ End-to-End-Smoketests                                  | `dx`            | [#30](https://github.com/dstN/bewerby/issues/30) |
-| 31  | ✅ CI-Pipeline als Merge-Gate                             | `dx`            | [#31](https://github.com/dstN/bewerby/issues/31) |
-| 32  | ✅ Dokumentation: README, Runbook, Architektur            | `documentation` | [#32](https://github.com/dstN/bewerby/issues/32) |
-| 33  | ✅ Toten Code und Konfigurationsdrift entfernen           | `refactoring`   | [#33](https://github.com/dstN/bewerby/issues/33) |
-| 34  | Manifest vervollständigen und Lighthouse 100 verifizieren | `performance`   | [#34](https://github.com/dstN/bewerby/issues/34) |
-| 35  | Versionsstände synchronisieren und v1.0.0 releasen        | `enhancement`   | [#35](https://github.com/dstN/bewerby/issues/35) |
+| #   | Aufgabe                                                      | Labels          | Issue                                            |
+| :-- | :----------------------------------------------------------- | :-------------- | :----------------------------------------------- |
+| 29  | ✅ Unit-Tests für die risikoreiche Logik                     | `dx`            | [#29](https://github.com/dstN/bewerby/issues/29) |
+| 30  | ✅ End-to-End-Smoketests                                     | `dx`            | [#30](https://github.com/dstN/bewerby/issues/30) |
+| 31  | ✅ CI-Pipeline als Merge-Gate                                | `dx`            | [#31](https://github.com/dstN/bewerby/issues/31) |
+| 32  | ✅ Dokumentation: README, Runbook, Architektur               | `documentation` | [#32](https://github.com/dstN/bewerby/issues/32) |
+| 33  | ✅ Toten Code und Konfigurationsdrift entfernen              | `refactoring`   | [#33](https://github.com/dstN/bewerby/issues/33) |
+| 34  | ✅ Manifest vervollständigen und Lighthouse 100 verifizieren | `performance`   | [#34](https://github.com/dstN/bewerby/issues/34) |
+| 35  | Versionsstände synchronisieren und v1.0.0 releasen           | `enhancement`   | [#35](https://github.com/dstN/bewerby/issues/35) |
 
 ### 29 — Unit-Tests für die risikoreiche Logik
 
@@ -446,7 +446,21 @@ Verifiziert: `npx vitest run` — 45 Tests in 5 Dateien, alle grün. `npm run ch
 
 ### 34 — Manifest vervollständigen und Lighthouse 100 verifizieren
 
-**Ist:** `static/manifest.json` fehlen `id`, `scope`, `screenshots` und `shortcuts`; `lang` ist fest auf `de`, obwohl die App zweisprachig ist. `src/app.html:6-7` deklariert zwei `theme-color`-Werte (`#ffffff` light, `#2563eb` dark), das Manifest nur `#2563eb`. Ein Lighthouse-Lauf mit 100 in allen vier Kategorien ist nie belegt worden.
+**Status:** ✅ Erledigt (siehe [#34](https://github.com/dstN/bewerby/issues/34) für den schließenden Commit und Details).
+
+**Manifest:** `id` und `scope` ergänzt. Zwei echte Screenshots (`static/screenshots/board-wide.png` 1280×800, `board-narrow.png` 390×844) zur Laufzeit per Playwright erzeugt — vier realistische, aber synthetische Demo-Bewerbungen über die echte UI angelegt, kein reales Datenmaterial. `scripts/check-static.mjs`s Allowlist um das neue `screenshots/`-Verzeichnis erweitert (das Build-Guard aus #1 hätte den Build sonst zu Recht abgebrochen). Drei `shortcuts` ergänzt (Neue Bewerbung, Statistiken, Backup & Sync) — „Neue Bewerbung" verlinkt auf `/?new=1`, wofür `+page.svelte` einen neuen `onMount`-Handler bekommen hat, der den Parameter konsumiert, den Bewerbungs-Dialog öffnet und die URL bereinigt.
+
+**`theme_color`/`lang`-Diskrepanz bewusst nicht „behoben":** Die Web-App-Manifest-Spezifikation kennt kein medienabhängiges `theme_color` (kein Pendant zu `app.html`s zwei `<meta name="theme-color" media="...">`-Tags) — ein statischer Wert ist eine unausweichliche Vereinfachung, kein Bug. `lang: "de"` entspricht der tatsächlichen Default-Sprache der App (letzter Fallback in `detectLocale()`) und dem Text von `name`/`description` im Manifest selbst; eine vollständig zweisprachige Manifest-Auflösung würde mehrere Manifest-Dateien plus Laufzeit-Umschaltung des `<link rel="manifest">`-Tags erfordern — Aufwand, der in keinem Verhältnis zum Nutzen steht, zumal `name`/`short_name` ohnehin sprachneutral sind.
+
+**Echter Bug beim Bauen der `?new=1`-Funktion gefunden:** `replaceState()` synchron im selben `onMount()`-Aufruf wie das Öffnen des Dialogs abzusetzen, brachte das Rendering zum Absturz (`Cannot read properties of undefined (reading '$set')`, aufgefangen von der Fehlergrenze aus #4) — unabhängig von der Reihenfolge der beiden Aufrufe. Ursache: eine reentrante State-Aktualisierung, während der initiale Mount-/Hydration-Zyklus der Seite noch nicht abgeschlossen ist. Behoben, indem `replaceState()` per `queueMicrotask()` auf den nächsten Tick verschoben wird. Mit einem neuen Playwright-Test in `board-crud.spec.ts` abgesichert, der genau dieses Szenario abdeckt (nicht nur, dass der Dialog aufgeht, sondern auch, dass die URL hinterher bereinigt ist).
+
+**Lighthouse (Desktop-Preset, alle vier Routen, `node app.cjs` gegen den echten Produktions-Build):** Vorher `/settings` 100/**96**/100/100 (die anderen drei Routen bereits 100/100/100/100). Der 96er-Accessibility-Fund war ein echter `color-contrast`-Verstoß: `.export-hint-link` und `.privacy-link` in `src/routes/settings/+page.svelte` nutzten `--color-accent-600` direkt als Textfarbe — genau das Muster, das #17 bereits für andere Stellen behoben und dafür den eigenen `--color-accent-text`-Token eingeführt hatte (`--color-accent-600` erreicht als Text nur auf hellem Untergrund 4,5:1). Eine gezielte Suche nach demselben Muster im gesamten `src/` fand eine dritte, bis dahin ungetestete Stelle: `.total-val` in `src/routes/analytics/+page.svelte`, sichtbar nur mit vorhandenen Bewerbungsdaten (bei leerer Datenbank rendert diese Sektion gar nicht — der ursprüngliche Lighthouse-Lauf gegen die leere Datenbank hätte sie nie erreicht). Alle drei auf `--color-accent-text` umgestellt. Nach der Korrektur: **alle vier Routen 100/100/100/100.**
+
+**axe-core (inkl. geöffnetem Dialog) — zwei weitere echte, von Lighthouse nicht erfasste Befunde:** (1) Der Sprachumschalter-Button (`+layout.svelte`) hatte `aria-label="Sprache wechseln"`, sichtbarer Text aber nur „DE"/„EN" — ein WCAG-2.5.3-„Label in Name"-Verstoß, da der sichtbare Text nicht im Accessible Name enthalten war (relevant für Sprachsteuerungs-Nutzer, die z. B. „klicke DE" sagen). Behoben durch ein zusammengesetztes `aria-label` (`"DE – Sprache wechseln"`). (2) Der versteckte `<input type="color">` für eigene Kartenfarben (`ApplicationModal.svelte`) steckt in einem `<label>`, das nur ein dekoratives, `aria-hidden`-SVG-Icon enthält — der implizite Name daraus ist leer, das `title`-Attribut auf dem `<label>` zählt nicht als Ersatz. Behoben durch ein explizites `aria-label` direkt auf dem `<input>`. Ein einzelner, augenscheinlicher `.btn-flat`-Kontrastbefund erwies sich beim zweifachen Reproduktionsversuch als nicht reproduzierbar (vermutlich ein Messzeitpunkt mitten in der Öffnungs-Animation des Dialogs, `animation: modal-enter`) — zweimal in Folge 0 Verstöße bestätigt, kein Fix nötig. **Alle vier Routen und der geöffnete Dialog: 0 axe-Verstöße.**
+
+**Bewusste Abgrenzung:** Kein permanentes Lighthouse-/axe-Tooling in `package.json`/CI ergänzt — beide liefen als temporäre `--no-save`-Installationen ausschließlich für diese einmalige v1-Verifikation, danach deinstalliert, dem in dieser Session etablierten Muster für Ad-hoc-Werkzeuge folgend. Ein Lighthouse-Lauf gegen mit Daten befüllte Routen (statt der leeren Standard-Datenbank) scheiterte technisch an der Kombination aus Playwrights eigenem CDP-Kanal und Lighthouses `--port`-Anbindung an dieselbe Chrome-Instanz („Target closed"); die dadurch verdeckte Lücke (das analytics-`.total-val`-Element) wurde stattdessen über eine gezielte Grep-Suche nach demselben Fehlermuster im gesamten `src/` gefunden — nach eigener Einschätzung gründlicher als ein einzelner Lighthouse-Lauf gegen einen bestimmten Datenzustand, da es unabhängig vom Render-Zustand jede statische Deklaration erfasst.
+
+**Ursprüngliches Ist:** `static/manifest.json` fehlen `id`, `scope`, `screenshots` und `shortcuts`; `lang` ist fest auf `de`, obwohl die App zweisprachig ist. `src/app.html:6-7` deklariert zwei `theme-color`-Werte (`#ffffff` light, `#2563eb` dark), das Manifest nur `#2563eb`. Ein Lighthouse-Lauf mit 100 in allen vier Kategorien ist nie belegt worden.
 
 **Soll:** Das Manifest ist vollständig und installierbar, mit `id`, `scope`, Screenshots und passenden `theme-color`-Werten. Ein dokumentierter Lighthouse-Lauf (mobil, Inkognito) erreicht auf allen vier Routen 100 in Performance, Accessibility, Best Practices und SEO; axe-DevTools meldet null Verstöße, auch im geöffneten Dialog.
 

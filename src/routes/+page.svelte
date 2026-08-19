@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { liveQuery } from 'dexie';
 	import { SvelteSet } from 'svelte/reactivity';
 	import { db, type Application } from '$lib/db/index.js';
@@ -8,6 +9,8 @@
 	import { deletePdfFromOpfs } from '$lib/utils/opfs.js';
 	import { announcer } from '$lib/stores/announcer.svelte.js';
 	import { getReminderDueAt } from '$lib/utils/reminders.js';
+	import { replaceState } from '$app/navigation';
+	import { resolve } from '$app/paths';
 
 	// Columns definition
 	const columns = [
@@ -124,6 +127,22 @@
 		selectedApp = app;
 		showModal = true;
 	}
+
+	// The manifest's "New application" shortcut (long-press the installed
+	// app icon) launches here with ?new=1. Consuming it once via onMount and
+	// stripping the param immediately means reloading or reopening the tab
+	// later never re-triggers the modal from stale history/bookmark state.
+	onMount(() => {
+		if (new URLSearchParams(window.location.search).has('new')) {
+			openAddModal('draft');
+			// Deferred to a microtask: calling replaceState() synchronously
+			// inside this same onMount - before the initial mount/hydration
+			// cycle has fully settled - crashed the render ("Cannot read
+			// properties of undefined ($set)"). Queuing it for the next tick
+			// avoids the reentrant update.
+			queueMicrotask(() => replaceState(resolve('/'), {}));
+		}
+	});
 
 	function closeModal() {
 		showModal = false;

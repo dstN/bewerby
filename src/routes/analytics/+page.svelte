@@ -398,7 +398,9 @@
 	.total-val {
 		font-size: 24px;
 		font-weight: 700;
-		color: var(--color-accent-600);
+		/* --color-accent-600 only clears 4.5:1 as text on a light surface; the
+		   dedicated text-role token is needed in the dark theme (see #17). */
+		color: var(--color-accent-text);
 	}
 
 	.total-label {
