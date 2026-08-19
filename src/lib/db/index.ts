@@ -38,11 +38,13 @@ interface ApplicationV1 extends Omit<Application, 'pdfRef'> {
 
 const APPLICATIONS_SCHEMA = '++id, title, company, priority, status, *tags, createdAt, updatedAt';
 
-class BewerbyDatabase extends Dexie {
+/** Exported (not just the singleton below) so tests can construct isolated instances. */
+export class BewerbyDatabase extends Dexie {
 	applications!: Table<Application>;
 
-	constructor() {
-		super('bewerby-db');
+	/** name defaults to the real database; tests pass a unique one for isolation. */
+	constructor(name = 'bewerby-db') {
+		super(name);
 
 		this.version(1).stores({ applications: APPLICATIONS_SCHEMA });
 

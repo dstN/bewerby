@@ -1,88 +1,20 @@
 <script lang="ts">
 	import { liveQuery } from 'dexie';
-	import { db, type Application } from '$lib/db/index.js';
+	import { db } from '$lib/db/index.js';
 	import { t } from '$lib/i18n/index.svelte.js';
+	import { computeApplicationStats, type AnalyticsRow } from '$lib/utils/analytics.js';
 
 	// Analytics only ever reads status/history - project down to that instead
 	// of holding every field (title, notes, contact info, pdfRef, ...) of
 	// every application in the reactive store.
-	type AnalyticsRow = Pick<Application, 'status' | 'history'>;
-
 	const applicationsStore = liveQuery(async (): Promise<AnalyticsRow[]> =>
 		(await db.applications.toArray()).map(({ status, history }) => ({ status, history }))
 	);
 
-	// Funnel and Response Time metrics computed reactively using Svelte 5 runes
-	let stats = $derived.by(() => {
-		const list = $applicationsStore ?? [];
-
-		// Initialize counters
-		let draft = 0;
-		let sent = 0;
-		let interview = 0;
-		let accepted = 0;
-		let rejected = 0;
-
-		const responseTimes: number[] = [];
-
-		list.forEach((app) => {
-			// Basic status count
-			if (app.status === 'draft') draft++;
-			else if (app.status === 'sent') sent++;
-			else if (app.status === 'interview') interview++;
-			else if (app.status === 'accepted') accepted++;
-			else if (app.status === 'rejected') rejected++;
-
-			// Calculate response time from history log
-			// Time from 'sent' -> first 'interview' or 'rejected'
-			const sentEvent = app.history.find((h) => h.status === 'sent');
-			const responseEvent = app.history.find(
-				(h) => h.status === 'interview' || h.status === 'rejected'
-			);
-
-			if (sentEvent && responseEvent && responseEvent.timestamp > sentEvent.timestamp) {
-				const durationDays =
-					(responseEvent.timestamp - sentEvent.timestamp) / (1000 * 60 * 60 * 24);
-				responseTimes.push(durationDays);
-			}
-		});
-
-		// Funnel accumulation:
-		// Sent stage includes anything that reached "sent", "interview", "accepted", or "rejected"
-		const totalSent = sent + interview + accepted + rejected;
-		const totalSelection = interview + accepted + rejected;
-		const totalSuccess = accepted;
-
-		// Percentages
-		const selectionRate = totalSent > 0 ? Math.round((totalSelection / totalSent) * 100) : 0;
-		const successRate = totalSelection > 0 ? Math.round((totalSuccess / totalSelection) * 100) : 0;
-		const totalConversion = totalSent > 0 ? Math.round((totalSuccess / totalSent) * 100) : 0;
-
-		// Response time aggregations
-		const count = responseTimes.length;
-		const avg =
-			count > 0 ? Math.round((responseTimes.reduce((a, b) => a + b, 0) / count) * 10) / 10 : 0;
-		const best = count > 0 ? Math.round(Math.min(...responseTimes) * 10) / 10 : 0;
-		const worst = count > 0 ? Math.round(Math.max(...responseTimes) * 10) / 10 : 0;
-
-		return {
-			counts: { draft, sent, interview, accepted, rejected },
-			funnel: {
-				sent: totalSent,
-				selection: totalSelection,
-				success: totalSuccess,
-				selectionRate,
-				successRate,
-				totalConversion
-			},
-			response: {
-				avg,
-				best,
-				worst,
-				count
-			}
-		};
-	});
+	// Funnel and Response Time metrics; the actual computation is a plain,
+	// unit-tested function (see analytics.test.ts) - this just feeds it the
+	// live query's current value reactively.
+	let stats = $derived(computeApplicationStats($applicationsStore ?? []));
 </script>
 
 <svelte:head>

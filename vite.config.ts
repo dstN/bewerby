@@ -1,6 +1,6 @@
 import adapter from '@sveltejs/adapter-node';
 import { sveltekit } from '@sveltejs/kit/vite';
-import { defineConfig } from 'vite';
+import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
 	plugins: [
@@ -51,5 +51,13 @@ export default defineConfig({
 				}
 			}
 		})
-	]
+	],
+	test: {
+		// None of the tested logic (PDF heuristics, reminder math, backup
+		// serialization, analytics stats, the Dexie migration) touches the
+		// DOM - plain Node is lighter and faster than jsdom/happy-dom here.
+		// IndexedDB (for Dexie) is provided per-test-file via fake-indexeddb.
+		environment: 'node',
+		include: ['src/**/*.{test,spec}.{js,ts}']
+	}
 });

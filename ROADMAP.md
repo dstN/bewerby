@@ -338,7 +338,7 @@ Mit Playwright end-to-end verifiziert (16 Checks) — Karte hat volle Deckkraft 
 
 | #   | Aufgabe                                                   | Labels          | Issue                                            |
 | :-- | :-------------------------------------------------------- | :-------------- | :----------------------------------------------- |
-| 29  | Unit-Tests für die risikoreiche Logik                     | `dx`            | [#29](https://github.com/dstN/bewerby/issues/29) |
+| 29  | ✅ Unit-Tests für die risikoreiche Logik                  | `dx`            | [#29](https://github.com/dstN/bewerby/issues/29) |
 | 30  | End-to-End-Smoketests                                     | `dx`            | [#30](https://github.com/dstN/bewerby/issues/30) |
 | 31  | CI-Pipeline als Merge-Gate                                | `dx`            | [#31](https://github.com/dstN/bewerby/issues/31) |
 | 32  | Dokumentation: README, Runbook, Architektur               | `documentation` | [#32](https://github.com/dstN/bewerby/issues/32) |
@@ -347,6 +347,24 @@ Mit Playwright end-to-end verifiziert (16 Checks) — Karte hat volle Deckkraft 
 | 35  | Versionsstände synchronisieren und v1.0.0 releasen        | `enhancement`   | [#35](https://github.com/dstN/bewerby/issues/35) |
 
 ### 29 — Unit-Tests für die risikoreiche Logik
+
+**Status:** ✅ Erledigt (siehe [#29](https://github.com/dstN/bewerby/issues/29) für den schließenden Commit und Details).
+
+**Setup:** Vitest 4 eingerichtet (`vitest`/`fake-indexeddb` als permanente `devDependencies`, nicht nur temporär für die Verifikation installiert). `vite.config.ts` importiert `defineConfig` jetzt aus `vitest/config` statt `vite` (die reine `vite`-Variante kennt den `test`-Schlüssel nicht — sonst ein `svelte-check`-Fehler). `environment: 'node'`, weil keine der getesteten Logik (PDF-Heuristik, Reminder-Mathematik, Backup-Serialisierung, Analytics-Kennzahlen, Dexie-Migration) das DOM berührt — leichter und schneller als jsdom/happy-dom. `npm test` (einmalig) / `npm run test:watch` neu in `package.json`.
+
+**PDF-Heuristik** (`src/lib/utils/pdf.test.ts`, 11 Tests): Formalisiert die Ad-hoc-Skripte aus #27 zu echten, dauerhaften Tests gegen die aktuelle Quelldatei (kein Extract-and-eval-Workaround mehr nötig). Deckt Rechnungsnummer-vs-Telefon-Unterscheidung (nah und fern vom Dokumentrand), reale „Tel:"-Extraktion, die formelle-Stellenanzeige-Fehlklassifikation, den `match.index`-0-Grenzfall, eine ReDoS-Zeitmessung und leere Eingaben ab. Dazu vier Tests für `validatePdfFile` (gültiger Header, fehlender Header, Größenlimit, korrekter Fehlertyp).
+
+**Reminder-Mathematik** (`src/lib/utils/reminders.test.ts`, 12 Tests): `getReminderDueAt` war bereits eine reine Funktion. Deckt alle vier Intervalle, `'accepted'`/`'rejected'` → `null`, Ankerung auf den **ersten** `'sent'`-Eintrag (nicht einen späteren erneuten Versand), Fallback auf `appliedAt` und weiter auf `createdAt`, einen unbekannten Intervallwert und eine Regression ab, bei der unrelated Feldänderungen (`updatedAt`, `cardColor`) die Fälligkeit nicht verschieben.
+
+**Analytics-Kennzahlen** (`src/lib/utils/analytics.ts` + `.test.ts`, 7 Tests): Die Trichter- und Antwortzeit-Berechnung steckte als 60+ Zeilen `$derived.by` direkt in `analytics/+page.svelte` und war ohne Svelte-Rendering-Infrastruktur nicht testbar — in eine reine, exportierte Funktion `computeApplicationStats()` extrahiert; die Route importiert sie jetzt nur noch. Deckt leere Datenmenge, unabhängige Status-Zählung, kumulative Trichter-Pipeline, gerundete Prozentwerte, Antwortzeit vom ersten `sent` zum ersten `interview`/`rejected` und eine falsch-herum sortierte Historie ab.
+
+**Backup-Roundtrip mit PDF** (`src/lib/utils/backup.ts` + `.test.ts`, 11 Tests): Export/Import-Logik (`blobToBase64`/`base64ToBlob`/`buildBackupPayload`/`parseBackupPayload`/`prepareImportRows`) aus `backup/+page.svelte` in ein eigenes Modul extrahiert — die Route bindet nur noch UI-Belange (Dateidialog, `confirm()`, Statusmeldungen). Deckt einen bytegenauen Base64-Roundtrip, den vollständigen Export-→-JSON-→-Import-Zyklus über zwei isolierte, mit `fake-indexeddb` unterlegte `BewerbyDatabase`-Instanzen (PDF-Bytes bleiben unter einem frisch vergebenen OPFS-Ref identisch erhalten), Ablehnung bei falscher Formatversion/kaputtem JSON/ungültiger Zeile, sowie ab, dass Import nie eine ID oder einen OPFS-Ref aus der Backup-Datei wiederverwendet.
+
+**Dexie-v1-nach-v2-Migration** (`src/lib/db/index.test.ts`, 4 Tests): `BewerbyDatabase` ist jetzt exportiert (zuvor nur die `db`-Singleton-Instanz) und der Konstruktor nimmt optional einen `name` an (Default `'bewerby-db'`), damit Tests isolierte, eindeutig benannte Instanzen öffnen können, ohne die echte Datenbank oder andere Tests zu berühren. Mit `fake-indexeddb` und einem `vi.mock()` von `$lib/utils/opfs.js`s `writePdfToOpfs` wird eine v1-only-Zeile mit `pdfBlob` gesät, dieselbe Datenbank dann über die reale Klasse (v1+v2 inkl. `.upgrade()`) geöffnet und geprüft: der Blob-Inhalt landet unversehrt (byteweise verglichen, nicht per Referenz — IndexedDB klont beim Schreiben) unter einem `pdfRef`, Zeilen ohne `pdfBlob` bleiben unangetastet, mehrere Zeilen bekommen unabhängige Refs, andere Felder bleiben unverändert.
+
+**Bewusste Abgrenzung zum Soll:** Keine Vitest-Tests gegen echte PDF-Byte-Fixtures für `extractTextFromPdf()` selbst — die Funktion bricht per `$app/environment`-`browser`-Flag in Node sofort ab, und pdf.js' Legacy-Node-Build liefe nur mit zusätzlichen jsdom/canvas-Polyfills, deren Aufwand hier in keinem Verhältnis zum Nutzen steht: der echte Browser-Pfad ist bereits über Playwright end-to-end verifiziert (#27) und wird unter #30 systematisch erneut abgedeckt. Getestet ist stattdessen die reine, umgebungsunabhängige `parseJobDetailsFromText()`-Heuristik, die `extractTextFromPdf()` mit Text füttert — das ist exakt die Logik, die in #27 fehlerhaft war.
+
+Verifiziert: `npx vitest run` — 45 Tests in 5 Dateien, alle grün. `npm run check` — 0 Fehler. `npm run lint` — 0 Fehler/Warnungen. `npm run build` — erfolgreich.
 
 **Ist:** Es existiert kein Testframework und keine einzige Testdatei. Die fehleranfälligsten Teile sind völlig ungetestet: 256 Zeilen Regex-Heuristik in `src/lib/utils/pdf.ts`, die Reminder-Arithmetik in `src/lib/utils/reminders.ts`, die Trichter- und Antwortzeit-Berechnung in `src/routes/analytics/+page.svelte:9-76` und der Backup-Roundtrip.
 
