@@ -270,10 +270,19 @@
 			{/if}
 		</section>
 
-		<!-- Tier 3 Card (Cloud Sync Placeholder) -->
+		<!-- Tier 3 Card (Cloud Sync Placeholder). Neither inert nor
+		     aria-disabled applies here: there's no interactive content to
+		     disable, inert would hide the "this is planned" messaging from
+		     assistive tech entirely (defeating the point), and aria-disabled
+		     isn't valid on a <section>'s implicit region role and wouldn't be
+		     announced by real screen readers on a non-widget container anyway.
+		     Relying on unambiguous, always-perceivable text instead: the
+		     "Geplant"/"Planned" badge and the notice below, both at normal
+		     contrast (see issue #28). -->
 		<section class="card disabled-card">
 			<div class="card-meta">
 				<span class="tier-tag">Tier 3</span>
+				<span class="planned-tag">{t('backup.plannedFeature')}</span>
 				<h2 class="card-title">{t('backup.cloudTitle')}</h2>
 			</div>
 			<p class="card-desc">{t('backup.cloudDesc')}</p>
@@ -281,11 +290,11 @@
 			<div class="cloud-providers">
 				<div class="provider-box">
 					<span class="provider-name">Google Drive</span>
-					<span class="provider-status">{t('backup.inactive')}</span>
+					<span class="provider-status">{t('backup.plannedFeature')}</span>
 				</div>
 				<div class="provider-box">
 					<span class="provider-name">Dropbox</span>
-					<span class="provider-status">{t('backup.inactive')}</span>
+					<span class="provider-status">{t('backup.plannedFeature')}</span>
 				</div>
 			</div>
 
@@ -369,6 +378,22 @@
 	}
 
 	.tier-tag {
+		font-size: 10px;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		background-color: var(--surface-2);
+		color: var(--text-secondary);
+		padding: 2px 6px;
+		border-radius: var(--radius-sm);
+		border: 1px solid var(--border-subtle);
+	}
+
+	/* Same treatment as .tier-tag (not a dimmed/opacity-based style) so this
+	   badge's text meets the same contrast floor as the rest of the app - see
+	   issue #28, which specifically flagged opacity-based "disabled" styling
+	   for failing contrast. */
+	.planned-tag {
 		font-size: 10px;
 		font-weight: 700;
 		text-transform: uppercase;
@@ -499,13 +524,17 @@
 		border: 1px solid var(--status-danger-border);
 	}
 
-	/* Disabled / Greyed out state (Cloud sync) */
+	/* Planned/not-yet-available state (Cloud sync) - deliberately not
+	   opacity-based (that dimmed the text below every contrast threshold) and
+	   not pointer-events: none (there's no interactive content inside this
+	   card to block, and it wouldn't affect assistive tech either way; see
+	   aria-disabled on the section itself and issue #28). The dashed border
+	   and slightly muted surface are enough to read as "not a normal card"
+	   without sacrificing legibility. */
 	.disabled-card {
 		grid-column: span 2;
-		opacity: 0.6;
 		background-color: var(--surface-1);
 		border-style: dashed;
-		pointer-events: none;
 	}
 
 	.cloud-providers {

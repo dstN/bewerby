@@ -176,21 +176,21 @@ Zusätzlich: `engines`-Feld in `package.json` ergänzt (gibt `.npmrc`s `engine-s
 
 **Ziel:** WCAG 2.2 AA durchgehend erfüllen und Lighthouse 100 in allen vier Kategorien erreichen.
 
-| #   | Aufgabe                                                 | Labels                             | Issue                                            |
-| :-- | :------------------------------------------------------ | :--------------------------------- | :----------------------------------------------- |
-| 16  | ✅ Fokus-Sichtbarkeit wiederherstellen                  | `a11y`                             | [#16](https://github.com/dstN/bewerby/issues/16) |
-| 17  | ✅ Kontrastverstöße beheben                             | `a11y`                             | [#17](https://github.com/dstN/bewerby/issues/17) |
-| 18  | ✅ Fokusmanagement im Bearbeitungsdialog                | `a11y` `refactoring`               | [#18](https://github.com/dstN/bewerby/issues/18) |
-| 19  | ✅ DatePicker als bedienbares Kalender-Grid             | `a11y` `performance` `refactoring` | [#19](https://github.com/dstN/bewerby/issues/19) |
-| 20  | ✅ Kanban-Karte semantisch entflechten                  | `a11y`                             | [#20](https://github.com/dstN/bewerby/issues/20) |
-| 21  | ✅ Tailwind-Scope eingrenzen (30 KB → ~2 KB CSS)        | `performance`                      | [#21](https://github.com/dstN/bewerby/issues/21) |
-| 22  | ✅ Asset-Gewicht reduzieren                             | `performance`                      | [#22](https://github.com/dstN/bewerby/issues/22) |
-| 23  | ✅ Board- und Analytics-Queries entkoppeln              | `performance`                      | [#23](https://github.com/dstN/bewerby/issues/23) |
-| 24  | ✅ $effect-Disziplin herstellen                         | `refactoring`                      | [#24](https://github.com/dstN/bewerby/issues/24) |
-| 25  | ✅ prefers-reduced-motion durchgehend respektieren      | `a11y`                             | [#25](https://github.com/dstN/bewerby/issues/25) |
-| 26  | ✅ i18n vervollständigen und Seitentitel differenzieren | `a11y` `bug`                       | [#26](https://github.com/dstN/bewerby/issues/26) |
-| 27  | ✅ PDF-Verarbeitung härten                              | `bug` `performance`                | [#27](https://github.com/dstN/bewerby/issues/27) |
-| 28  | Cloud-Sync-Platzhalter ehrlich und barrierefrei machen  | `a11y`                             | [#28](https://github.com/dstN/bewerby/issues/28) |
+| #   | Aufgabe                                                   | Labels                             | Issue                                            |
+| :-- | :-------------------------------------------------------- | :--------------------------------- | :----------------------------------------------- |
+| 16  | ✅ Fokus-Sichtbarkeit wiederherstellen                    | `a11y`                             | [#16](https://github.com/dstN/bewerby/issues/16) |
+| 17  | ✅ Kontrastverstöße beheben                               | `a11y`                             | [#17](https://github.com/dstN/bewerby/issues/17) |
+| 18  | ✅ Fokusmanagement im Bearbeitungsdialog                  | `a11y` `refactoring`               | [#18](https://github.com/dstN/bewerby/issues/18) |
+| 19  | ✅ DatePicker als bedienbares Kalender-Grid               | `a11y` `performance` `refactoring` | [#19](https://github.com/dstN/bewerby/issues/19) |
+| 20  | ✅ Kanban-Karte semantisch entflechten                    | `a11y`                             | [#20](https://github.com/dstN/bewerby/issues/20) |
+| 21  | ✅ Tailwind-Scope eingrenzen (30 KB → ~2 KB CSS)          | `performance`                      | [#21](https://github.com/dstN/bewerby/issues/21) |
+| 22  | ✅ Asset-Gewicht reduzieren                               | `performance`                      | [#22](https://github.com/dstN/bewerby/issues/22) |
+| 23  | ✅ Board- und Analytics-Queries entkoppeln                | `performance`                      | [#23](https://github.com/dstN/bewerby/issues/23) |
+| 24  | ✅ $effect-Disziplin herstellen                           | `refactoring`                      | [#24](https://github.com/dstN/bewerby/issues/24) |
+| 25  | ✅ prefers-reduced-motion durchgehend respektieren        | `a11y`                             | [#25](https://github.com/dstN/bewerby/issues/25) |
+| 26  | ✅ i18n vervollständigen und Seitentitel differenzieren   | `a11y` `bug`                       | [#26](https://github.com/dstN/bewerby/issues/26) |
+| 27  | ✅ PDF-Verarbeitung härten                                | `bug` `performance`                | [#27](https://github.com/dstN/bewerby/issues/27) |
+| 28  | ✅ Cloud-Sync-Platzhalter ehrlich und barrierefrei machen | `a11y`                             | [#28](https://github.com/dstN/bewerby/issues/28) |
 
 ### 16 — Fokus-Sichtbarkeit wiederherstellen
 
@@ -321,6 +321,10 @@ Mit Playwright end-to-end verifiziert (12 Checks) — dafür wurden minimale, g�
 **Soll:** Vor dem Parsen greifen Größen- und Seitenzahl-Grenzen mit klarer Meldung. Das Parsen läuft außerhalb des Main Threads, mit sichtbarem Fortschritt und Abbruchmöglichkeit. Fehler erscheinen als übersetzte Inline-Meldung statt als `alert()`; ein korruptes, verschlüsseltes oder rein bildbasiertes PDF führt zu einer verständlichen Aussage. Die Dateiart wird inhaltlich geprüft. Die Extraktionsheuristiken sind mit Testfällen belegt und in den benannten Punkten korrigiert.
 
 ### 28 — Cloud-Sync-Platzhalter ehrlich und barrierefrei machen
+
+**Status:** ✅ Erledigt (siehe [#28](https://github.com/dstN/bewerby/issues/28) für den schließenden Commit und Details) — **damit ist Milestone 2 vollständig abgeschlossen.** Bei genauerer Prüfung enthält die Tier-3-Karte gar keine interaktiven Elemente (keine Buttons/Links in den Provider-Boxen) — `pointer-events: none` blockierte also faktisch nichts, war aber trotzdem ein irreführendes Signal. Entfernt, ebenso wie das kontrastzerstörende `opacity: 0.6` auf der ganzen Karte; stattdessen sorgen `border-style: dashed` und die bereits vorhandene `--surface-1`-Hintergrundfläche für optische Abgrenzung, ohne Text unter die Lesbarkeitsgrenze zu drücken. Weder `inert` noch `aria-disabled` kamen zum Einsatz: `inert` hätte die gesamte „das ist geplant"-Information vor assistiver Technik versteckt (das Gegenteil des Ziels), und `aria-disabled` ist laut Svelte-A11y-Linter auf der impliziten `region`-Rolle eines `<section>` nicht unterstützt und würde von echten Screenreadern auf einem Nicht-Widget-Container ohnehin nicht angesagt. Stattdessen ausschließlich auf eindeutigen, für alle Nutzenden gleichermaßen wahrnehmbaren Text gesetzt: ein neues „Geplant"-Badge neben dem bestehenden „Tier 3"-Tag, „Inaktiv" (klang nach einem existierenden, nur abgeschalteten Feature) durch dasselbe „Geplant" ersetzt, und der Hinweistext von entwicklerlastigem Jargon („OAuth-App-Zugangsdaten sind erforderlich" — klang nach einer fast fertigen Funktion, die nur noch Zugangsdaten braucht) auf eine unmissverständliche Aussage umgeschrieben, dass die Funktion für eine zukünftige Version geplant und aktuell nicht verfügbar ist.
+
+Mit Playwright end-to-end verifiziert (16 Checks) — Karte hat volle Deckkraft und kein `pointer-events: none` mehr, beide Badges vorhanden, Provider-Status zeigt durchgängig „Geplant" statt „Inaktiv", Hinweistext erwähnt „geplant" und keinen OAuth-Jargon mehr, und die tatsächlich berechneten Kontrastwerte von Kartentitel, Provider-Namen, Provider-Status, Badge und Hinweistext liegen alle zwischen 5,9:1 und 17,9:1 — sowohl im Hell- als auch im Dunkelmodus, weit über der 4,5:1-Anforderung.
 
 **Ist:** Die Tier-3-Karte (`src/routes/backup/+page.svelte:169-194`) zeigt „Google Drive" und „Dropbox" als ausgegrauten Platzhalter, umgesetzt über `opacity: 0.6` und `pointer-events: none` (`:342-348`). `pointer-events: none` entfernt nichts aus dem Baum assistiver Technik, und die reduzierte Deckkraft senkt den Kontrast unter jeden Grenzwert.
 

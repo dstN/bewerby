@@ -159,6 +159,7 @@ export type TranslationKeys = {
 		cloudDesc: string;
 		inactive: string;
 		active: string;
+		plannedFeature: string;
 		successImport: string;
 		errorFormat: string;
 		errorValidation: string;
