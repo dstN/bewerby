@@ -70,6 +70,22 @@
 		});
 	});
 
+	// Groups the filtered list by column once per render instead of the board
+	// re-filtering the same list once per column (5x) in the template.
+	let applicationsByColumn = $derived.by(() => {
+		const grouped: Record<Status, Application[]> = {
+			draft: [],
+			sent: [],
+			interview: [],
+			accepted: [],
+			rejected: []
+		};
+		for (const app of filteredApplications) {
+			grouped[app.status].push(app);
+		}
+		return grouped;
+	});
+
 	// Get unique tags for filter dropdown
 	let allTags = $derived.by(() => {
 		const list = $applicationsStore ?? [];
@@ -92,7 +108,10 @@
 
 	// Modal states
 	let showModal = $state(false);
-	let selectedApp = $state<Application | null>(null);
+	// $state.raw: this reference is only ever swapped wholesale (never mutated
+	// through), so a deep reactive proxy over its tags/history arrays buys
+	// nothing.
+	let selectedApp = $state.raw<Application | null>(null);
 	let modalInitialStatus = $state<Status>('draft');
 
 	function openAddModal(status: Status) {
@@ -313,7 +332,7 @@
 	<!-- Kanban Workspace -->
 	<div class="kanban-board">
 		{#each columns as col (col.id)}
-			{@const columnApps = filteredApplications.filter((app) => app.status === col.id)}
+			{@const columnApps = applicationsByColumn[col.id]}
 			<div
 				class="kanban-column"
 				class:drag-over={activeDragOverColumn === col.id}

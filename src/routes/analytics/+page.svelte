@@ -1,9 +1,16 @@
 <script lang="ts">
 	import { liveQuery } from 'dexie';
-	import { db } from '$lib/db/index.js';
+	import { db, type Application } from '$lib/db/index.js';
 	import { t } from '$lib/i18n/index.svelte.js';
 
-	const applicationsStore = liveQuery(() => db.applications.toArray());
+	// Analytics only ever reads status/history - project down to that instead
+	// of holding every field (title, notes, contact info, pdfRef, ...) of
+	// every application in the reactive store.
+	type AnalyticsRow = Pick<Application, 'status' | 'history'>;
+
+	const applicationsStore = liveQuery(async (): Promise<AnalyticsRow[]> =>
+		(await db.applications.toArray()).map(({ status, history }) => ({ status, history }))
+	);
 
 	// Funnel and Response Time metrics computed reactively using Svelte 5 runes
 	let stats = $derived.by(() => {
