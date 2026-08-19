@@ -343,7 +343,7 @@ Mit Playwright end-to-end verifiziert (16 Checks) — Karte hat volle Deckkraft 
 | 29  | ✅ Unit-Tests für die risikoreiche Logik                  | `dx`            | [#29](https://github.com/dstN/bewerby/issues/29) |
 | 30  | ✅ End-to-End-Smoketests                                  | `dx`            | [#30](https://github.com/dstN/bewerby/issues/30) |
 | 31  | ✅ CI-Pipeline als Merge-Gate                             | `dx`            | [#31](https://github.com/dstN/bewerby/issues/31) |
-| 32  | Dokumentation: README, Runbook, Architektur               | `documentation` | [#32](https://github.com/dstN/bewerby/issues/32) |
+| 32  | ✅ Dokumentation: README, Runbook, Architektur            | `documentation` | [#32](https://github.com/dstN/bewerby/issues/32) |
 | 33  | Toten Code und Konfigurationsdrift entfernen              | `refactoring`   | [#33](https://github.com/dstN/bewerby/issues/33) |
 | 34  | Manifest vervollständigen und Lighthouse 100 verifizieren | `performance`   | [#34](https://github.com/dstN/bewerby/issues/34) |
 | 35  | Versionsstände synchronisieren und v1.0.0 releasen        | `enhancement`   | [#35](https://github.com/dstN/bewerby/issues/35) |
@@ -412,7 +412,13 @@ Verifiziert: `npx vitest run` — 45 Tests in 5 Dateien, alle grün. `npm run ch
 
 ### 32 — Dokumentation: README, Runbook, Architektur
 
+**Status:** ✅ Erledigt (siehe [#32](https://github.com/dstN/bewerby/issues/32) für den schließenden Commit und Details).
+
+**Umsetzung:** `README.md` komplett neu geschrieben (auf Englisch, passend zum bereits bestehenden `DEPLOYMENT.md` und für ein öffentliches Repo) — Zweck, Feature-Liste, echter Tech-Stack (Tailwind bewusst **nicht** erwähnt, da es im Projekt inzwischen vollständig entfernt ist — `grep` nach „tailwind" im gesamten `src/` findet nichts mehr), lokale Entwicklung, alle vier Test-/Lint-Befehle, Projektstruktur, Verlinkung zu `DEPLOYMENT.md`/`ARCHITECTURE.md`/`ROADMAP.md`. Neues `ARCHITECTURE.md`: wo welche Daten liegen und warum (IndexedDB für Zeilen, OPFS für PDFs, samt der v1-nach-v2-Migrationsgeschichte), warum keine Daten das Gerät verlassen können (nur drei `dependencies`, keine davon macht Netzwerk-I/O), wie das Offline-Precaching wirklich funktioniert (inklusive des in #30 gefundenen Bugs als Lehrbeispiel), die Reminder-Engine mit ihrer ehrlich benannten Grenze (funktioniert nur bei offenem Tab), die Security-Header-Kette, und die Testing-Strategie (Vitest vs. Playwright, mit Begründung wann was).
+
 **Hinweis zur Konsolidierung:** Das Runbook ist bereits Teil von #15 entstanden (`DEPLOYMENT.md`), da sich die beiden Issues beim ursprünglichen Schreiben der Roadmap inhaltlich überschnitten hatten. #32 beschränkt sich daher auf die README-Neufassung und ein kurzes Architekturdokument; das bestehende `DEPLOYMENT.md` wird von dort aus verlinkt statt dupliziert.
+
+**Bewusst nicht ergänzt:** Kein `LICENSE`-Feld/-File — das ist eine Rechte-Entscheidung, die dem Projektinhaber gehört, nicht mir.
 
 **Ist:** `README.md` ist unverändert das `sv`-Scaffold-Template und beschreibt das Projekt nicht. Die Datenschutz- und Offline-Architektur ist nirgends dokumentiert.
 
