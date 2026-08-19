@@ -10,6 +10,12 @@ jobs:
   deploy:
     name: Deploy to Netcup
     runs-on: ubuntu-latest
+    # See ci.yml's identical comment: apt-get against the runner's mirror has
+    # repeatedly stalled for 15-30 minutes instead of failing cleanly. This is
+    # the only thing that reliably recovers from that, since it tears down
+    # the whole runner VM - a hung run here would otherwise sit on GitHub's
+    # default 360-minute cap while a real deploy waits on it.
+    timeout-minutes: 15
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     # The environment must exist in repo Settings → Environments for its protection
     # rules to apply. If it does not, GitHub silently auto-creates an UNPROTECTED one
