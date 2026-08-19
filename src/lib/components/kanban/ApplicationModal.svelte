@@ -40,36 +40,49 @@
 		return new Date(dateStr).getTime();
 	}
 
-	// Form states
-	let title = $state('');
-	let company = $state('');
-	let url = $state('');
-	let salary = $state('');
-	let contactName = $state('');
-	let contactEmail = $state('');
-	let contactPhone = $state('');
-	let priority = $state<'low' | 'medium' | 'high'>('medium');
-	let status = $state<Application['status']>('draft');
-	let reminderInterval = $state<Application['reminderInterval']>('none');
-	let cardColor = $state<string | undefined>(undefined);
-	let notes = $state('');
+	// Snapshot the prop once via untrack(): the parent only ever renders this
+	// component inside {#if showModal}, so a fresh instance is mounted per
+	// open/edit and `application` never changes during this instance's
+	// lifetime - the same guarantee {#key} would otherwise exist to provide.
+	// Reading it directly in each $state(...) initializer below still triggers
+	// Svelte's "state_referenced_locally" warning (it can't tell a deliberate
+	// one-time snapshot from a forgotten reactive binding), so it's captured
+	// into a plain, non-reactive local once instead.
+	const initialApp = untrack(() => application);
+	const initialStat = untrack(() => initialStatus);
+
+	// Form states, initialized directly from initialApp (or its absence)
+	// instead of via a prop-sync $effect.
+	let title = $state(initialApp?.title ?? '');
+	let company = $state(initialApp?.company ?? '');
+	let url = $state(initialApp?.url ?? '');
+	let salary = $state(initialApp?.salary ?? '');
+	let contactName = $state(initialApp?.contactName ?? '');
+	let contactEmail = $state(initialApp?.contactEmail ?? '');
+	let contactPhone = $state(initialApp?.contactPhone ?? '');
+	let priority = $state<'low' | 'medium' | 'high'>(initialApp?.priority ?? 'medium');
+	let status = $state<Application['status']>(initialApp?.status ?? initialStat);
+	let reminderInterval = $state<Application['reminderInterval']>(
+		initialApp?.reminderInterval ?? 'none'
+	);
+	let cardColor = $state<string | undefined>(initialApp?.cardColor);
+	let notes = $state(initialApp?.notes ?? '');
 	let tagInput = $state('');
-	let tags = $state<string[]>([]);
-	let pdfName = $state('');
+	let tags = $state<string[]>(initialApp ? [...initialApp.tags] : []);
+	let pdfName = $state(initialApp?.pdfName || '');
 	// The OPFS ref that will be saved. originalPdfRef is a plain (non-reactive)
 	// snapshot of what was loaded, so save() can tell whether the PDF was
 	// replaced and clean up the old OPFS file only once the new ref is
 	// actually persisted - never before, or a cancelled edit would leave the
 	// row pointing at a file that no longer exists.
-	let pdfRef = $state<string | undefined>(undefined);
-	let originalPdfRef: string | undefined;
+	let pdfRef = $state<string | undefined>(initialApp?.pdfRef);
+	let originalPdfRef: string | undefined = initialApp?.pdfRef;
 	let isParsingPdf = $state(false);
 	let isViewingPdf = $state(false);
-	let appliedDateStr = $state(formatDateForInput());
+	let appliedDateStr = $state(
+		formatDateForInput(initialApp ? initialApp.appliedAt || initialApp.createdAt : undefined)
+	);
 	let dialogEl: HTMLDialogElement;
-	// Captured once the initial load below finishes, so isDirty only reflects
-	// actual user edits rather than the load effect's own field assignments.
-	let baselineSnapshot = $state('');
 
 	function snapshotFields(): string {
 		return JSON.stringify({
@@ -91,41 +104,11 @@
 		});
 	}
 
-	let isDirty = $derived(baselineSnapshot !== '' && snapshotFields() !== baselineSnapshot);
+	// Captured once, from the initial values above, so isDirty only reflects
+	// actual user edits.
+	let baselineSnapshot = $state(snapshotFields());
 
-	// Load existing application data if editing
-	$effect(() => {
-		if (application) {
-			title = application.title;
-			company = application.company;
-			url = application.url;
-			salary = application.salary;
-			contactName = application.contactName;
-			contactEmail = application.contactEmail;
-			contactPhone = application.contactPhone;
-			priority = application.priority;
-			status = application.status;
-			reminderInterval = application.reminderInterval;
-			cardColor = application.cardColor;
-			notes = application.notes;
-			tags = [...application.tags];
-			pdfName = application.pdfName || '';
-			pdfRef = application.pdfRef;
-			originalPdfRef = application.pdfRef;
-			appliedDateStr = formatDateForInput(
-				application.appliedAt || application.createdAt || Date.now()
-			);
-		} else {
-			status = initialStatus;
-			cardColor = undefined;
-			originalPdfRef = undefined;
-			appliedDateStr = formatDateForInput(Date.now());
-		}
-		// untrack: reading every field here would make this load effect
-		// depend on them too, so any later edit would re-run it and quietly
-		// recapture the just-edited value as the new "clean" baseline.
-		baselineSnapshot = untrack(() => snapshotFields());
-	});
+	let isDirty = $derived(snapshotFields() !== baselineSnapshot);
 
 	let justSaved = false;
 

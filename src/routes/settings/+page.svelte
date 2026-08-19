@@ -12,6 +12,7 @@
 		type StorageEstimate
 	} from '$lib/utils/storage.js';
 	import { eraseAllData } from '$lib/utils/eraseAllData.js';
+	import { onMount } from 'svelte';
 
 	let permissionState = $derived(getNotificationPermissionState());
 
@@ -23,7 +24,7 @@
 	let isPersisted = $state(false);
 	let storageEstimate = $state<StorageEstimate | null>(null);
 
-	$effect(() => {
+	onMount(() => {
 		isStoragePersisted().then((value) => (isPersisted = value));
 		getStorageEstimate().then((value) => (storageEstimate = value));
 	});

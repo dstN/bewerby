@@ -1,5 +1,6 @@
 <script lang="ts">
 	import '../app.css';
+	import { onMount } from 'svelte';
 	import { theme } from '$lib/stores/theme.svelte.js';
 	import { i18n, t } from '$lib/i18n/index.svelte.js';
 	import { resolve } from '$app/paths';
@@ -69,8 +70,13 @@
 		await cleanupOrphanedPdfs(validRefs);
 	}
 
-	// Synchronize alerts with service worker and initialize locale when the page loads
-	$effect(() => {
+	// One-time app boot: none of this should ever re-run reactively. It
+	// previously lived in a bare $effect, which meant every language switch
+	// re-ran the entire pipeline below (including tearing down and
+	// restarting the reminder engine) - i18n.init() writes i18n.locale and
+	// then reads it right back via document.documentElement.lang, and that
+	// read was enough to make the effect depend on locale.
+	onMount(() => {
 		i18n.init();
 		colorStore.init();
 		cleanupOrphanedPdfsOnStartup();
