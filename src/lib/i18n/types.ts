@@ -204,22 +204,17 @@ export type TranslationKeys = {
 		privacyPolicyLink: string;
 	};
 	legal: {
-		placeholderBanner: string;
 		impressum: {
 			title: string;
 			infoTitle: string;
-			namePlaceholder: string;
-			addressPlaceholder: string;
 			contactTitle: string;
-			contactPlaceholder: string;
+			contactEmailLabel: string;
 			responsibleTitle: string;
-			responsiblePlaceholder: string;
 		};
 		datenschutz: {
 			title: string;
 			intro: string;
 			controllerTitle: string;
-			controllerPlaceholder: string;
 			principleTitle: string;
 			principleBody: string;
 			storageTitle: string;
@@ -239,11 +234,9 @@ export type TranslationKeys = {
 			noTrackingBody: string;
 			hostingTitle: string;
 			hostingBody: string;
-			hostingPlaceholder: string;
 			rightsTitle: string;
 			rightsBody: string;
 			contactRightsTitle: string;
-			contactRightsPlaceholder: string;
 			changesTitle: string;
 			changesBody: string;
 		};

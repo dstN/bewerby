@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { t } from '$lib/i18n/index.svelte.js';
+	import ObfuscatedEmail from '$lib/components/common/ObfuscatedEmail.svelte';
 </script>
 
 <svelte:head>
@@ -12,13 +13,17 @@
 		<p class="intro">{t('legal.datenschutz.intro')}</p>
 	</header>
 
-	<div class="placeholder-banner" role="note">
-		{t('legal.placeholderBanner')}
-	</div>
-
 	<section class="legal-card">
 		<h2>{t('legal.datenschutz.controllerTitle')}</h2>
-		<p class="placeholder">{t('legal.datenschutz.controllerPlaceholder')}</p>
+		<!-- Verbatim, not i18n'd - see the identical note on the Impressum page. -->
+		<address>
+			Dustin Tramm<br />
+			c/o Impressumservice Dein-Impressum<br />
+			Stettiner Str. 41<br />
+			35410 Hungen<br />
+			Deutschland
+		</address>
+		<p><ObfuscatedEmail /></p>
 	</section>
 
 	<section class="legal-card">
@@ -76,7 +81,13 @@
 	<section class="legal-card">
 		<h2>{t('legal.datenschutz.hostingTitle')}</h2>
 		<p>{t('legal.datenschutz.hostingBody')}</p>
-		<p class="placeholder">{t('legal.datenschutz.hostingPlaceholder')}</p>
+		<!-- Netcup's own registered business address - real, verbatim, not i18n'd. -->
+		<address>
+			Netcup GmbH<br />
+			Daimlerstraße 25<br />
+			76185 Karlsruhe<br />
+			Deutschland
+		</address>
 	</section>
 
 	<section class="legal-card">
@@ -86,7 +97,7 @@
 
 	<section class="legal-card">
 		<h2>{t('legal.datenschutz.contactRightsTitle')}</h2>
-		<p class="placeholder">{t('legal.datenschutz.contactRightsPlaceholder')}</p>
+		<p><ObfuscatedEmail /></p>
 	</section>
 
 	<section class="legal-card">
@@ -116,21 +127,6 @@
 		color: var(--text-secondary);
 		margin: 6px 0 0 0;
 		line-height: 1.6;
-	}
-
-	.placeholder-banner {
-		background-color: rgba(217, 119, 6, 0.1);
-		border: 1px solid rgba(217, 119, 6, 0.3);
-		border-radius: var(--radius-lg);
-		padding: 14px 16px;
-		font-size: 13px;
-		line-height: 1.6;
-		color: var(--color-warning);
-		font-weight: 500;
-	}
-
-	:root.dark .placeholder-banner {
-		background-color: rgba(217, 119, 6, 0.15);
 	}
 
 	.legal-card {
@@ -206,13 +202,10 @@
 		border-radius: var(--radius-sm);
 	}
 
-	.placeholder {
-		font-family: var(--font-mono);
-		color: var(--color-warning);
-		background-color: var(--surface-2);
-		border-radius: var(--radius-sm);
-		padding: 6px 10px;
-		display: inline-block;
-		width: fit-content;
+	.legal-card address {
+		font-size: 13px;
+		line-height: 1.7;
+		font-style: normal;
+		color: var(--text-secondary);
 	}
 </style>

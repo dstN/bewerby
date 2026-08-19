@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { t } from '$lib/i18n/index.svelte.js';
+	import ObfuscatedEmail from '$lib/components/common/ObfuscatedEmail.svelte';
 </script>
 
 <svelte:head>
@@ -11,24 +12,34 @@
 		<h1>{t('legal.impressum.title')}</h1>
 	</header>
 
-	<div class="placeholder-banner" role="note">
-		{t('legal.placeholderBanner')}
-	</div>
-
 	<section class="legal-card">
 		<h2>{t('legal.impressum.infoTitle')}</h2>
-		<p class="placeholder">{t('legal.impressum.namePlaceholder')}</p>
-		<p class="placeholder">{t('legal.impressum.addressPlaceholder')}</p>
+		<!-- A postal address is a legally required verbatim detail (§ 5 DDG) and
+		     reads identically in every language, so it stays literal here rather
+		     than going through i18n - only the surrounding labels are translated. -->
+		<address>
+			Dustin Tramm<br />
+			c/o Impressumservice Dein-Impressum<br />
+			Stettiner Str. 41<br />
+			35410 Hungen<br />
+			Deutschland
+		</address>
 	</section>
 
 	<section class="legal-card">
 		<h2>{t('legal.impressum.contactTitle')}</h2>
-		<p class="placeholder">{t('legal.impressum.contactPlaceholder')}</p>
+		<p>{t('legal.impressum.contactEmailLabel')}: <ObfuscatedEmail /></p>
 	</section>
 
 	<section class="legal-card">
 		<h2>{t('legal.impressum.responsibleTitle')}</h2>
-		<p class="placeholder">{t('legal.impressum.responsiblePlaceholder')}</p>
+		<address>
+			Dustin Tramm<br />
+			c/o Impressumservice Dein-Impressum<br />
+			Stettiner Str. 41<br />
+			35410 Hungen<br />
+			Deutschland
+		</address>
 	</section>
 </div>
 
@@ -46,21 +57,6 @@
 		letter-spacing: -0.03em;
 		color: var(--text-primary);
 		margin: 0;
-	}
-
-	.placeholder-banner {
-		background-color: rgba(217, 119, 6, 0.1);
-		border: 1px solid rgba(217, 119, 6, 0.3);
-		border-radius: var(--radius-lg);
-		padding: 14px 16px;
-		font-size: 13px;
-		line-height: 1.6;
-		color: var(--color-warning);
-		font-weight: 500;
-	}
-
-	:root.dark .placeholder-banner {
-		background-color: rgba(217, 119, 6, 0.15);
 	}
 
 	.legal-card {
@@ -85,12 +81,10 @@
 		white-space: pre-line;
 	}
 
-	.placeholder {
-		font-family: var(--font-mono);
-		color: var(--color-warning);
-		background-color: var(--surface-2);
-		border-radius: var(--radius-sm);
-		padding: 6px 10px;
-		display: inline-block;
+	.legal-card address {
+		font-size: 13px;
+		line-height: 1.7;
+		font-style: normal;
+		color: var(--text-secondary);
 	}
 </style>

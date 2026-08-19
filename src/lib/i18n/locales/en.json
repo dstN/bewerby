@@ -198,22 +198,17 @@
 		"privacyPolicyLink": "View the full privacy policy"
 	},
 	"legal": {
-		"placeholderBanner": "Placeholder - fill in before a public release. This information was deliberately not auto-generated: a legal notice with a made-up name or address would be misleading and legally invalid.",
 		"impressum": {
 			"title": "Legal Notice (Impressum)",
 			"infoTitle": "Information pursuant to § 5 German Digital Services Act (DDG)",
-			"namePlaceholder": "[Full name or company name]",
-			"addressPlaceholder": "[Street number, postal code city, country]",
 			"contactTitle": "Contact",
-			"contactPlaceholder": "[Phone number]\n[Email address]",
-			"responsibleTitle": "Responsible for content pursuant to § 18 (2) German Interstate Media Treaty (MStV)",
-			"responsiblePlaceholder": "[Name and address as above]"
+			"contactEmailLabel": "Email",
+			"responsibleTitle": "Responsible for content pursuant to § 18 (2) German Interstate Media Treaty (MStV)"
 		},
 		"datenschutz": {
 			"title": "Privacy Policy",
 			"intro": "bewerby processes your application data exclusively on this device. This policy describes what data technically arises, where it lives, and what rights you have.",
 			"controllerTitle": "Data controller under the GDPR",
-			"controllerPlaceholder": "[Name]\n[Address]\n[Email address]",
 			"principleTitle": "Core principle: strictly local processing",
 			"principleBody": "Everything you enter into bewerby - job title, company name, contact details, salary expectations, notes, and uploaded cover-letter PDFs - is stored exclusively in your browser's local storage (IndexedDB and the Origin Private File System). There is no server this content is sent to, received by, or stored on. Inspecting the source code or your browser's network activity confirms this: aside from the initial load of the application itself, bewerby makes no network connections at all.",
 			"storageTitle": "Where each kind of data lives",
@@ -232,12 +227,10 @@
 			"noTrackingTitle": "No cookies, no tracking, no third parties",
 			"noTrackingBody": "bewerby does not embed any analytics or tracking services, does not set cookies for advertising or statistics purposes, and does not load content from third-party servers. Fonts are bundled with the application locally instead of being loaded from an external font service.",
 			"hostingTitle": "Server logs at the hosting provider",
-			"hostingBody": "When you load this page, the hosting provider's web server processes technically unavoidable access data (e.g. IP address, time of access, requested file), as is standard for any website visit. These log entries concern only the delivery of the application itself, not the application data you enter within it.",
-			"hostingPlaceholder": "[Name and address of the hosting provider, retention period of access logs]",
+			"hostingBody": "When you load this page, the hosting provider's web server processes technically unavoidable access data (e.g. IP address, time of access, requested file), as is standard for any website visit. These log entries concern only the delivery of the application itself, not the application data you enter within it. The retention period for these access logs is governed by the hosting provider's own terms.",
 			"rightsTitle": "Your rights",
 			"rightsBody": "Since all application data lives exclusively on your device, you exercise your rights to access, rectification, and erasure directly within the application: applications can be viewed, edited, and individually deleted at any time. Settings also lets you permanently delete all data in one click (right to erasure). The backup page lets you export all data as a file (right to data portability) and import it again.",
 			"contactRightsTitle": "Contact for inquiries",
-			"contactRightsPlaceholder": "[Email address for data-protection inquiries]",
 			"changesTitle": "Changes to this policy",
 			"changesBody": "This policy will be updated whenever the actual data processing changes."
 		}

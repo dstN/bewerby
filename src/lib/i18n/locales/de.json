@@ -198,22 +198,17 @@
 		"privacyPolicyLink": "Vollständige Datenschutzerklärung ansehen"
 	},
 	"legal": {
-		"placeholderBanner": "Platzhalter — vor einer öffentlichen Veröffentlichung ausfüllen. Diese Angaben wurden absichtlich nicht automatisch erzeugt: ein Impressum mit erfundenen Namen oder Adressen wäre irreführend und rechtlich unwirksam.",
 		"impressum": {
 			"title": "Impressum",
 			"infoTitle": "Angaben gemäß § 5 Digitale-Dienste-Gesetz (DDG)",
-			"namePlaceholder": "[Vollständiger Name bzw. Firmenname]",
-			"addressPlaceholder": "[Straße Hausnummer, PLZ Ort, Land]",
 			"contactTitle": "Kontakt",
-			"contactPlaceholder": "[Telefonnummer]\n[E-Mail-Adresse]",
-			"responsibleTitle": "Verantwortlich für den Inhalt nach § 18 Abs. 2 Medienstaatsvertrag (MStV)",
-			"responsiblePlaceholder": "[Name und Anschrift wie oben]"
+			"contactEmailLabel": "E-Mail",
+			"responsibleTitle": "Verantwortlich für den Inhalt nach § 18 Abs. 2 Medienstaatsvertrag (MStV)"
 		},
 		"datenschutz": {
 			"title": "Datenschutzerklärung",
 			"intro": "Bewerby verarbeitet deine Bewerbungsdaten ausschließlich lokal auf diesem Gerät. Diese Erklärung beschreibt, welche Daten technisch anfallen, wo sie liegen und welche Rechte dir zustehen.",
 			"controllerTitle": "Verantwortlicher im Sinne der DSGVO",
-			"controllerPlaceholder": "[Name]\n[Anschrift]\n[E-Mail-Adresse]",
 			"principleTitle": "Grundprinzip: ausschließlich lokale Verarbeitung",
 			"principleBody": "Alle Inhalte, die du in bewerby einträgst — Jobtitel, Firmenname, Kontaktdaten, Gehaltsvorstellung, Notizen und hochgeladene PDF-Anschreiben — werden ausschließlich im lokalen Speicher deines Browsers abgelegt (IndexedDB und Origin Private File System). Es gibt keinen Server, an den diese Inhalte übertragen, der sie empfängt oder speichert. Ein Blick in den Quellcode oder die Netzwerkanalyse deines Browsers bestätigt das: bewerby stellt außer dem initialen Laden der Anwendung selbst keine Netzwerkverbindungen her.",
 			"storageTitle": "Wo welche Daten liegen",
@@ -232,12 +227,10 @@
 			"noTrackingTitle": "Keine Cookies, kein Tracking, keine Drittanbieter",
 			"noTrackingBody": "bewerby bindet keine Analyse- oder Trackingdienste ein, setzt keine Cookies zu Werbe- oder Statistikzwecken und lädt keine Inhalte von Drittanbieter-Servern. Schriftarten sind lokal in der Anwendung enthalten statt von einem externen Font-Dienst geladen.",
 			"hostingTitle": "Serverprotokolle beim Hosting",
-			"hostingBody": "Beim Aufruf dieser Seite verarbeitet der Webserver des Hosting-Anbieters technisch unvermeidbare Zugriffsdaten (z. B. IP-Adresse, Zeitpunkt des Zugriffs, angeforderte Datei), wie bei jedem Website-Aufruf üblich. Diese Protokolldaten betreffen ausschließlich die Auslieferung der Anwendung selbst, nicht die Bewerbungsdaten, die du in der Anwendung einträgst.",
-			"hostingPlaceholder": "[Name und Anschrift des Hosting-Anbieters, Speicherdauer der Zugriffsprotokolle]",
+			"hostingBody": "Beim Aufruf dieser Seite verarbeitet der Webserver des Hosting-Anbieters technisch unvermeidbare Zugriffsdaten (z. B. IP-Adresse, Zeitpunkt des Zugriffs, angeforderte Datei), wie bei jedem Website-Aufruf üblich. Diese Protokolldaten betreffen ausschließlich die Auslieferung der Anwendung selbst, nicht die Bewerbungsdaten, die du in der Anwendung einträgst. Für die Speicherdauer dieser Zugriffsprotokolle gelten die Angaben des Hosting-Anbieters.",
 			"rightsTitle": "Deine Rechte",
 			"rightsBody": "Da alle Bewerbungsdaten ausschließlich auf deinem Gerät liegen, übst du deine Rechte auf Auskunft, Berichtigung und Löschung direkt in der Anwendung aus: Bewerbungen lassen sich jederzeit einsehen, bearbeiten und einzeln löschen. In den Einstellungen kannst du zudem mit einem Klick alle Daten vollständig und unwiderruflich löschen (Recht auf Löschung). Über die Backup-Seite kannst du alle Daten als Datei exportieren (Recht auf Datenübertragbarkeit) und wieder importieren.",
 			"contactRightsTitle": "Kontakt für Anfragen",
-			"contactRightsPlaceholder": "[E-Mail-Adresse für datenschutzrechtliche Anfragen]",
 			"changesTitle": "Änderungen dieser Erklärung",
 			"changesBody": "Diese Erklärung wird angepasst, sobald sich an der tatsächlichen Datenverarbeitung etwas ändert."
 		}
