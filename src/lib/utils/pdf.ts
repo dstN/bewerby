@@ -16,6 +16,44 @@ export interface ParsedJobInfo {
 	url: string;
 }
 
+/** A CV/cover-letter PDF is realistically a handful of pages; this is
+ *  generous headroom while still bounding the main-thread text-extraction
+ *  loop below against a pathological many-hundred-page file. */
+export const MAX_PDF_PAGES = 30;
+/** Generous for a text document even with embedded images/logos. */
+export const MAX_PDF_SIZE_BYTES = 15 * 1024 * 1024;
+
+export type PdfErrorCode =
+	'too-large' | 'too-many-pages' | 'not-a-pdf' | 'encrypted' | 'corrupted' | 'no-text';
+
+export class PdfProcessingError extends Error {
+	code: PdfErrorCode;
+	constructor(code: PdfErrorCode, message: string) {
+		super(message);
+		this.name = 'PdfProcessingError';
+		this.code = code;
+	}
+}
+
+/**
+ * Content-based validation, not just the .pdf extension the file picker's
+ * accept=".pdf" filters on (trivially spoofed by renaming any file) - checks
+ * size and the %PDF- magic header before anything is persisted or parsed.
+ */
+export async function validatePdfFile(file: File): Promise<void> {
+	if (file.size > MAX_PDF_SIZE_BYTES) {
+		throw new PdfProcessingError(
+			'too-large',
+			`File is ${file.size} bytes, exceeds the ${MAX_PDF_SIZE_BYTES}-byte limit`
+		);
+	}
+	const headerBytes = await file.slice(0, 5).arrayBuffer();
+	const header = new TextDecoder('ascii').decode(headerBytes);
+	if (header !== '%PDF-') {
+		throw new PdfProcessingError('not-a-pdf', 'File does not start with the %PDF- header');
+	}
+}
+
 /**
  * Dynamically imports PDF.js client-side and extracts text from a PDF file.
  */
@@ -33,7 +71,24 @@ export async function extractTextFromPdf(file: File): Promise<string> {
 
 	const arrayBuffer = await file.arrayBuffer();
 	const loadingTask = pdfjs.getDocument({ data: arrayBuffer });
-	const pdf = await loadingTask.promise;
+
+	let pdf;
+	try {
+		pdf = await loadingTask.promise;
+	} catch (err) {
+		const name = err && typeof err === 'object' && 'name' in err ? err.name : undefined;
+		if (name === 'PasswordException') {
+			throw new PdfProcessingError('encrypted', 'PDF is password-protected');
+		}
+		throw new PdfProcessingError('corrupted', 'PDF could not be parsed');
+	}
+
+	if (pdf.numPages > MAX_PDF_PAGES) {
+		throw new PdfProcessingError(
+			'too-many-pages',
+			`PDF has ${pdf.numPages} pages, exceeds the ${MAX_PDF_PAGES}-page limit`
+		);
+	}
 
 	let text = '';
 	for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
@@ -59,6 +114,13 @@ export async function extractTextFromPdf(file: File): Promise<string> {
 		text += pageText + '\n\n';
 	}
 
+	if (!text.trim()) {
+		throw new PdfProcessingError(
+			'no-text',
+			'No extractable text found - the PDF may be image-only/scanned'
+		);
+	}
+
 	return text;
 }
 
@@ -80,12 +142,20 @@ export function parseJobDetailsFromText(text: string): ParsedJobInfo {
 		.map((l) => l.trim())
 		.filter(Boolean);
 
-	// Multi-language document classification (DE, EN, NL, FR, ES, IT)
+	// Multi-language document classification (DE, EN, NL, FR, ES, IT). The
+	// negative list originally only covered informal German phrasing
+	// ("deine Aufgaben", "unsere Anforderungen"), so a formal Sie-form job
+	// posting ("Ihre Aufgaben", "Wir bieten", ...) that also happens to
+	// contain a formal greeting like "Sehr geehrte" anywhere (common in a
+	// closing line) was misclassified as a cover letter - which then made
+	// the recruiter's own contact info downstream get treated as the
+	// applicant's and discarded. Broadened to cover the formal/Sie-form
+	// variants and their English equivalents.
 	const isCoverLetterOrCV =
 		/(?:Bewerbung|Bewerbungsschreiben|Lebenslauf|Sehr\s+geehrte|Cover\s+Letter|Curriculum\s+Vitae|Resume|Application|Dear\s+[A-Z]|Sollicitatie|Sollicitatiebrief|Curriculum|Geachte|Candidature|Lettre\s+de\s+motivation|Cher|Chère|Candidatura|Estimado|Estimada|Gentile)/i.test(
 			text
 		) &&
-		!/(?:wir\s+suchen|unsere\s+Anforderungen|deine\s+Aufgaben|what\s+we\s+offer|qualifications|requirements|responsibilities|we\s+are\s+(?:looking|hiring|seeking)|job\s+description|wij\s+zoeken|wat\s+wij\s+bieden|jouw\s+profiel|functe-eisen|nous\s+recherchons|votre\s+profil|buscamos|cercasi|requisiti)/i.test(
+		!/(?:wir\s+suchen|unsere\s+Anforderungen|deine\s+Aufgaben|ihre\s+Aufgaben|dein\s+Profil|ihr\s+Profil|wir\s+bieten|das\s+bringen\s+sie\s+mit|das\s+erwartet\s+sie|jetzt\s+bewerben|what\s+we\s+offer|qualifications|requirements|responsibilities|your\s+profile|your\s+responsibilities|we\s+are\s+(?:looking|hiring|seeking)|job\s+description|apply\s+now|wij\s+zoeken|wat\s+wij\s+bieden|jouw\s+profiel|functe-eisen|nous\s+recherchons|votre\s+profil|buscamos|cercasi|requisiti)/i.test(
 			text
 		);
 
@@ -340,7 +410,11 @@ export function parseJobDetailsFromText(text: string): ParsedJobInfo {
 	const emailMatches = [...text.matchAll(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g)];
 	for (const match of emailMatches) {
 		const email = match[0];
-		const matchIndex = match.index || 0;
+		// ?? not ||: index 0 is a legitimate match position, not a missing one -
+		// this happened to be harmless before since the fallback was also 0,
+		// but ?? states the actual intent (only substitute for a genuinely
+		// missing index) instead of relying on that coincidence.
+		const matchIndex = match.index ?? 0;
 		const isApplicantEmail =
 			isCoverLetterOrCV &&
 			(matchIndex < 350 ||
@@ -356,16 +430,35 @@ export function parseJobDetailsFromText(text: string): ParsedJobInfo {
 		}
 	}
 
+	// A bare digit-and-separator run also matches invoice/order/reference
+	// numbers ("Rechnung Nr. 2024-0158934"), which are exactly the right
+	// shape and length to pass the phone-format check below. A phone-context
+	// label right before the match is treated as decisive proof either way
+	// (a real phone number, or definitely not one), overriding the
+	// position-based applicant/recruiter guess used when neither is present.
+	const phoneContextRegex =
+		/(?:Tel\.?|Telefon|Phone|Mobile?|Mobil|Fax|Handy|GSM|Cell|Kontakt|Ansprechpartner)\s*\.?:?\s*$/i;
+	const nonPhoneContextRegex =
+		/(?:Rechnung(?:s-?nr)?|Bestell(?:ung)?|Order|Invoice|Referenz|Kennziffer|Aktenzeichen|Vorgang(?:s-?nr)?|Kunden-?nr|Auftrag(?:s-?nr)?)\.?:?\s*(?:nr\.?|no\.?|#)?\s*$/i;
 	const phoneMatches = [...text.matchAll(/\+?[0-9][0-9\s\-/()]{8,20}/g)];
 	for (const match of phoneMatches) {
 		const phone = match[0];
 		const cleaned = phone.replace(/[\s\-/()]/g, '');
-		const matchIndex = match.index || 0;
-		if (cleaned.length >= 9 && cleaned.length <= 16 && /^\+?\d+$/.test(cleaned)) {
-			if (isCoverLetterOrCV && (matchIndex < 350 || matchIndex > text.length - 350)) continue;
-			info.contactPhone = phone.trim();
-			break;
+		const matchIndex = match.index ?? 0;
+		if (cleaned.length < 9 || cleaned.length > 16 || !/^\+?\d+$/.test(cleaned)) continue;
+
+		const precedingText = text.slice(Math.max(0, matchIndex - 40), matchIndex);
+		if (nonPhoneContextRegex.test(precedingText)) continue;
+		const hasPhoneContext = phoneContextRegex.test(precedingText);
+		if (
+			!hasPhoneContext &&
+			isCoverLetterOrCV &&
+			(matchIndex < 350 || matchIndex > text.length - 350)
+		) {
+			continue;
 		}
+		info.contactPhone = phone.trim();
+		break;
 	}
 
 	// 5. URL

@@ -90,7 +90,14 @@
 			"uploadText": "Stellenausschreibung hochladen (PDF) für Auto-Ausfüllen",
 			"scanning": "Scanne Ausschreibung...",
 			"view": "Anzeigen",
-			"viewError": "PDF konnte nicht geladen werden."
+			"viewError": "PDF konnte nicht geladen werden.",
+			"errorTooLarge": "Die PDF ist zu groß (maximal 15 MB).",
+			"errorTooManyPages": "Die PDF hat zu viele Seiten (maximal 30).",
+			"errorNotAPdf": "Die Datei ist keine gültige PDF-Datei.",
+			"errorEncrypted": "Die PDF ist passwortgeschützt und kann nicht gelesen werden.",
+			"errorCorrupted": "Die PDF-Datei ist beschädigt oder ungültig.",
+			"errorNoText": "In der PDF wurde kein Text gefunden (vermutlich nur eingescannte Bilder ohne Texterkennung).",
+			"dismissError": "Fehlermeldung schließen"
 		}
 	},
 	"datepicker": {

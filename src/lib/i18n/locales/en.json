@@ -90,7 +90,14 @@
 			"uploadText": "Upload job listing (PDF) to auto-fill",
 			"scanning": "Scanning job listing...",
 			"view": "View",
-			"viewError": "Could not load the PDF."
+			"viewError": "Could not load the PDF.",
+			"errorTooLarge": "The PDF is too large (15 MB maximum).",
+			"errorTooManyPages": "The PDF has too many pages (30 maximum).",
+			"errorNotAPdf": "This file is not a valid PDF.",
+			"errorEncrypted": "The PDF is password-protected and can't be read.",
+			"errorCorrupted": "The PDF file is corrupted or invalid.",
+			"errorNoText": "No extractable text was found in the PDF (it may be scanned images with no text recognition).",
+			"dismissError": "Dismiss error message"
 		}
 	},
 	"datepicker": {

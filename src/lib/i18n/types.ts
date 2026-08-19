@@ -97,6 +97,13 @@ export type TranslationKeys = {
 			scanning: string;
 			view: string;
 			viewError: string;
+			errorTooLarge: string;
+			errorTooManyPages: string;
+			errorNotAPdf: string;
+			errorEncrypted: string;
+			errorCorrupted: string;
+			errorNoText: string;
+			dismissError: string;
 		};
 	};
 	datepicker: {

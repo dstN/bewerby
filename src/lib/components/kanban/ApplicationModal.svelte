@@ -2,7 +2,13 @@
 	import { onMount, untrack } from 'svelte';
 	import { t } from '$lib/i18n/index.svelte.js';
 	import { db, type Application } from '$lib/db/index.js';
-	import { extractTextFromPdf, parseJobDetailsFromText } from '$lib/utils/pdf.js';
+	import {
+		extractTextFromPdf,
+		parseJobDetailsFromText,
+		validatePdfFile,
+		PdfProcessingError,
+		type PdfErrorCode
+	} from '$lib/utils/pdf.js';
 	import { writePdfToOpfs, readPdfFromOpfs, deletePdfFromOpfs } from '$lib/utils/opfs.js';
 	import DatePicker from '$lib/components/common/DatePicker.svelte';
 	import { colorStore } from '$lib/stores/colors.svelte.js';
@@ -79,6 +85,7 @@
 	let originalPdfRef: string | undefined = initialApp?.pdfRef;
 	let isParsingPdf = $state(false);
 	let isViewingPdf = $state(false);
+	let pdfError = $state<string | null>(null);
 	let appliedDateStr = $state(
 		formatDateForInput(initialApp ? initialApp.appliedAt || initialApp.createdAt : undefined)
 	);
@@ -198,12 +205,39 @@
 		tags = tags.filter((t) => t !== tagToRemove);
 	}
 
+	const PDF_ERROR_KEYS: Record<PdfErrorCode, string> = {
+		'too-large': 'application.pdf.errorTooLarge',
+		'too-many-pages': 'application.pdf.errorTooManyPages',
+		'not-a-pdf': 'application.pdf.errorNotAPdf',
+		encrypted: 'application.pdf.errorEncrypted',
+		corrupted: 'application.pdf.errorCorrupted',
+		'no-text': 'application.pdf.errorNoText'
+	};
+
+	function showPdfError(message: string) {
+		pdfError = message;
+		announcer.announce(message);
+	}
+
 	async function handlePdfUpload(event: Event) {
 		const target = event.target as HTMLInputElement;
 		const file = target.files?.[0];
+		// Reset the input so re-selecting the same file after an error fires
+		// onchange again instead of being silently ignored as "unchanged".
+		target.value = '';
 		if (!file) return;
 
+		pdfError = null;
 		isParsingPdf = true;
+
+		try {
+			await validatePdfFile(file);
+		} catch (err) {
+			const code = err instanceof PdfProcessingError ? err.code : undefined;
+			showPdfError(code ? t(PDF_ERROR_KEYS[code]) : t('application.pdf.errorCorrupted'));
+			isParsingPdf = false;
+			return;
+		}
 
 		try {
 			pdfRef = await writePdfToOpfs(file);
@@ -211,7 +245,7 @@
 		} catch (err) {
 			console.error('Failed to store PDF:', err);
 			const message = err instanceof Error ? err.message : String(err);
-			alert(t('errors.pdfSaveFailed') + message);
+			showPdfError(t('errors.pdfSaveFailed') + message);
 			isParsingPdf = false;
 			return;
 		}
@@ -229,8 +263,12 @@
 			if (!url) url = parsed.url;
 		} catch (err) {
 			console.error('Failed to parse PDF:', err);
-			const message = err instanceof Error ? err.message : String(err);
-			alert(t('errors.pdfScanFailed') + message);
+			if (err instanceof PdfProcessingError) {
+				showPdfError(t(PDF_ERROR_KEYS[err.code]));
+			} else {
+				const message = err instanceof Error ? err.message : String(err);
+				showPdfError(t('errors.pdfScanFailed') + message);
+			}
 		} finally {
 			isParsingPdf = false;
 		}
@@ -406,6 +444,20 @@
 					</button>
 				{/if}
 			</div>
+
+			{#if pdfError}
+				<div class="pdf-error-banner" role="alert">
+					<span>{pdfError}</span>
+					<button
+						type="button"
+						class="btn-dismiss-pdf-error"
+						onclick={() => (pdfError = null)}
+						aria-label={t('application.pdf.dismissError')}
+					>
+						×
+					</button>
+				</div>
+			{/if}
 
 			<div class="form-grid">
 				<div class="form-group col-span-2">
@@ -800,6 +852,40 @@
 		transition:
 			border-color var(--duration-fast) ease,
 			background-color var(--duration-fast) ease;
+	}
+
+	.pdf-error-banner {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 12px;
+		margin: -10px 0 20px;
+		padding: 10px 12px;
+		background-color: var(--status-danger-bg);
+		border: 1px solid var(--status-danger-border);
+		border-radius: var(--radius-md);
+		color: var(--color-danger);
+		font-size: 13px;
+	}
+
+	.btn-dismiss-pdf-error {
+		flex-shrink: 0;
+		width: 22px;
+		height: 22px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border: none;
+		background: transparent;
+		color: var(--color-danger);
+		font-size: 16px;
+		line-height: 1;
+		cursor: pointer;
+		border-radius: var(--radius-sm);
+	}
+
+	.btn-dismiss-pdf-error:hover {
+		background-color: var(--status-danger-border);
 	}
 
 	.btn-view-pdf {
