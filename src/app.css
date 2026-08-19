@@ -290,6 +290,24 @@ body {
 	}
 }
 
+/* Global reduced-motion kill switch: collapses every animation/transition
+   duration to effectively zero regardless of where it's declared (this file,
+   any component's scoped <style>, inline styles) instead of hunting down and
+   gating each one individually - safe against future animations added
+   without remembering this rule too. Elements still reach their end state
+   (hover transforms, the specular-card shine, modal-enter, the sidebar's
+   collapse transition, ...), just without the animated motion in between. */
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+		scroll-behavior: auto !important;
+	}
+}
+
 /* Selection color */
 ::selection {
 	background-color: var(--color-accent-200);

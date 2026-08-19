@@ -187,7 +187,7 @@ Zusätzlich: `engines`-Feld in `package.json` ergänzt (gibt `.npmrc`s `engine-s
 | 22  | ✅ Asset-Gewicht reduzieren                            | `performance`                      | [#22](https://github.com/dstN/bewerby/issues/22) |
 | 23  | ✅ Board- und Analytics-Queries entkoppeln             | `performance`                      | [#23](https://github.com/dstN/bewerby/issues/23) |
 | 24  | ✅ $effect-Disziplin herstellen                        | `refactoring`                      | [#24](https://github.com/dstN/bewerby/issues/24) |
-| 25  | prefers-reduced-motion durchgehend respektieren        | `a11y`                             | [#25](https://github.com/dstN/bewerby/issues/25) |
+| 25  | ✅ prefers-reduced-motion durchgehend respektieren     | `a11y`                             | [#25](https://github.com/dstN/bewerby/issues/25) |
 | 26  | i18n vervollständigen und Seitentitel differenzieren   | `a11y` `bug`                       | [#26](https://github.com/dstN/bewerby/issues/26) |
 | 27  | PDF-Verarbeitung härten                                | `bug` `performance`                | [#27](https://github.com/dstN/bewerby/issues/27) |
 | 28  | Cloud-Sync-Platzhalter ehrlich und barrierefrei machen | `a11y`                             | [#28](https://github.com/dstN/bewerby/issues/28) |
@@ -281,6 +281,10 @@ Mit Playwright end-to-end verifiziert (7 Checks) — dabei gezielt der schwerwie
 **Soll:** Einmalige Initialisierung läuft in `onMount` mit Teardown. Abgeleitete Werte nutzen `$derived`. Die Formularinitialisierung des Dialogs erfolgt über Initialisierer plus `{#key}` statt über einen Prop-Sync-Effect. Ein Sprachwechsel wechselt die Sprache und löst keine Boot-Pipeline aus.
 
 ### 25 — prefers-reduced-motion durchgehend respektieren
+
+**Status:** ✅ Erledigt (siehe [#25](https://github.com/dstN/bewerby/issues/25) für den schließenden Commit und Details). Statt jede einzelne Animation/Transition individuell zu gaten (Specular-Shine-Keyframes, `modal-enter` in ApplicationModal und DatePicker, Sidebar-Grid-Transition, Hover-Transforms, Funnel-Balken-Transition — verteilt über mindestens 6 Dateien), ein einziger globaler `@media (prefers-reduced-motion: reduce)`-Block in `app.css`, der `animation-duration`/`animation-iteration-count`/`transition-duration`/`scroll-behavior` mit `!important` auf praktisch null setzt — unabhängig davon, wo die jeweilige Regel deklariert ist (globales CSS oder gescoptes Component-`<style>`), und robust gegen künftig neu hinzugefügte Animationen, die sonst leicht vergessen würden. Svelte-Transition-Direktiven (`transition:fade` o. Ä.) mussten nicht gesondert behandelt werden: eine Volltextsuche bestätigt, dass keine einzige im Code existiert — das im Ist zitierte `transition:scale` im DatePicker ist mit dem Popover-Umbau in #19 bereits entfallen.
+
+Mit Playwright end-to-end verifiziert (8 Checks), `prefers-reduced-motion: reduce` per `page.emulateMedia()` real emuliert statt nur die CSS-Regel gelesen: `scroll-behavior` steht auf `auto`, die Sidebar-Grid-Transition, die Kanban-Karten-Transition, die Specular-Shine-`::before`-Animation, beide `modal-enter`-Animationen (ApplicationModal und DatePicker) sowie die Funnel-Balken-Transition laufen alle mit einer effektiven Dauer von `1e-05s`. Als Gegenprobe zusätzlich in einem zweiten Kontext ohne reduzierte Bewegung geprüft, dass dieselbe Sidebar-Transition dort weiterhin ihre normale Dauer (`0.25s`) hat — bestätigt, dass die Media Query gezielt wirkt und nichts global zerschossen wurde.
 
 **Ist:** `src/app.css:191-195` respektiert die Einstellung ausschließlich für `scroll-behavior`. Alles andere ignoriert sie: die Specular-Shine-Keyframe-Animation auf farbmarkierten Karten (`src/routes/+page.svelte:625-669`), `modal-enter` (`ApplicationModal.svelte:436-442`), `transition:scale` im DatePicker (`:279`), die Grid-Transition der Sidebar (`+layout.svelte:91`), Hover-`transform`s und die Funnel-Balken-Transition.
 
