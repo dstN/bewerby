@@ -424,6 +424,22 @@ Verifiziert: `npx vitest run` — 45 Tests in 5 Dateien, alle grün. `npm run ch
 
 ---
 
+## Ad-hoc-Fixes außerhalb der Nummerierung
+
+Nicht Teil der ursprünglichen 36-Punkte-Analyse, sondern beiläufig während der Umsetzung entdeckt und sofort behoben — trotzdem dokumentiert, damit nichts stillschweigend passiert.
+
+### 37 — Sicherheitsupdate: verwundbare Abhängigkeiten patchen
+
+**Status:** ✅ Erledigt (siehe [#37](https://github.com/dstN/bewerby/issues/37) für den schließenden Commit und Details).
+
+**Ist:** Die permanente Installation von `@playwright/test` für #30 löste einen `npm audit`-Lauf aus, der 6 Advisories in installierten Abhängigkeiten meldete — darunter **High** direkt in `pdfjs-dist` (`>=5.6.83 <6.2.108`, [GHSA-hq66-cqwq-w95j](https://github.com/advisories/GHSA-hq66-cqwq-w95j): beliebige JavaScript-Ausführung beim Öffnen eines präparierten PDFs), unmittelbar relevant, da `extractTextFromPdf()` genau das mit jedem Nutzer-Upload und jedem Backup-Import tut.
+
+**Behoben:** `npm audit fix` (ohne `--force`) hat fünf der sechs Advisories innerhalb der bestehenden `^`-Ranges in `package.json` gelöst: `pdfjs-dist` → `6.2.108`, `nanoid` → `3.3.18`, `brace-expansion` → `5.0.9`, `postcss` → `8.5.26`, `@sveltejs/kit` → `2.70.3`. Verifiziert mit `npx vitest run` (45 Tests grün), `npm run check` (0 Fehler) und `npm run build` (erfolgreich).
+
+**Bewusst nicht behoben:** 3 verbleibende **Low**-Advisories in `cookie` (`<0.7.0`) — transitiv über `@sveltejs/kit`. Selbst die aktuellste stabile `@sveltejs/kit`-Version (`2.70.3`, npms `latest`-Tag) deklariert weiterhin `cookie: ^0.6.0`; ein Fix existiert nur in `3.0.0-next.*`-Prereleases. `npm audit fix --force` würde daher keinen echten Fix liefern, sondern eine sinnlose Downgrade-Kaskade bis `@sveltejs/kit@0.0.30` erzwingen. Wird bei einem künftigen stabilen Kit-Release erneut geprüft.
+
+---
+
 ## Verifikation für v1
 
 - `npm run lint` und `npm run check` laufen fehlerfrei durch.
