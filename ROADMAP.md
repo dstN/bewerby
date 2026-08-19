@@ -342,7 +342,7 @@ Mit Playwright end-to-end verifiziert (16 Checks) — Karte hat volle Deckkraft 
 | :-- | :-------------------------------------------------------- | :-------------- | :----------------------------------------------- |
 | 29  | ✅ Unit-Tests für die risikoreiche Logik                  | `dx`            | [#29](https://github.com/dstN/bewerby/issues/29) |
 | 30  | ✅ End-to-End-Smoketests                                  | `dx`            | [#30](https://github.com/dstN/bewerby/issues/30) |
-| 31  | CI-Pipeline als Merge-Gate                                | `dx`            | [#31](https://github.com/dstN/bewerby/issues/31) |
+| 31  | ✅ CI-Pipeline als Merge-Gate                             | `dx`            | [#31](https://github.com/dstN/bewerby/issues/31) |
 | 32  | Dokumentation: README, Runbook, Architektur               | `documentation` | [#32](https://github.com/dstN/bewerby/issues/32) |
 | 33  | Toten Code und Konfigurationsdrift entfernen              | `refactoring`   | [#33](https://github.com/dstN/bewerby/issues/33) |
 | 34  | Manifest vervollständigen und Lighthouse 100 verifizieren | `performance`   | [#34](https://github.com/dstN/bewerby/issues/34) |
@@ -395,6 +395,14 @@ Verifiziert: `npx vitest run` — 45 Tests in 5 Dateien, alle grün. `npm run ch
 **Soll:** Playwright deckt als Smoketest ab: Bewerbung anlegen, bearbeiten, verschieben und löschen; Tastaturpfad durch den Dialog inklusive Fokusrückgabe; Erreichbarkeit aller Routen auf einem 390px-Viewport; Offline-Hard-Reload jeder Route; Export- und Import-Roundtrip mit PDF; Ablehnung einer manipulierten Importdatei bei unverändertem Datenbestand.
 
 ### 31 — CI-Pipeline als Merge-Gate
+
+**Status:** ✅ Erledigt (siehe [#31](https://github.com/dstN/bewerby/issues/31) für den schließenden Commit und Details).
+
+**Umsetzung:** `.github/workflows/ci.yml` läuft auf jeden Push und jeden Pull Request (ohne Branch-Einschränkung), mit `concurrency`-Gruppe (ein neuer Push auf denselben Ref bricht den vorherigen Lauf ab statt ihn auslaufen zu lassen) und `permissions: contents: read` (kein Schreibzugriff, den der Workflow nicht braucht). Reihenfolge: `npm ci` → Lint → Type-Check → Unit-Tests (Vitest) → Build → Playwright-Browser-Installation → E2E-Smoketests (#30). `actions/setup-node@v4` mit `node-version: 20` und `cache: npm`, passend zu `DEPLOYMENT.md`s „Node.js version: 20 or newer" und dem bereits vorhandenen `engines`-Feld in `package.json` (durchgesetzt über `.npmrc`s `engine-strict=true`, beides schon aus einer früheren Aufgabe vorhanden).
+
+**Über die Roadmap-Formulierung hinaus:** Der Soll-Text nannte nur `lint`, `check`, `test`, `build`. Die Playwright-Suite aus #30 als fünftes Gate ergänzt — eine E2E-Suite, die nicht automatisiert bei jedem Push läuft, hätte genau den Wert verloren, für den sie gebaut wurde (siehe den in #30 gefundenen Service-Worker-Precache-Bug, den nur ein echter Browser-Test aufdecken konnte). `npx playwright install --with-deps chromium` installiert auf dem Ubuntu-Runner zusätzlich die vom Browser benötigten System-Bibliotheken über `apt`.
+
+**Lokal nicht mit `npm ci` reproduzierbar geprüft:** Unter Windows sperrte der Virenscanner wiederholt native Binärdateien (`lightningcss`, `@rollup/rollup-win32-x64-msvc`) während `npm ci`s Neuinstallation, was einmal zu einem unvollständigen `node_modules` führte (behoben durch ein reguläres `npm install`, verifiziert über erneutes `npx vitest run`/`npm run check`/`npm run build`). Dies ist ein bekanntes, plattformspezifisches npm-Verhalten unter Windows und tritt auf dem Linux-Runner der Pipeline nicht auf; der Workflow selbst (`npm ci` + die einzelnen Skripte) wurde stattdessen durch wiederholtes, erfolgreiches Ausführen jedes einzelnen zugrunde liegenden Befehls (`lint`, `check`, `test`, `build`, `test:e2e`) in dieser Session verifiziert.
 
 **Ist:** Kein `.github/`-Verzeichnis, keine Automatisierung. `npm run lint` ist derzeit dauerhaft rot (siehe Aufgabe 2) und würde als Gate ohnehin nichts durchlassen.
 
