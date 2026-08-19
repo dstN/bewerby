@@ -35,7 +35,7 @@
 	class:mobile-open={mobileOpen}
 	id="mobile-sidebar"
 	inert={isInert}
-	aria-label="Navigation"
+	aria-label={t('a11y.mainNavigation')}
 >
 	<div class="sidebar-header">
 		<a href={resolve('/')} class="logo-link" aria-label={t('app.name')}>

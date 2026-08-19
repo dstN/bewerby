@@ -61,6 +61,10 @@
 	}
 </script>
 
+<svelte:head>
+	<title>{t('nav.settings')} · {t('app.name')}</title>
+</svelte:head>
+
 <div class="settings-page">
 	<header class="page-header">
 		<h1>{t('settings.title')}</h1>

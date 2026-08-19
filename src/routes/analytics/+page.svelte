@@ -85,6 +85,10 @@
 	});
 </script>
 
+<svelte:head>
+	<title>{t('nav.analytics')} · {t('app.name')}</title>
+</svelte:head>
+
 <div class="analytics-page">
 	<header class="page-header">
 		<h1>{t('nav.analytics')}</h1>

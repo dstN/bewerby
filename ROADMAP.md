@@ -176,21 +176,21 @@ Zusätzlich: `engines`-Feld in `package.json` ergänzt (gibt `.npmrc`s `engine-s
 
 **Ziel:** WCAG 2.2 AA durchgehend erfüllen und Lighthouse 100 in allen vier Kategorien erreichen.
 
-| #   | Aufgabe                                                | Labels                             | Issue                                            |
-| :-- | :----------------------------------------------------- | :--------------------------------- | :----------------------------------------------- |
-| 16  | ✅ Fokus-Sichtbarkeit wiederherstellen                 | `a11y`                             | [#16](https://github.com/dstN/bewerby/issues/16) |
-| 17  | ✅ Kontrastverstöße beheben                            | `a11y`                             | [#17](https://github.com/dstN/bewerby/issues/17) |
-| 18  | ✅ Fokusmanagement im Bearbeitungsdialog               | `a11y` `refactoring`               | [#18](https://github.com/dstN/bewerby/issues/18) |
-| 19  | ✅ DatePicker als bedienbares Kalender-Grid            | `a11y` `performance` `refactoring` | [#19](https://github.com/dstN/bewerby/issues/19) |
-| 20  | ✅ Kanban-Karte semantisch entflechten                 | `a11y`                             | [#20](https://github.com/dstN/bewerby/issues/20) |
-| 21  | ✅ Tailwind-Scope eingrenzen (30 KB → ~2 KB CSS)       | `performance`                      | [#21](https://github.com/dstN/bewerby/issues/21) |
-| 22  | ✅ Asset-Gewicht reduzieren                            | `performance`                      | [#22](https://github.com/dstN/bewerby/issues/22) |
-| 23  | ✅ Board- und Analytics-Queries entkoppeln             | `performance`                      | [#23](https://github.com/dstN/bewerby/issues/23) |
-| 24  | ✅ $effect-Disziplin herstellen                        | `refactoring`                      | [#24](https://github.com/dstN/bewerby/issues/24) |
-| 25  | ✅ prefers-reduced-motion durchgehend respektieren     | `a11y`                             | [#25](https://github.com/dstN/bewerby/issues/25) |
-| 26  | i18n vervollständigen und Seitentitel differenzieren   | `a11y` `bug`                       | [#26](https://github.com/dstN/bewerby/issues/26) |
-| 27  | PDF-Verarbeitung härten                                | `bug` `performance`                | [#27](https://github.com/dstN/bewerby/issues/27) |
-| 28  | Cloud-Sync-Platzhalter ehrlich und barrierefrei machen | `a11y`                             | [#28](https://github.com/dstN/bewerby/issues/28) |
+| #   | Aufgabe                                                 | Labels                             | Issue                                            |
+| :-- | :------------------------------------------------------ | :--------------------------------- | :----------------------------------------------- |
+| 16  | ✅ Fokus-Sichtbarkeit wiederherstellen                  | `a11y`                             | [#16](https://github.com/dstN/bewerby/issues/16) |
+| 17  | ✅ Kontrastverstöße beheben                             | `a11y`                             | [#17](https://github.com/dstN/bewerby/issues/17) |
+| 18  | ✅ Fokusmanagement im Bearbeitungsdialog                | `a11y` `refactoring`               | [#18](https://github.com/dstN/bewerby/issues/18) |
+| 19  | ✅ DatePicker als bedienbares Kalender-Grid             | `a11y` `performance` `refactoring` | [#19](https://github.com/dstN/bewerby/issues/19) |
+| 20  | ✅ Kanban-Karte semantisch entflechten                  | `a11y`                             | [#20](https://github.com/dstN/bewerby/issues/20) |
+| 21  | ✅ Tailwind-Scope eingrenzen (30 KB → ~2 KB CSS)        | `performance`                      | [#21](https://github.com/dstN/bewerby/issues/21) |
+| 22  | ✅ Asset-Gewicht reduzieren                             | `performance`                      | [#22](https://github.com/dstN/bewerby/issues/22) |
+| 23  | ✅ Board- und Analytics-Queries entkoppeln              | `performance`                      | [#23](https://github.com/dstN/bewerby/issues/23) |
+| 24  | ✅ $effect-Disziplin herstellen                         | `refactoring`                      | [#24](https://github.com/dstN/bewerby/issues/24) |
+| 25  | ✅ prefers-reduced-motion durchgehend respektieren      | `a11y`                             | [#25](https://github.com/dstN/bewerby/issues/25) |
+| 26  | ✅ i18n vervollständigen und Seitentitel differenzieren | `a11y` `bug`                       | [#26](https://github.com/dstN/bewerby/issues/26) |
+| 27  | PDF-Verarbeitung härten                                 | `bug` `performance`                | [#27](https://github.com/dstN/bewerby/issues/27) |
+| 28  | Cloud-Sync-Platzhalter ehrlich und barrierefrei machen  | `a11y`                             | [#28](https://github.com/dstN/bewerby/issues/28) |
 
 ### 16 — Fokus-Sichtbarkeit wiederherstellen
 
@@ -291,6 +291,12 @@ Mit Playwright end-to-end verifiziert (8 Checks), `prefers-reduced-motion: reduc
 **Soll:** Bei `prefers-reduced-motion: reduce` sind alle nicht-essenziellen Animationen und Transitions deaktiviert oder auf einen Opacity-Wechsel reduziert — inklusive der Svelte-Transitions, nicht nur der CSS-Regeln.
 
 ### 26 — i18n vervollständigen und Seitentitel differenzieren
+
+**Status:** ✅ Erledigt (siehe [#26](https://github.com/dstN/bewerby/issues/26) für den schließenden Commit und Details). Per Volltextsuche über `aria-label="..."`, `title="..."`, `alert('...')` und `toLocaleDateString(undefined, ...)` alle verbliebenen hartcodierten Stellen gefunden und übersetzt: Spalten-Hinzufügen-Button (jetzt mit Spaltenname interpoliert), Karten-Farbmarkierungs-Tooltip, Karten-Löschen-Button (jetzt mit Firmenname interpoliert, konsistent mit dem bereits vorhandenen `changeStatus`-Muster), Sidebar-`aria-label`, Eigene-Farbe-entfernen-Button (title UND aria-label jetzt konsistent derselbe Text), Tag-Löschen-Button (jetzt mit dem tatsächlichen Tag-Namen interpoliert — ein zusätzlicher A11y-Gewinn, da mehrere Tag-Buttons vorher nicht unterscheidbar waren) und beide PDF-Fehlermeldungen. Kartendatum nutzt jetzt `i18n.locale` statt `undefined` (Browser-Default). Die im Ist zitierten `DatePicker`-Labels waren durch #19 bereits erledigt. Alle vier bis dahin titellosen Routen (Board, Analytics, Backup, Einstellungen) sowie zusätzlich `+error.svelte` haben jetzt einen eigenen `<title>` nach demselben `{Seite} · {app.name}`-Muster, das Impressum/Datenschutz bereits aus #13 nutzten.
+
+Der Skip-Link in `app.html` liegt außerhalb des Svelte-Komponentenbaums und kann `t()` nicht direkt aufrufen; die Lösung spiegelt das bestehende Theme-FOUC-Skript. Dabei ein reales, per Playwright im Browser bestätigtes CSP-Problem gefunden, keine Vermutung: Ein zweites eigenständiges Inline-`<script>` (im `<body>`, direkt nach dem Skip-Link) wurde von SvelteKits automatischer CSP-Hash-Erkennung **nicht** erfasst und dadurch zur Laufzeit blockiert — nur das ursprüngliche `<head>`-Skript bekam einen passenden Hash in der generierten Policy. Behoben, indem beide Skripte zu einem einzigen im `<head>` zusammengeführt wurden (der nachweislich funktionierende Fall), mit einem `DOMContentLoaded`-Listener für den Skip-Link-Text, da das Element beim Ausführen des Head-Skripts noch nicht existiert.
+
+Mit Playwright end-to-end verifiziert (18 Checks): alle sechs Routen haben unterscheidbare Titel, der Skip-Link zeigt vor dem ersten Rendern korrekt Deutsch bzw. Englisch (Locale vorab in `localStorage` gesetzt, wie beim Theme-Skript), alle elf zuvor hartcodierten Labels lösen jetzt über i18n auf (inklusive der neu interpolierten Varianten), das Kartendatum folgt der App-Sprache statt der Browsersprache, und — als gezielter Beleg für den CSP-Fund — keine CSP-Verstöße mehr in der Konsole nach dem Zusammenführen der Skripte.
 
 **Ist:** Trotz vollständiger Übersetzungsdateien sind mehrere Strings hartcodiert deutsch: `aria-label="Hinzufügen"` und `"Löschen"` (`src/routes/+page.svelte:265`, `:331`), `title="Farbmarkierung"` (`:295`), `aria-label="Tag löschen"` und `"Farbe löschen"` sowie `title="Entfernen"` (`ApplicationModal.svelte:385`, `:338`, `:337`), `aria-label="Vorheriger Monat"`/`"Nächster Monat"` (`DatePicker.svelte:292`, `:300`), `aria-label="Navigation"` (`Sidebar.svelte:20`), die PDF-Fehlermeldung per `alert()` (`ApplicationModal.svelte:117`) und der Skip-Link in `src/app.html:32` — obwohl `a11y.skipToContent` als Key existiert. Alle vier Routen tragen denselben `<title>` „bewerby", weil er nur im Layout gesetzt wird (`+layout.svelte:24`). Kartendaten werden mit `toLocaleDateString(undefined, …)` formatiert (`+page.svelte:323`), folgen also der Browser- statt der App-Sprache.
 

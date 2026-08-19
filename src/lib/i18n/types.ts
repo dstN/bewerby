@@ -39,6 +39,9 @@ export type TranslationKeys = {
 		deletedAnnouncement: string;
 		savedAnnouncement: string;
 		changeStatus: string;
+		addToColumn: string;
+		colorMarker: string;
+		deleteApplication: string;
 		subtitle: string;
 		searchPlaceholder: string;
 		allTags: string;
@@ -65,6 +68,8 @@ export type TranslationKeys = {
 		cardColor: string;
 		colorNone: string;
 		addCustomColor: string;
+		removeCustomColor: string;
+		removeTag: string;
 		appliedAt: string;
 		createdAt: string;
 		confirmDiscard: string;
@@ -261,6 +266,7 @@ export type TranslationKeys = {
 		closeMenu: string;
 		toggleTheme: string;
 		switchLanguage: string;
+		mainNavigation: string;
 	};
 	errorPage: {
 		title: string;
@@ -273,5 +279,7 @@ export type TranslationKeys = {
 		saveFailed: string;
 		deleteFailed: string;
 		moveFailed: string;
+		pdfSaveFailed: string;
+		pdfScanFailed: string;
 	};
 };

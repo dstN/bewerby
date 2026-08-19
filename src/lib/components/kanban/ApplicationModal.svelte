@@ -211,7 +211,7 @@
 		} catch (err) {
 			console.error('Failed to store PDF:', err);
 			const message = err instanceof Error ? err.message : String(err);
-			alert('Fehler beim Speichern der PDF: ' + message);
+			alert(t('errors.pdfSaveFailed') + message);
 			isParsingPdf = false;
 			return;
 		}
@@ -230,7 +230,7 @@
 		} catch (err) {
 			console.error('Failed to parse PDF:', err);
 			const message = err instanceof Error ? err.message : String(err);
-			alert('Fehler beim Scannen der PDF: ' + message);
+			alert(t('errors.pdfScanFailed') + message);
 		} finally {
 			isParsingPdf = false;
 		}
@@ -605,8 +605,8 @@
 										colorStore.removeCustomColor(customHex);
 										if (cardColor?.toLowerCase() === customHex.toLowerCase()) cardColor = 'none';
 									}}
-									title="Entfernen"
-									aria-label="Farbe löschen">×</button
+									title={t('application.removeCustomColor')}
+									aria-label={t('application.removeCustomColor')}>×</button
 								>
 							</div>
 						{/each}
@@ -664,7 +664,7 @@
 										type="button"
 										class="btn-tag-remove"
 										onclick={() => removeTag(tag)}
-										aria-label="Tag löschen">×</button
+										aria-label={t('application.removeTag').replace('{tag}', tag)}>×</button
 									>
 								</span>
 							{/each}

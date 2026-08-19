@@ -2,7 +2,7 @@
 	import { liveQuery } from 'dexie';
 	import { SvelteSet } from 'svelte/reactivity';
 	import { db, type Application } from '$lib/db/index.js';
-	import { t } from '$lib/i18n/index.svelte.js';
+	import { t, i18n } from '$lib/i18n/index.svelte.js';
 	import ApplicationModal from '$lib/components/kanban/ApplicationModal.svelte';
 	import { colorStore } from '$lib/stores/colors.svelte.js';
 	import { deletePdfFromOpfs } from '$lib/utils/opfs.js';
@@ -213,6 +213,10 @@
 	}
 </script>
 
+<svelte:head>
+	<title>{t('nav.kanban')} · {t('app.name')}</title>
+</svelte:head>
+
 <div class="dashboard">
 	<!-- Active local in-app warnings -->
 	{#if activeAlerts.length > 0}
@@ -346,7 +350,11 @@
 					<div class="column-indicator"></div>
 					<h2 class="column-title">{t(col.labelKey)}</h2>
 					<span class="column-badge">{columnApps.length}</span>
-					<button class="btn-col-add" onclick={() => openAddModal(col.id)} aria-label="Hinzufügen">
+					<button
+						class="btn-col-add"
+						onclick={() => openAddModal(col.id)}
+						aria-label={t('kanban.addToColumn').replace('{status}', t(col.labelKey))}
+					>
 						+
 					</button>
 				</header>
@@ -370,7 +378,7 @@
 											<span
 												class="card-color-dot"
 												style:--dot-color={app.cardColor}
-												title="Farbmarkierung"
+												title={t('kanban.colorMarker')}
 											></span>
 										{/if}
 										<span class="card-company">{app.company}</span>
@@ -404,7 +412,7 @@
 							<footer class="card-footer">
 								<span class="card-date">
 									{new Date(app.appliedAt || app.createdAt || app.updatedAt).toLocaleDateString(
-										undefined,
+										i18n.locale,
 										{ day: 'numeric', month: 'short' }
 									)}
 								</span>
@@ -428,7 +436,7 @@
 										e.stopPropagation();
 										deleteApp(app.id!, app.company);
 									}}
-									aria-label="Löschen"
+									aria-label={t('kanban.deleteApplication').replace('{company}', app.company)}
 								>
 									<svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
 										<path

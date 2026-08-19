@@ -4,6 +4,10 @@
 	import { t } from '$lib/i18n/index.svelte.js';
 </script>
 
+<svelte:head>
+	<title>{t('errorPage.title')} · {t('app.name')}</title>
+</svelte:head>
+
 <div class="error-page">
 	<div class="error-card">
 		<h1>{t('errorPage.title')}</h1>

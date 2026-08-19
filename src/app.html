@@ -48,7 +48,17 @@
 			crossorigin="anonymous"
 		/>
 
-		<!-- Prevent FOUC on theme: apply .dark before first paint -->
+		<!-- Prevent FOUC on theme (apply .dark before first paint) and set the
+		     skip-link's language before it can be perceived. Both live in this
+		     one script, in <head>, matching the only pattern SvelteKit's CSP
+		     hash auto-detection reliably picks up for a prerendered page - a
+		     second inline <script> placed in <body> (tried first) was silently
+		     dropped from the generated script-src hash list and blocked at
+		     runtime. The skip-link update is deferred to DOMContentLoaded since
+		     the element itself doesn't exist yet while this script (in <head>)
+		     runs; app.html can't call t() directly since it's the static shell
+		     SvelteKit injects the built app into, outside the Svelte component
+		     tree - mirrors the locale detection in $lib/i18n/index.svelte.ts. -->
 		<script>
 			(function () {
 				const stored = localStorage.getItem('bewerby-theme');
@@ -56,14 +66,27 @@
 				if (stored === 'dark' || (!stored && prefersDark)) {
 					document.documentElement.classList.add('dark');
 				}
+
+				const skipLinkLabels = { de: 'Zum Inhalt springen', en: 'Skip to content' };
+				const storedLocale = localStorage.getItem('bewerby-locale');
+				const browserLocale = (navigator.language || '').slice(0, 2).toLowerCase();
+				const locale = skipLinkLabels[storedLocale]
+					? storedLocale
+					: skipLinkLabels[browserLocale]
+						? browserLocale
+						: 'de';
+				document.addEventListener('DOMContentLoaded', () => {
+					const skipLink = document.getElementById('skip-link');
+					if (skipLink) skipLink.textContent = skipLinkLabels[locale];
+				});
 			})();
 		</script>
 
 		%sveltekit.head%
 	</head>
 	<body data-sveltekit-preload-data="hover">
-		<!-- Skip to content link for keyboard/screen reader users -->
-		<a href="#main-content" class="skip-link"> Zum Inhalt springen </a>
+		<!-- Skip to content link for keyboard/screen reader users. -->
+		<a href="#main-content" class="skip-link" id="skip-link">Zum Inhalt springen</a>
 		<div style="display: contents">%sveltekit.body%</div>
 	</body>
 </html>

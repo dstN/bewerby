@@ -201,6 +201,10 @@
 	}
 </script>
 
+<svelte:head>
+	<title>{t('nav.backup')} · {t('app.name')}</title>
+</svelte:head>
+
 <div class="backup-page">
 	<header class="page-header">
 		<h1>{t('backup.title')}</h1>
