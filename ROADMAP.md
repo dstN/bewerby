@@ -488,6 +488,7 @@ Verifiziert: `npx vitest run` — 45 Tests in 5 Dateien, alle grün. `npm run ch
 | 38  | ✅ Open Graph / Twitter Card Meta-Tags                       | `enhancement`                        | [#38](https://github.com/dstN/bewerby/issues/38) |
 | 39  | ✅ PWA-Icons 404 live (`/icons/`-Alias-Kollision)            | `bug`                                | [#39](https://github.com/dstN/bewerby/issues/39) |
 | 40  | Epic: Opt-in Web-Push-Erinnerungen bei geschlossenem Browser | `enhancement` `architecture` `dsgvo` | [#40](https://github.com/dstN/bewerby/issues/40) |
+| 41  | Epic: Live-P2P-Sync per QR-Pairing (WebRTC + CRDT)           | `enhancement` `architecture` `dsgvo` | [#41](https://github.com/dstN/bewerby/issues/41) |
 
 ### 36 — Epic: Ende-zu-Ende-verschlüsselter Cloud-Sync
 
@@ -520,6 +521,12 @@ Ein Vorschlag aus dieser Phase, das Ganze stattdessen per QR-Code zwischen zwei 
 **Ist:** Die Reminder-Engine (`src/lib/utils/reminders.ts`) läuft rein im JS-Kontext der Seite und feuert nur, solange ein Tab mit bewerby offen ist (siehe `settings.remindersDesc`). `registerBackgroundSyncBestEffort()` ist ein dokumentierter No-op — der Service Worker hat keinen `sync`-Listener.
 
 **Soll:** Optional zuschaltbare, echte Zustellung über die Web-Push-API, ohne bewerbys Kernversprechen ("100 % lokal, kein Server, kein Konto") für alle anzutasten, die das Feature nicht aktivieren. Erfordert zwingend eine neue, externe Server-Komponente (Push kann sich selbst nicht terminieren) — datensparsam entworfen, sodass dieser Server nur Push-Subscription + Fälligkeits-Zeitstempel kennt, nie Firmenname/Titel/Notizen. Details, Double-Opt-in-Vorschlag und offene Fragen siehe [#40](https://github.com/dstN/bewerby/issues/40). Wie #36 bewusst als Backlog-Epic nach v1 eingeordnet, kein aktueller Implementierungsauftrag.
+
+### 41 — Epic: Live-P2P-Sync per QR-Pairing (WebRTC + CRDT)
+
+**Ist:** Mehrgeräte-Nutzung ist nur über den manuellen Export/Import-Umweg (`backup.ts`) möglich — kein automatischer Abgleich, kein "einfach auf zwei Geräten weiterarbeiten".
+
+**Soll:** Bewusst als eigenständige, **serverlose Alternative** zu #36 angelegt (nicht als dessen Vorstufe): ein QR-Code vermittelt nur den WebRTC-Verbindungsaufbau zwischen zwei Geräten; die eigentliche Synchronisation läuft danach direkt Gerät-zu-Gerät über einen DataChannel, ohne dass je ein Server die Bewerbungsdaten sieht oder speichert — auch nicht verschlüsselt. Kernstück ist eine Umstellung des Datenmodells auf CRDT (z. B. Yjs), damit Änderungen aus Offline-Phasen beider Geräte automatisch und ohne Datenverlust zusammengeführt werden, statt nur die neueste Momentaufnahme zu gewinnen. Einziges externes Infrastrukturstück ist ein zustandsloser Signaling-Relay (kein Datenspeicher). Details, Vergleichstabelle zu #36 und offene Fragen siehe [#41](https://github.com/dstN/bewerby/issues/41). Wie #36/#40 bewusst als Backlog-Epic nach v1 eingeordnet, kein aktueller Implementierungsauftrag.
 
 ---
 
