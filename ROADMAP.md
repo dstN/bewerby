@@ -482,11 +482,12 @@ Verifiziert: `npx vitest run` — 45 Tests in 5 Dateien, alle grün. `npm run ch
 
 ## Nach v1 (Backlog, ohne Milestone)
 
-| #   | Aufgabe                                           | Labels        | Issue                                            |
-| :-- | :------------------------------------------------ | :------------ | :----------------------------------------------- |
-| 36  | Epic: Ende-zu-Ende-verschlüsselter Cloud-Sync     | `enhancement` | [#36](https://github.com/dstN/bewerby/issues/36) |
-| 38  | ✅ Open Graph / Twitter Card Meta-Tags            | `enhancement` | [#38](https://github.com/dstN/bewerby/issues/38) |
-| 39  | ✅ PWA-Icons 404 live (`/icons/`-Alias-Kollision) | `bug`         | [#39](https://github.com/dstN/bewerby/issues/39) |
+| #   | Aufgabe                                                      | Labels                               | Issue                                            |
+| :-- | :----------------------------------------------------------- | :----------------------------------- | :----------------------------------------------- |
+| 36  | Epic: Ende-zu-Ende-verschlüsselter Cloud-Sync                | `enhancement`                        | [#36](https://github.com/dstN/bewerby/issues/36) |
+| 38  | ✅ Open Graph / Twitter Card Meta-Tags                       | `enhancement`                        | [#38](https://github.com/dstN/bewerby/issues/38) |
+| 39  | ✅ PWA-Icons 404 live (`/icons/`-Alias-Kollision)            | `bug`                                | [#39](https://github.com/dstN/bewerby/issues/39) |
+| 40  | Epic: Opt-in Web-Push-Erinnerungen bei geschlossenem Browser | `enhancement` `architecture` `dsgvo` | [#40](https://github.com/dstN/bewerby/issues/40) |
 
 ### 36 — Epic: Ende-zu-Ende-verschlüsselter Cloud-Sync
 
@@ -513,6 +514,12 @@ Ein Vorschlag aus dieser Phase, das Ganze stattdessen per QR-Code zwischen zwei 
 **Ist:** `static/icons/*` 404en live, obwohl die Dateien im Build und im Git-Tracking vorhanden sind.
 
 **Soll:** Alle vier PWA-Icon-Dateien sind live unter einem Pfad erreichbar, der nicht mit einer Apache-Standardvoreinstellung kollidiert.
+
+### 40 — Epic: Opt-in Web-Push-Erinnerungen bei geschlossenem Browser
+
+**Ist:** Die Reminder-Engine (`src/lib/utils/reminders.ts`) läuft rein im JS-Kontext der Seite und feuert nur, solange ein Tab mit bewerby offen ist (siehe `settings.remindersDesc`). `registerBackgroundSyncBestEffort()` ist ein dokumentierter No-op — der Service Worker hat keinen `sync`-Listener.
+
+**Soll:** Optional zuschaltbare, echte Zustellung über die Web-Push-API, ohne bewerbys Kernversprechen ("100 % lokal, kein Server, kein Konto") für alle anzutasten, die das Feature nicht aktivieren. Erfordert zwingend eine neue, externe Server-Komponente (Push kann sich selbst nicht terminieren) — datensparsam entworfen, sodass dieser Server nur Push-Subscription + Fälligkeits-Zeitstempel kennt, nie Firmenname/Titel/Notizen. Details, Double-Opt-in-Vorschlag und offene Fragen siehe [#40](https://github.com/dstN/bewerby/issues/40). Wie #36 bewusst als Backlog-Epic nach v1 eingeordnet, kein aktueller Implementierungsauftrag.
 
 ---
 
