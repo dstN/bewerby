@@ -6,6 +6,19 @@ on:
     branches: [master]
     types: [completed]
 
+# The repo's default workflow token permission is "read", but that default
+# does not extend to the `actions` scope - actions/download-artifact below
+# needs it explicitly to pull CI's artifact by run-id from this separate,
+# workflow_run-triggered workflow (cross-workflow artifact access is gated
+# behind this specific scope, unlike same-workflow artifact up/download).
+# Without it the download 403s ("Resource not accessible by integration"),
+# which is exactly what broke this workflow once the repo's default
+# permission tightened - see ci.yml's `permissions: contents: read` for the
+# same explicit-over-implicit pattern already used there.
+permissions:
+  contents: read
+  actions: read
+
 jobs:
   deploy:
     name: Deploy to Netcup
