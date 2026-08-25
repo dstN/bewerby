@@ -1,7 +1,7 @@
 {
 	"name": "bewerby",
 	"private": true,
-	"version": "1.0.0",
+	"version": "1.1.0",
 	"type": "module",
 	"engines": {
 		"node": ">=26.0.0"
@@ -21,6 +21,7 @@
 		"format": "prettier --write ."
 	},
 	"devDependencies": {
+		"@axe-core/playwright": "^4.13.0",
 		"@eslint/js": "^10.0.1",
 		"@playwright/test": "^1.62.1",
 		"@sveltejs/adapter-node": "^5.5.4",
@@ -32,6 +33,7 @@
 		"eslint-plugin-svelte": "^3.19.0",
 		"fake-indexeddb": "^6.2.5",
 		"globals": "^17.6.0",
+		"jsdom": "^30.0.1",
 		"prettier": "^3.8.3",
 		"prettier-plugin-svelte": "^4.1.0",
 		"svelte": "^5.56.1",
