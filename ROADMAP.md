@@ -532,6 +532,55 @@ Nicht Teil der ursprünglichen 36-Punkte-Analyse, sondern beiläufig während de
 
 ---
 
+## Nach dem v1-Release — Test- und Barrierefreiheits-Härtung (v1.1.0)
+
+Nicht Teil der ursprünglichen 39-Punkte-Analyse und ohne eigenes GitHub-Issue (auf Nutzerwunsch direkt umgesetzt, nicht über den sonst üblichen Issue-Workflow) — trotzdem hier dokumentiert, aus demselben Grund wie #37: nichts soll stillschweigend passieren.
+
+**Auslöser:** Zwei Aufträge — (1) die bestehende Testabdeckung um tiefere Unit-, E2E- und Barrierefreiheitstests erweitern, (2) ein gemeldetes Mobil-Layout-Problem prüfen ("Suchleiste läuft über den Bildschirmrand hinaus").
+
+### Testabdeckung
+
+**Unit-Tests (Vitest):** von 4 auf 15 Testdateien, von rund 45 auf **217 Tests**. Neu abgedeckt: die Reminder-Engine selbst (Scheduling, Deduplizierung über `localStorage`-Marker, Aufräumen verwaister Marker, `setTimeout`-Clamping auf `2^31-1`) über Fake-Timer und eine ersetzte `liveQuery`/`Notification`-Kette statt nur `getReminderDueAt()`s reine Datumsmathematik; die Theme-, i18n- und Farb-Stores (inkl. System-Preference-Wechsel zur Laufzeit, Persistenz-Roundtrips, korruptem `localStorage`); `isValidApplication()` feldweise (jede Pflicht- und Optionalfeld-Kombination einzeln, da genau diese Funktion die einzige Instanz zwischen einer manipulierten Backup-Datei und der Live-Datenbank ist); OPFS und die Storage-Permission-Hilfsfunktionen über ein In-Memory-`FileSystemDirectoryHandle`; `eraseAllData()` (jeder der fünf Lösch-Schritte einzeln, plus dass ein Fehler in einem Schritt die folgenden nicht abbricht); und ein Konsistenztest, der `de.json`/`en.json` gegen jede tatsächliche `t('...')`-Aufrufstelle in `src/` abgleicht (inklusive der drei dynamischen Template-Literal-Aufrufe). Zwei Umgebungslücken mussten dafür geschlossen werden: Node 26 deklariert ein eigenes, unter Vitest wirkungsloses `globalThis.localStorage`, das jsdoms funktionierende Implementierung verdeckt, und jsdom 30 kennt `matchMedia` überhaupt nicht — beide über `tests/setup/browser-globals.ts` als deterministische Ersatzimplementierungen bereitgestellt.
+
+**E2E-Tests (Playwright):** von 6 auf **108 Tests**, vier neue Spec-Dateien plus eine gemeinsame Seed-Fixture (`tests/e2e/fixtures/seed.ts`, schreibt Testdaten direkt über die rohe IndexedDB-API statt über die UI, damit ein befüllter Board-Zustand nicht den Modal-Erstellungspfad mittestet). `board-filters.spec.ts` fährt Suche/Tag-/Prioritäts-/Farbfilter und die Sortierung über die echten Steuerelemente statt über die zugrunde liegende `$derived`-Kette. `preferences.spec.ts` prüft Theme/Sprache gegen das tatsächliche No-FOUC-Verhalten in `app.html` (dass der gespeicherte Wert _vor_ dem ersten Paint auf `<html>` steht, nicht nur, dass der Store-Zustand stimmt) und dass keine Route in keiner Sprache eine rohe Übersetzungs-Schlüssel-Zeichenkette rendert.
+
+### Barrierefreiheit: WCAG 2.2 Level AAA + Best Practice (`a11y.spec.ts`)
+
+**Ist (vor dieser Änderung):** Die App war gegen WCAG **AA** verifiziert (#34). Ein axe-core-Scan lief nie automatisiert in CI, und mehrere Farb-Tokens erreichten zwar 4,5:1 (AA), aber nicht 7:1 (AAA).
+
+**Umsetzung:** `@axe-core/playwright` neu installiert. Ein Scan über jede Route, beide Themes, Desktop- und 390px-Viewport, gegen `wcag2a`/`wcag2aa`/`wcag2aaa`/`wcag21*`/`wcag22*` plus `best-practice` (nicht nur die sonst übliche AA-Baseline) — zusätzlich das befüllte Board (inkl. Alert-Banner, farbigen/spekularen Karten, Tag-Overflow-Chip), Analytics mit echten Daten, den geöffneten Bewerbungs-Dialog und das DatePicker-Popover, da ein Scan der leeren Standardansicht die meisten Komponenten gar nicht erreicht (dieselbe Lücke, die #34 beim `.total-val`-Fund in Analytics schon einmal aufgezeigt hatte). Ergänzt um handschriftliche Prüfungen, die axe strukturell nicht leisten kann: Skip-Link-Verhalten, Live-Region-Ansagen, `inert` auf der geschlossenen Mobil-Schublade, `prefers-reduced-motion`.
+
+**Gefundene und behobene AAA-Verstöße:** Ein vollständiger Sweep (alle Routen × beide Themes × zwei Viewports × alle Overlay-Zustände, mit `reducedMotion: 'reduce'` gegen Falschmessungen mitten in der `modal-enter`-Öffnungsanimation) förderte 56 einzelne Kontrastbefunde zutage, die sich auf eine Handvoll zugrunde liegender Farb-Tokens in `src/app.css` zurückführen ließen. Jedes Token wurde numerisch neu bestimmt (WCAG-Relative-Luminanz-Formel, Ziel ≥ 7,0:1 gegen jede Oberfläche, auf der es tatsächlich verwendet wird) statt nach Augenmaß angepasst:
+
+- `--text-secondary` / `--text-tertiary` (beide Themes) — reichten bislang nur AA.
+- `--color-accent-text` (Fließtext-/Icon-Blau) und, getrennt davon, `--color-accent-600`/`700` (Volltonfarbe für weißen Button-Text — eine andere Kontrastanforderung als dieselbe Farbe als Text auf hellem Grund).
+- `--color-danger` / `--color-danger-solid`.
+- Der Sidebar-Akzent-Ton im aktiven Navigationseintrag (`--sidebar-text-active`, `--sidebar-item-active` im Dark-Theme) — die einzige nicht-neutrale Hintergrundfläche, gegen die das Akzentblau bestehen muss.
+- Die fest codierte Warnbanner-Textfarbe in `+page.svelte` (bewusst themeunabhängig, siehe bestehender Kommentar dort).
+
+Nach der Korrektur: **0 axe-Verstöße** über die gesamte Scan-Matrix (Routen × Themes × Viewports × Board-/Analytics-/Dialog-/DatePicker-Zustände).
+
+### Mobil-Layout: Suchleiste und Filter-Dropdowns
+
+**Ist (Suchleiste):** Auf einem Telefon lief das Suchfeld über den rechten Bildschirmrand hinaus. Ursache: Nirgends im Projekt galt `box-sizing: border-box` global — jedes `width: 100%`-Element addierte sein eigenes Padding/Border obendrauf. Beim Suchfeld allein macht das 36px Icon-Inset + Padding + Rahmen ≈ 50px Überstand, auf dem Desktop unsichtbar (der Wrapper ist dort auf 320px begrenzt, der Überstand verschwand im freien Flex-Platz), auf einem 390px-Telefon jedoch sichtbar jenseits des Rands, sobald der Mobil-Breakpoint diese Begrenzung aufhebt.
+
+**Behoben:** Ein globaler `*, *::before, *::after { box-sizing: border-box; }`-Reset in `src/app.css`. Bei der Gelegenheit zwei weitere, durch denselben Root-Cause verwandte Überlauf-Bugs im Bewerbungs-Dialog gefunden und behoben: `.modal-content` nutzte `width: 100%` unter `position: fixed` (Prozentwerte lösen dort gegen den _Viewport_ auf, nicht gegen die eigene, per `inset: 16px` definierte Box — führte bei 320px zu 16px Überstand unabhängig vom Border-Box-Fix) sowie fehlendes `min-width: 0` im Tag-Eingabefeld und im Formular-Grid (ein `<input>`s intrinsische Mindestbreite verhinderte das Schrumpfen innerhalb von Flex/Grid).
+
+**Ist (Filter-Dropdowns, auf Hinweis nachträglich gefunden):** Die vier Filter-Selects unter der Suchleiste quetschten sich auf einem Telefon in eine einzige Reihe zu je ca. 75px Breite — jedes Label kürzte auf ein bis zwei Zeichen ("Alle Tags" → "Al", "Sortieren nach: Standard" → "So"). Ursache: `.filter-dropdowns select { flex: 1; }` setzt `flex-basis: 0%`, was jedem Element erlaubt, beliebig zu schrumpfen, statt `flex-wrap: wrap` je auszulösen — der Zeilenumbruch griff also nie.
+
+**Behoben:** Die vier Selects stapeln sich auf Mobilbreite jetzt volle Breite untereinander (wie das Suchfeld es bereits tat), statt in eine Reihe gezwängt zu werden. Ein zweispaltiges Raster wurde geprüft und verworfen: Das längste Standard-Label ("Sortieren nach: Standard") passt selbst bei 390px nicht in eine halbe Zeile, ohne erneut zu kürzen.
+
+**Absicherung:** `tests/e2e/mobile-layout.spec.ts` (neu, 29 Tests) prüft bei 320px und 390px auf jeder Route, im befüllten Board und im Dialog, dass kein Element über den Viewport-Rand hinausragt, sowie gezielt für die Filter-Selects, dass sie sich stapeln statt zu quetschen (Regressionstest bewusst _vor_ dem Fix gegen den alten Code laufen lassen und als tatsächlich fehlschlagend verifiziert — 75px statt der erwarteten > 322px —, um sicherzustellen, dass der Test den Bug wirklich erkannt hätte).
+
+### Nebenbei behoben
+
+- `playwright.config.ts`: `workers` auf `4` gedeckelt (Playwrights Default von der halben CPU-Zahl — 12 auf der genutzten Maschine — ließ so viele parallele Browser-Kontexte gleichzeitig den Service Worker registrieren und jede Route precachen, dass es zuverlässig in `net::ERR_INSUFFICIENT_RESOURCES` kippte, sobald die Suite über ~100 Tests wuchs) sowie `retries: 1` **überall**, nicht nur in CI (ein seltener, umgebungsbedingter `browser.newContext: Target page, context or browser has been closed`-Fehler beim Chromium-Start betraf auch bereits bestehende Tests wie `modal-keyboard.spec.ts` — kein Test-Bug, sondern ein Environment-Flake, das eine ehrliche Retry-Politik verdient statt eines Test-seitigen Workarounds).
+- `vite.config.ts`: `setupFiles` für die neue `tests/setup/browser-globals.ts`-Shim ergänzt, Kommentar zur Test-Environment-Wahl aktualisiert (einzelne Dateien können jetzt gezielt `// @vitest-environment jsdom` opt-in nutzen).
+
+**Verifikation:** `npm run lint`, `npm run check`, `npm run build`, `npm run test` (217/217) und `npm run test:e2e` (108/108, inkl. mehrfacher Wiederholung zur Flake-Prüfung) laufen fehlerfrei durch.
+
+---
+
 ## Verifikation für v1
 
 - `npm run lint` und `npm run check` laufen fehlerfrei durch.

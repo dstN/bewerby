@@ -62,11 +62,17 @@ export default defineConfig({
 		})
 	],
 	test: {
-		// None of the tested logic (PDF heuristics, reminder math, backup
-		// serialization, analytics stats, the Dexie migration) touches the
-		// DOM - plain Node is lighter and faster than jsdom/happy-dom here.
-		// IndexedDB (for Dexie) is provided per-test-file via fake-indexeddb.
+		// Plain Node is the default because most of the tested logic (PDF
+		// heuristics, reminder math, backup serialization, analytics stats,
+		// the Dexie migration, validation) never touches the DOM, and node is
+		// far lighter than jsdom. The handful of files that genuinely need a
+		// document (the theme store's `.dark` class, i18n's <html lang>) opt
+		// in per-file with a `// @vitest-environment jsdom` docblock instead
+		// of slowing every file down. IndexedDB (for Dexie) is provided
+		// per-test-file via fake-indexeddb; localStorage and matchMedia come
+		// from the setup file below, which both environments need.
 		environment: 'node',
-		include: ['src/**/*.{test,spec}.{js,ts}']
+		include: ['src/**/*.{test,spec}.{js,ts}'],
+		setupFiles: ['tests/setup/browser-globals.ts']
 	}
 });

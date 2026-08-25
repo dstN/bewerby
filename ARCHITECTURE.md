@@ -131,13 +131,43 @@ to remember to add them.
 ## Testing strategy
 
 - **Vitest** (`src/**/*.test.ts`) for pure logic that doesn't need a real
-  browser: PDF-parsing heuristics, reminder math, backup serialization,
-  analytics calculations, and the Dexie v1→v2 migration (via
-  `fake-indexeddb`).
+  browser: PDF-parsing heuristics, reminder math, the reminder engine's
+  scheduling/dedup (fake timers + a substituted `liveQuery`), backup
+  serialization, analytics calculations, `isValidApplication`'s field-by-field
+  import validation, the theme/i18n/color stores (jsdom, with `localStorage`
+  and `matchMedia` stood in via `tests/setup/browser-globals.ts` - Node 26
+  shadows jsdom's own `localStorage`, and jsdom has no `matchMedia` at all),
+  translation-file parity between `de.json`/`en.json`, and the Dexie v1→v2
+  migration (via `fake-indexeddb`).
 - **Playwright** (`tests/e2e/`) for everything that only a real browser can
-  verify: the offline/service-worker behavior above, focus management in the
-  application dialog, mobile navigation, and a full backup export → erase →
-  import roundtrip with an actual PDF attachment.
+  verify:
+  - the offline/service-worker behavior above, focus management in the
+    application dialog, mobile navigation, and a full backup export → erase →
+    import roundtrip with an actual PDF attachment;
+  - `board-filters.spec.ts` drives the search/tag/priority/color filters and
+    the sort dropdown through the real controls, not the underlying
+    `$derived`;
+  - `preferences.spec.ts` checks the theme/locale stores against the actual
+    no-FOUC behavior in `app.html` - i.e. that the stored value is on
+    `<html>` _before_ first paint, not just that the store's state is right;
+  - `mobile-layout.spec.ts` asserts nothing overflows a 320px/390px viewport
+    on any route, the populated board, or the modal - written after exactly
+    that bug in the board's search input (see the file's own comment for the
+    box-sizing root cause, fixed by the global `border-box` reset in
+    `app.css`);
+  - `a11y.spec.ts` runs an [axe-core](https://github.com/dequelabs/axe-core)
+    scan against every route, in both themes, at desktop and 390px width,
+    against **WCAG 2.2 Level AAA** plus axe's `best-practice` ruleset (not
+    just the usual AA baseline) - including the populated board, analytics
+    with real data, the application dialog, and the date picker popover, plus
+    hand-written checks for things axe can't assert on its own (skip-link
+    behavior, live-region announcements, `inert` on the closed mobile drawer,
+    `prefers-reduced-motion`). Getting the AAA contrast rules to pass meant
+    retuning several color tokens in `app.css`'s `:root`/`:root.dark` blocks
+    (`--text-secondary`/`--text-tertiary`, `--color-accent-text`,
+    `--color-accent-600`/`700`, `--color-danger`/`-solid`, the sidebar's
+    active-item tint) - see that file's comments for the reasoning behind
+    each value.
 
 See [ROADMAP.md](ROADMAP.md) for the full history of what was found and
 fixed while building out this test coverage.

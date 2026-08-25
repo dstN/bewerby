@@ -59,29 +59,36 @@
 	--font-sans: 'Lexend', 'Lexend Fallback', system-ui, sans-serif;
 	--font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Code', 'Source Code Pro', monospace;
 
-	/* Accent: warm cobalt blue */
+	/* Accent: warm cobalt blue.
+	   50-500 are tint/border/ring shades held at the 3:1 non-text threshold.
+	   600/700 are the *solid fill* shades, always paired with white label text
+	   (primary buttons, the skip-link, the date picker's selected day), so they
+	   are tuned deeper than the usual blue-600/700 to clear WCAG AAA's 7:1 for
+	   that white text - 600 lands at 7.0:1 and 700, its hover step, at 8.6:1 so
+	   hovering still reads as darker. See tests/e2e/a11y.spec.ts. */
 	--color-accent-50: #eff6ff;
 	--color-accent-100: #dbeafe;
 	--color-accent-200: #bfdbfe;
 	--color-accent-300: #93c5fd;
 	--color-accent-400: #60a5fa;
 	--color-accent-500: #3b82f6;
-	--color-accent-600: #2563eb;
-	--color-accent-700: #1d4ed8;
+	--color-accent-600: #1e51bf;
+	--color-accent-700: #1841b3;
 	--color-accent-800: #1e40af;
 	--color-accent-900: #1e3a8a;
 
 	/* Semantic colors - defaults tuned for dark surfaces; :root below darkens
-	   success/warning for light surfaces, :root.dark lightens danger. */
+	   success/warning/danger for light surfaces, :root.dark restates them. */
 	--color-success: #16a34a;
 	--color-warning: #d97706;
-	--color-danger: #dc2626;
+	--color-danger: #f58a8a;
 	--color-info: #2563eb;
 
 	/* Fixed red for solid fills paired with white/inverse text (delete buttons, error
 	   banners) - kept theme-independent because that contrast pairing only depends on
-	   this hue against white, not on the surrounding light/dark surface. */
-	--color-danger-solid: #dc2626;
+	   this hue against white, not on the surrounding light/dark surface. Deepened
+	   from #dc2626 (4.8:1) so that white text clears AAA's 7:1. */
+	--color-danger-solid: #ad1e1e;
 
 	/* Kanban column colors */
 	--color-kanban-draft: #6b7280;
@@ -118,10 +125,14 @@
 	--surface-2: #f1f5f9;
 	--surface-3: #e2e8f0;
 
-	/* Text */
+	/* Text. AAA's 7:1 leaves far less headroom between tiers than AA's 4.5:1
+	   did: --text-tertiary sits *at* the 7:1 floor for the lightest surface it
+	   is used on (including the .priority-low chip's tinted background), so the
+	   tier below it is created by pushing --text-secondary well past the floor
+	   (8.6:1) rather than by letting tertiary drift lighter. */
 	--text-primary: #0f172a;
-	--text-secondary: #475569;
-	--text-tertiary: #56657a;
+	--text-secondary: #353f4e;
+	--text-tertiary: #434f5f;
 	--text-inverse: #ffffff;
 
 	/* Borders */
@@ -130,18 +141,22 @@
 	--border-strong: #cbd5e1;
 
 	/* Semantic colors, darkened from the theme-independent defaults above so they
-	   reach 4.5:1 as text on light surfaces (those defaults are tuned for dark
-	   surfaces instead). */
+	   reach 7:1 as text on light surfaces, including their own tinted status
+	   backgrounds below (those defaults are tuned for dark surfaces instead). */
 	--color-success: #15803d;
 	--color-warning: #b45309;
+	--color-danger: #a21c1c;
 
-	/* Accent blue used as body text/icon color (not as a fill) needs its own darker
-	   shade for 4.5:1 on light surfaces; --color-accent-500/600 stay unchanged since
-	   they're also relied on for borders/rings at the 3:1 non-text threshold. */
-	--color-accent-text: var(--color-accent-600);
+	/* Accent blue used as body text/icon color (not as a fill) needs its own shade:
+	   the solid-fill --color-accent-600 is tuned for white text *on* it, which is a
+	   different constraint from this blue *on* a near-white surface. Held to 7:1
+	   against every surface it appears on, the sidebar's active-item tint included.
+	   --color-accent-500 stays unchanged since it is only used for borders/rings at
+	   the 3:1 non-text threshold. */
+	--color-accent-text: #1c4cb2;
 
 	/* Tinted status message backgrounds (success/error banners). Alpha is tuned per
-	   color, not shared, since red and green reach 4.5:1 text contrast at different
+	   color, not shared, since red and green reach their contrast target at different
 	   tint strengths over a near-white background. */
 	--status-success-bg: rgba(21, 128, 61, 0.06);
 	--status-success-border: rgba(21, 128, 61, 0.25);
@@ -159,7 +174,10 @@
 	--sidebar-item-hover: #f1f5f9;
 	--sidebar-item-active: #eff6ff;
 	--sidebar-text: #475569;
-	--sidebar-text-active: #2563eb;
+	/* Same shade as --color-accent-text: the active nav item sits on the tinted
+	   --sidebar-item-active pill, which is the lightest background this blue has
+	   to hold 7:1 against. */
+	--sidebar-text-active: #1c4cb2;
 }
 
 :root.dark {
@@ -171,8 +189,8 @@
 	--surface-3: #252a36;
 
 	--text-primary: #f1f5f9;
-	--text-secondary: #94a3b8;
-	--text-tertiary: #8695ab;
+	--text-secondary: #c0c9d5;
+	--text-tertiary: #9eaabb;
 	--text-inverse: #0f172a;
 
 	--border-default: #252a36;
@@ -186,8 +204,10 @@
 	   through instead of falling back to the shared default. */
 	--color-success: #16a34a;
 	--color-warning: #d97706;
-	--color-danger: #ef4444;
-	--color-accent-text: #60a5fa;
+	--color-danger: #f58a8a;
+	/* Lighter than --color-accent-400 was: it has to clear 7:1 against
+	   --surface-2 as well as the sidebar's active-item tint. */
+	--color-accent-text: var(--color-accent-300);
 
 	--status-success-bg: rgba(22, 163, 74, 0.1);
 	--status-success-border: rgba(22, 163, 74, 0.3);
@@ -201,14 +221,32 @@
 	--sidebar-bg: #12151c;
 	--sidebar-border: #252a36;
 	--sidebar-item-hover: #1a1e28;
-	--sidebar-item-active: #1e3a5f;
+	/* Deepened from #1e3a5f: the active pill is the one background the accent
+	   blue above sits on that is not a plain surface, and at the old tint it
+	   held only 4.5:1 against it. */
+	--sidebar-item-active: #17304f;
 	--sidebar-text: #94a3b8;
-	--sidebar-text-active: #60a5fa;
+	--sidebar-text-active: var(--color-accent-300);
 }
 
 /* ——————————————————————————————————————————————
    Base resets
    —————————————————————————————————————————————— */
+
+/* Universal border-box sizing. Nearly every sized element in this app is
+   written as `width: 100%` alongside its own padding and border - under the
+   default content-box that overflows its container by exactly padding +
+   border, which is what pushed the board's search input off the right edge
+   on a phone (its 36px icon inset + 12px + borders = 50px of overflow once
+   the mobile breakpoint drops the wrapper's max-width). Three components had
+   already each patched this locally (DatePicker, ApplicationModal,
+   /kontakt); declaring it once here fixes the ones that hadn't and means the
+   next `width: 100%` doesn't have to remember. */
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
 
 html {
 	font-family: var(--font-sans);

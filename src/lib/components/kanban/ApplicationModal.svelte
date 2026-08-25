@@ -755,11 +755,15 @@
 		background-color: rgba(0, 0, 0, 0.6);
 	}
 
+	/* No `width: 100%` here: for a fixed-position box, percentage widths resolve
+	   against the viewport, not the box `inset: 16px` carves out - so 100% made
+	   the dialog exactly viewport-wide, over-constraining left/right and pushing
+	   it 16px past the right edge on a phone. Leaving width auto lets the insets
+	   size it, max-width cap it, and `margin: auto` centre it. */
 	.modal-content {
 		position: fixed;
 		inset: 16px;
 		margin: auto;
-		width: 100%;
 		max-width: 640px;
 		max-height: 90dvh;
 		height: fit-content;
@@ -949,8 +953,29 @@
 		gap: 16px;
 	}
 
+	/* A grid item's default `min-width: auto` refuses to shrink below its
+	   content's minimum - a long <select> option or the date picker's trigger
+	   label then widens its 1fr column and the whole grid overflows the dialog
+	   body instead of the text wrapping/truncating. */
+	.form-grid > * {
+		min-width: 0;
+	}
+
 	.col-span-2 {
 		grid-column: span 2;
+	}
+
+	/* Below this width two columns leave each field too narrow to read; stack
+	   them. `span 2` has to be reset alongside, or it would create a phantom
+	   second column in the now single-column grid. */
+	@media (max-width: 560px) {
+		.form-grid {
+			grid-template-columns: 1fr;
+		}
+
+		.col-span-2 {
+			grid-column: span 1;
+		}
 	}
 
 	.form-group {
@@ -1003,6 +1028,18 @@
 	.tags-input-container {
 		display: flex;
 		gap: 8px;
+	}
+
+	/* An <input> carries a default intrinsic width (roughly 20 characters) that
+	   flex will not shrink below without `min-width: 0` - on a 320px viewport
+	   that alone plus the button pushed the row past the dialog's edge. */
+	.tags-input-container input {
+		flex: 1;
+		min-width: 0;
+	}
+
+	.tags-input-container .btn-secondary {
+		flex-shrink: 0;
 	}
 
 	.tags-input-container input {

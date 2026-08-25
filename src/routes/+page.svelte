@@ -496,12 +496,15 @@
 		height: 100%;
 	}
 
+	/* Amber is deliberately hardcoded rather than themed: this banner keeps its
+	   warning colour in both themes. The text is deepened from #92400e (6.4:1)
+	   so it clears AAA's 7:1 against the amber fill. */
 	.alerts-banner {
 		background-color: #fef3c7;
 		border: 1px solid #fde68a;
 		border-radius: var(--radius-lg);
 		padding: 16px;
-		color: #92400e;
+		color: #873b0d;
 		display: flex;
 		flex-direction: column;
 		gap: 8px;
@@ -987,13 +990,21 @@
 			max-width: none;
 		}
 
+		/* Stacked full-width rather than wrapped: `flex: 1` on the selects below
+		   sets `flex-basis: 0%`, which lets every item shrink to fit one line
+		   instead of ever triggering `flex-wrap` - so on a phone all four selects
+		   used to cram onto one row at ~75px each, truncating every label to a
+		   couple of characters ("Alle Tags" -> "Al"). A 2-column grid was tried
+		   first, but "Sortieren nach: Standard" (the sort select's default
+		   label) doesn't fit in half of even a 390px screen without clipping;
+		   full-width rows are what actually keeps every label readable. */
 		.filter-dropdowns {
-			flex-wrap: wrap;
+			flex-direction: column;
+			align-items: stretch;
 		}
 
 		.filter-dropdowns select {
-			flex: 1;
-			min-width: 0;
+			width: 100%;
 		}
 
 		/* Below tablet width the board reflows into a vertical stack of full-

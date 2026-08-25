@@ -40,7 +40,8 @@ browser, with nothing sent to a server.
 - `@sveltejs/adapter-node`, deployed via a small Phusion Passenger-compatible
   entry point (`app.cjs`) - see [DEPLOYMENT.md](DEPLOYMENT.md)
 - [Vitest](https://vitest.dev/) for unit tests, [Playwright](https://playwright.dev/)
-  for an end-to-end smoke suite
+  for end-to-end, mobile-layout, and accessibility tests (the latter via
+  [axe-core](https://github.com/dequelabs/axe-core), held to WCAG 2.2 AAA)
 
 ## Getting started
 
@@ -57,13 +58,20 @@ The production server itself only needs Node ≥20 - see
 
 ```sh
 npm run test       # Vitest unit tests
-npm run test:e2e   # Playwright smoke suite (builds and runs the real production server)
+npm run test:e2e   # Playwright suite (builds and runs the real production server)
 npm run check      # svelte-check
 npm run lint       # prettier + eslint
 ```
 
 All four run on every push and pull request via GitHub Actions
 (`.github/workflows/ci.yml`).
+
+`test:e2e` covers more than CRUD/offline/backup smoke tests: `tests/e2e/a11y.spec.ts`
+scans every route, both themes, and mobile with axe-core against WCAG 2.2
+**Level AAA** plus axe's best-practice ruleset (not just the usual AA
+baseline), and `tests/e2e/mobile-layout.spec.ts` asserts nothing overflows the
+viewport at 320px/390px - see [ARCHITECTURE.md](ARCHITECTURE.md) if you're
+adding to either.
 
 ## Project structure
 
