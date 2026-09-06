@@ -480,6 +480,99 @@ Verifiziert: `npx vitest run` — 45 Tests in 5 Dateien, alle grün. `npm run ch
 
 ---
 
+## Milestone 4 — Onboarding & Bewerbungsunterlagen (v1.2.0)
+
+Drei Lücken, die im Alltag zusammenhängen: es gibt keinen erklärten Einstieg, der Prozess endet vor der eigentlichen Bewerbung, und der Stellenanzeigen-Parser liefert bei echten Ausdrucken zu oft Falsches statt Leeres. Die Einzelbelege stehen in den Issues; #48 enthält eine gemessene Auswertung gegen fünf reale Anzeigen.
+
+| #   | Aufgabe                                                                                | Labels                       | Issue                                            |
+| :-- | :------------------------------------------------------------------------------------- | :--------------------------- | :----------------------------------------------- |
+| 42  | Landing-/Onboarding-Seite einführen, Board nach `/board` verschieben                   | `enhancement` `a11y`         | [#42](https://github.com/dstN/bewerby/issues/42) |
+| 43  | Epic: Bewerbungsunterlagen — Lebenslauf, Anschreiben und Export                        | `enhancement` `architecture` | [#43](https://github.com/dstN/bewerby/issues/43) |
+| 44  | Profil und globaler Lebenslauf (Einstellungen, OPFS, Backup)                           | `enhancement` `dsgvo`        | [#44](https://github.com/dstN/bewerby/issues/44) |
+| 45  | Anschreiben-Editor (Markdown mit Live-Vorschau und Vorlage)                            | `enhancement` `a11y`         | [#45](https://github.com/dstN/bewerby/issues/45) |
+| 46  | Anschreiben-PDF erzeugen und mit dem Lebenslauf zusammenführen                         | `enhancement`                | [#46](https://github.com/dstN/bewerby/issues/46) |
+| 47  | Versand-Dialog: gemeinsame oder getrennte Dateien, mailto, Web Share                   | `enhancement` `a11y`         | [#47](https://github.com/dstN/bewerby/issues/47) |
+| 48  | Stellenanzeigen-Parser quellen- und branchenunabhängig machen (Layout statt Vokabular) | `enhancement` `dx`           | [#48](https://github.com/dstN/bewerby/issues/48) |
+
+Reihenfolge der Umsetzung: #48, dann #42, dann #44 → #45 → #46 → #47. #48 steht vorn, weil es unabhängig ist, sofort messbar und die Felder `location`/`referenceNumber` liefert, die #44 ohnehin braucht. #42 folgt früh, weil der Routenumzug jeden E2E-Spec anfasst — spätere Arbeit soll nicht gegen bewegte Pfade geschrieben werden.
+
+### 42 — Landing-/Onboarding-Seite einführen, Board nach `/board` verschieben
+
+**Ist:** `/` rendert unmittelbar das Kanban-Board (`src/routes/+page.svelte`). Wer bewerby.de zum ersten Mal öffnet, sieht fünf leere Spalten ohne jede Erklärung — weder was das Werkzeug tut, noch dass die Daten das Gerät nicht verlassen. `src/lib/components/layout/Sidebar.svelte:12-17` kennt nur Board, Statistiken, Backup und Einstellungen.
+
+**Soll:** `/` ist eine kurze, erklärende Einstiegsseite in DE und EN; das Board liegt auf `/board`. Der Umzug berührt `static/manifest.json` (`start_url` und Shortcuts), `PRERENDERED_ROUTES` in `src/service-worker.ts:20-29`, die Sidebar-Navigation und jeden E2E-Spec, der über `goto('/')` aufs Board navigiert. `/` bleibt gültig, es entsteht kein 404.
+
+Die Seite bleibt auf eine Bildschirmhöhe beschränkt: Überschrift, ein Satz Lead, drei nummerierte Schritte, eine Faktenzeile, ein CTA und ein kurzer Block dazu, wo die Daten liegen. Der Text ist im Issue wörtlich festgehalten, zusammen mit sprachlichen Leitplanken gegen Werbefloskeln und die typischen Anzeichen KI-generierter Texte. Barrierefreiheit wie überall sonst: genau ein `<h1>`, Abschnitte mit `aria-labelledby`, Farben ausschließlich aus den Tokens in `src/app.css`.
+
+**Bewusst offen:** kein Auto-Redirect und kein Erstbesuchs-Flag. Wiederkehrer klicken einmal; die installierte PWA startet über `start_url` ohnehin direkt auf `/board`.
+
+### 43 — Epic: Bewerbungsunterlagen — Lebenslauf, Anschreiben und Export
+
+**Ist:** Die App verwaltet Metadaten zur Bewerbung, aber die Bewerbung selbst entsteht vollständig außerhalb. `contactEmail` wird gespeichert (`src/lib/db/index.ts:16`) und gepflegt (`ApplicationModal.svelte:544-552`), danach nie wieder verwendet: kein `mailto:` für eine Bewerbung, keine PDF-Erzeugung, kein Editor. Das angehängte PDF ist die Stellenanzeige, nicht die eigene Bewerbung.
+
+**Soll:** Aus einer Karte heraus entsteht ein Anschreiben, wird mit dem Lebenslauf zu einer versandfertigen PDF verbunden und an den Mailclient übergeben — komplett lokal. Aufgeteilt in #44 bis #47, strikt in dieser Reihenfolge.
+
+Zwei Entscheidungen sind bewusst gegen die naheliegende Variante gefallen. Erstens **kein TipTap**: ein ProseMirror-`contenteditable` ist genau die Komponente, die die Prüfkette aus `tests/e2e/a11y.spec.ts` (WCAG 2.2 AAA plus axe `best-practice`, alle Routen, beide Themes, 390 px) realistisch nicht sauber besteht, und es wären rund 200 KB in einem Projekt mit bisher zwei Runtime-Dependencies. Stattdessen ein natives `<textarea>` mit Markdown und Live-Vorschau. Zweitens **kein Versand-Backend**: das würde `ARCHITECTURE.md:14-36` und die Datenschutzerklärung brechen und einen neuen Eintrag in `connect-src` (`vite.config.ts:54`) erzwingen.
+
+**Einschränkung, die im UI benannt wird:** `mailto:` kann keine Anhänge tragen. RFC 6068 kennt keinen Attachment-Parameter, kein Mailclient unterstützt einen. Der Mail-Knopf füllt Empfänger, Betreff und Anschreiben-Klartext vor, die Datei hängt der Nutzer selbst an; auf Geräten mit Web Share Level 2 reicht ein zusätzlicher Knopf die PDF direkt an die Mail-App weiter.
+
+### 44 — Profil und globaler Lebenslauf (Einstellungen, OPFS, Backup)
+
+**Ist:** Es gibt keinen Ort für den eigenen Lebenslauf. `src/lib/utils/opfs.ts` verwaltet ausschließlich die angehängte Stellenanzeige, und `Application` (`src/lib/db/index.ts:9-32`) kennt nur `pdfName`/`pdfRef` für ebendiese. Absenderdaten für einen Briefkopf existieren nirgends.
+
+**Soll:** Ein Lebenslauf wird einmal in den Einstellungen hinterlegt und pro Bewerbung optional überschrieben; ist `cvRef` leer, gilt der globale. Die neuen Felder an `Application` sind alle optional und nicht indiziert, damit `APPLICATIONS_SCHEMA` unverändert bleibt und **keine neue Dexie-Version** fällig wird.
+
+**Fallstrick, der sonst Daten löscht:** `cleanupOrphanedPdfsOnStartup()` in `src/routes/+layout.svelte:65-71` baut `validRefs` ausschließlich aus `app.pdfRef` — ohne Anpassung löscht der nächste App-Start den globalen Lebenslauf und jeden pro Bewerbung hinterlegten CV. `validRefs` muss `cvRef` und `profile.cvRef` mit aufnehmen, und `profile.init()` muss vor dem Cleanup laufen.
+
+`BACKUP_FORMAT_VERSION` steigt auf 3, aber `parseBackupPayload` (`src/lib/utils/backup.ts:57-89`) muss **2 und 3 akzeptieren** statt wie bisher hart auf die aktuelle Zahl zu prüfen — sonst werden alle bereits exportierten Backups unlesbar. Die Datenschutzerklärung wird um Lebenslauf und Absenderdaten ergänzt.
+
+### 45 — Anschreiben-Editor (Markdown mit Live-Vorschau und Vorlage)
+
+**Ist:** Es gibt kein Feld und keine Oberfläche für ein Anschreiben. `notes` (`src/lib/db/index.ts:18`) ist ein Notizfeld, kein Dokument.
+
+**Soll:** Ein natives `<textarea>` mit Markdown, einer Toolbar, die über `selectionStart`/`selectionEnd` Auszeichnung einfügt statt DOM zu manipulieren, und einer Vorschau ohne `aria-live`. Dazu ein eigenes, abhängigkeitsfreies Markdown-Modul (`src/lib/utils/markdown.ts`) mit HTML-Escaping vor der Formatierung, das zugleich den Klartext für `mailto:` und die Blöcke für den PDF-Renderer liefert. Eine Vorlage mit Platzhaltern für Firma, Titel, Ansprechpartner, Anrede, Ort, Datum und Referenznummer füllt sich aus genau den Feldern, die der Parser aus #48 ohnehin schon liefert.
+
+### 46 — Anschreiben-PDF erzeugen und mit dem Lebenslauf zusammenführen
+
+**Ist:** Es gibt keinerlei PDF-Erzeugung. `pdfjs-dist` wird ausschließlich lesend verwendet; der einzige PDF-Schreiber im Repo ist der Testhelfer `tests/e2e/fixtures/make-pdf.ts`, der nie ausgeliefert wird.
+
+**Soll:** `pdf-lib` rendert das Anschreiben auf A4 nach einem an DIN 5008 angelehnten Aufbau und kopiert per `PDFDocument.copyPages` die Seiten des Lebenslaufs dazu. **Dynamisch importiert** nach dem Muster von `src/lib/utils/pdf.ts:67`, sonst wachsen Startbundle und Service-Worker-Precache um rund 350 KB für eine Funktion, die die meisten Sitzungen nie aufrufen. Fehlerfälle nutzen die vorhandenen `PdfProcessingError`-Codes und deren i18n-Schlüssel weiter.
+
+**Bewusste Einschränkung:** die PDF setzt in Helvetica, nicht in Lexend. WinAnsi deckt Umlaute und ß ab, das Ergebnis ist korrekt, nur nicht markengleich. Lexend einzubetten bräuchte `@pdf-lib/fontkit` und eine TTF; im Repo liegen ausschließlich `.woff2`, die fontkit nicht liest.
+
+### 47 — Versand-Dialog: gemeinsame oder getrennte Dateien, mailto, Web Share
+
+**Ist:** `contactEmail` führt nirgendwohin. Auf der Karte (`src/routes/+page.svelte:393-470`) taucht die Adresse nicht auf, und es gibt keinen Weg von einer Bewerbung zu einer E-Mail.
+
+**Soll:** Ein eigener `<dialog>` mit drei Abschnitten — Lebenslauf, Anschreiben, Ausgabe. Die Ausgabe ist wählbar zwischen einer gemeinsamen PDF und getrennten Dateien; manche Arbeitgeber verlangen das eine, manche das andere. Aktionen: Herunterladen, E-Mail öffnen und, wo `navigator.canShare({ files })` es hergibt, Teilen.
+
+Bewusst ein eigener Dialog statt eines weiteren Abschnitts in `ApplicationModal.svelte`: die Datei hat bereits 1284 Zeilen und einen handgebauten Fokus-Trap (#18). Ein zweiter Dialog nach demselben Muster ist billiger als eine weitere Ebene darin und separat prüfbar.
+
+`buildMailtoUrl` bekommt einen Längenschutz: überschreitet die kodierte URL rund 1900 Zeichen, wird der Body gekürzt und stattdessen das Kopieren in die Zwischenablage angeboten — Outlook unter Windows schneidet lange `mailto:` still ab, ohne Fehlermeldung.
+
+### 48 — Stellenanzeigen-Parser quellen- und branchenunabhängig machen (Layout statt Vokabular)
+
+**Ist:** `parseJobDetailsFromText` (`src/lib/utils/pdf.ts:130-483`) wurde gegen fünf reale Anzeigen gemessen — vier Ausdrucke der Arbeitsagentur-Jobsuche, einer von fenecon.de, alle über Chrome „Als PDF drucken" erzeugt. Ergebnis: **0/5 Ansprechpartner, 0/5 Gehälter, 0/5 Orte, 2/5 falsche Telefonnummern, 1/5 komplett unbrauchbare Kopfdaten.** Bei fenecon liefert der Parser `company` = `F R O N T E N D` und `title` = `( M / W / D )`, weil die Überschrift gesperrt gesetzt ist und jedes Zeichen ein eigenes Textitem bildet. Bei zwei BA-Anzeigen landet die Referenznummer als Telefonnummer im Feld, weil `nonPhoneContextRegex` (`src/lib/utils/pdf.ts:441`) den Bindestrich in `Referenz-Nr.:` nicht abdeckt.
+
+Die Ursache liegt tiefer als die Einzelfehler: der Parser sucht über **Vokabular** statt über Struktur. Der Titel wird aus einer fest verdrahteten Liste von 33 Rollenbegriffen abgeleitet (`src/lib/utils/pdf.ts:357-390`), die praktisch durchweg IT und Technik abdecken — eine Pflegefachkraft, ein Bäckereifachverkäufer, eine Steuerfachangestellte bekommen damit **niemals** einen Titel. Verschärfend füllt das Autofill nur leere Felder (`ApplicationModal.svelte:257-263`) und meldet nichts: ein falscher Wert gewinnt gegen einen leeren, und der Nutzer erfährt es nicht.
+
+**Soll:** Nur Signale, die weder eine bestimmte Quelle noch eine bestimmte Branche voraussetzen. `extractTextFromPdf` liefert dafür kein flaches Textstück mehr, sondern ein strukturiertes Dokument mit Seite, Y-Position, Schriftgröße und Fettung je Zeile; `text` bleibt für bestehende Aufrufer erhalten.
+
+Tragend ist die Typografie. Der Jobtitel ist in **5/5** Testdateien exakt die größte Schrift auf Seite 1 — auch bei fenecon, wo jede Textheuristik versagt —, die Firma in 4/5 die zweitgrößte Zeile im Kopfbereich. Das ist eine typografische Invariante und keine Domänenregel: eine Stellenanzeige setzt den Jobtitel als Überschrift, im Klinikum wie im Softwarehaus. Diese Daten wirft der Code heute weg, `src/lib/utils/pdf.ts:103` liest aus `item.transform` nur `[5]` für Zeilenumbrüche. Nebenbei lösen sich zwei Altlasten auf: gruppiert man Zeilen gleicher Größe mit benachbartem Y zu einem Block, ist der am Umbruch abgeschnittene NGB-Titel wieder vollständig und der gesperrte fenecon-Satz wieder zusammenhängend.
+
+Darunter drei weitere quellenunabhängige Signale: ein Label-Wörterbuch für beschriftete Schlüssel-Wert-Blöcke (gemessen 4/5 Ort, 3/5 E-Mail, 2/5 Telefon — inklusive fenecon, also quer über zwei ganz verschiedene Layouts), die Geschlechtskennzeichnung `(m/w/d)` samt Varianten als branchenübergreifend verlässlichster Titelmarker, und Struktursätze wie „Zum nächstmöglichen Zeitpunkt suchen wir eine/n", deren Folgezeile der Titel ist. Die Firma wird zusätzlich über E-Mail-Domain, Chrome-Dateinamen und Rechtsform gegengeprüft; letztere muss über den gewerblichen Bereich hinaus (`gGmbH`, `e.V.`, `AöR`, `Stiftung`, `Stadt`, `Landkreis`), sonst fällt der gesamte öffentliche und soziale Sektor durch. **Die 33-Begriffe-Rollenliste entfällt ersatzlos.**
+
+Dazu die Sicherheitsregel **leer schlägt falsch**: ein Feld bleibt lieber leer, als einen unsicheren Wert zu tragen. Der Firmen-Fallback 2 (`src/lib/utils/pdf.ts:294-306`), der blind Zeile 1 nimmt und genau den fenecon-Fall erzeugt, wird gelöscht statt nachgebessert. Übernommen wird nur noch über eine Sichtprüfung mit Checkbox je erkanntem Feld, vorausgewählt nur bei leerem Ziel und hoher Konfidenz.
+
+**Abgrenzung zu einem Quellprofil:** ein Profil für die BA-Jobsuche würde vier der fünf Testdateien lösen und trotzdem nichts über die Belastbarkeit aussagen — die Stichprobe ist schief (4 von 5 aus einer Quelle, 5 von 5 aus der IT). Die Profil-Registry bleibt deshalb optionale Feinjustierung, und es gilt die Testregel: **jedes Fixture muss den generischen Pfad mit deaktivierter Registry bestehen.** Ein Profil darf ein Ergebnis verbessern, nie Voraussetzung für einen grünen Test sein.
+
+Fixtures werden als **pseudonymisiertes Zeilenmodell** eingecheckt (JSON mit Seite, Y, Schriftgröße, Fettung, Text) — die Layoutschicht braucht Geometrie, reiner Text reicht nicht mehr, und die Linie „kein Binärfixture im Repo" (`tests/e2e/fixtures/make-pdf.ts`) bleibt trotzdem erhalten. Dazu Negativtests: eine Rechnung, ein Lebenslauf, ein leerer Textlayer müssen leere Felder liefern, nicht plausibel aussehende falsche.
+
+**Ehrliche Grenzen:** eingescannte Anzeigen ohne Textlayer scheitern weiterhin sauber mit `no-text` (`src/lib/utils/pdf.ts:117-122`); OCR würde rund 10 MB WASM in eine Offline-App ziehen und ist **bewusst kein Ziel**, die Fehlermeldung soll stattdessen klar zum manuellen Ausfüllen führen. Bei gleichmäßiger Typografie entwertet sich die Layoutschicht und die Label- und Musterschicht übernimmt mit niedrigerer Konfidenz.
+
+**Bewusst nicht:** ein Web Worker mit Fortschritt und Abbruch für die Extraktion. Das ist unter #27 bereits als Abgrenzung dokumentiert und ändert sich hier nicht.
+---
+
 ## Nach v1 (Backlog, ohne Milestone)
 
 | #   | Aufgabe                                                      | Labels                               | Issue                                            |
