@@ -484,19 +484,21 @@ Verifiziert: `npx vitest run` — 45 Tests in 5 Dateien, alle grün. `npm run ch
 
 Drei Lücken, die im Alltag zusammenhängen: es gibt keinen erklärten Einstieg, der Prozess endet vor der eigentlichen Bewerbung, und der Stellenanzeigen-Parser liefert bei echten Ausdrucken zu oft Falsches statt Leeres. Die Einzelbelege stehen in den Issues; #48 enthält eine gemessene Auswertung gegen fünf reale Anzeigen.
 
-| #   | Aufgabe                                                                                | Labels                       | Issue                                            |
-| :-- | :------------------------------------------------------------------------------------- | :--------------------------- | :----------------------------------------------- |
-| 42  | Landing-/Onboarding-Seite einführen, Board nach `/board` verschieben                   | `enhancement` `a11y`         | [#42](https://github.com/dstN/bewerby/issues/42) |
-| 43  | Epic: Bewerbungsunterlagen — Lebenslauf, Anschreiben und Export                        | `enhancement` `architecture` | [#43](https://github.com/dstN/bewerby/issues/43) |
-| 44  | Profil und globaler Lebenslauf (Einstellungen, OPFS, Backup)                           | `enhancement` `dsgvo`        | [#44](https://github.com/dstN/bewerby/issues/44) |
-| 45  | Anschreiben-Editor (Markdown mit Live-Vorschau und Vorlage)                            | `enhancement` `a11y`         | [#45](https://github.com/dstN/bewerby/issues/45) |
-| 46  | Anschreiben-PDF erzeugen und mit dem Lebenslauf zusammenführen                         | `enhancement`                | [#46](https://github.com/dstN/bewerby/issues/46) |
-| 47  | Versand-Dialog: gemeinsame oder getrennte Dateien, mailto, Web Share                   | `enhancement` `a11y`         | [#47](https://github.com/dstN/bewerby/issues/47) |
-| 48  | Stellenanzeigen-Parser quellen- und branchenunabhängig machen (Layout statt Vokabular) | `enhancement` `dx`           | [#48](https://github.com/dstN/bewerby/issues/48) |
+| #   | Aufgabe                                                                                   | Labels                       | Issue                                            |
+| :-- | :---------------------------------------------------------------------------------------- | :--------------------------- | :----------------------------------------------- |
+| 42  | ✅ Landing-/Onboarding-Seite einführen, Board nach `/board` verschieben                   | `enhancement` `a11y`         | [#42](https://github.com/dstN/bewerby/issues/42) |
+| 43  | ✅ Epic: Bewerbungsunterlagen — Lebenslauf, Anschreiben und Export                        | `enhancement` `architecture` | [#43](https://github.com/dstN/bewerby/issues/43) |
+| 44  | ✅ Profil und globaler Lebenslauf (Einstellungen, OPFS, Backup)                           | `enhancement` `dsgvo`        | [#44](https://github.com/dstN/bewerby/issues/44) |
+| 45  | ✅ Anschreiben-Editor (Markdown mit Live-Vorschau und Vorlage)                            | `enhancement` `a11y`         | [#45](https://github.com/dstN/bewerby/issues/45) |
+| 46  | ✅ Anschreiben-PDF erzeugen und mit dem Lebenslauf zusammenführen                         | `enhancement`                | [#46](https://github.com/dstN/bewerby/issues/46) |
+| 47  | ✅ Versand-Dialog: gemeinsame oder getrennte Dateien, mailto, Web Share                   | `enhancement` `a11y`         | [#47](https://github.com/dstN/bewerby/issues/47) |
+| 48  | ✅ Stellenanzeigen-Parser quellen- und branchenunabhängig machen (Layout statt Vokabular) | `enhancement` `dx`           | [#48](https://github.com/dstN/bewerby/issues/48) |
 
 Reihenfolge der Umsetzung: #48, dann #42, dann #44 → #45 → #46 → #47. #48 steht vorn, weil es unabhängig ist, sofort messbar und die Felder `location`/`referenceNumber` liefert, die #44 ohnehin braucht. #42 folgt früh, weil der Routenumzug jeden E2E-Spec anfasst — spätere Arbeit soll nicht gegen bewegte Pfade geschrieben werden.
 
 ### 42 — Landing-/Onboarding-Seite einführen, Board nach `/board` verschieben
+
+**Status:** ✅ Erledigt in [87fa874](https://github.com/dstN/bewerby/commit/87fa874) (#42, geschlossen).
 
 **Ist:** `/` rendert unmittelbar das Kanban-Board (`src/routes/+page.svelte`). Wer bewerby.de zum ersten Mal öffnet, sieht fünf leere Spalten ohne jede Erklärung — weder was das Werkzeug tut, noch dass die Daten das Gerät nicht verlassen. `src/lib/components/layout/Sidebar.svelte:12-17` kennt nur Board, Statistiken, Backup und Einstellungen.
 
@@ -508,6 +510,8 @@ Die Seite bleibt auf eine Bildschirmhöhe beschränkt: Überschrift, ein Satz Le
 
 ### 43 — Epic: Bewerbungsunterlagen — Lebenslauf, Anschreiben und Export
 
+**Status:** ✅ Erledigt über #44–#47 (geschlossen).
+
 **Ist:** Die App verwaltet Metadaten zur Bewerbung, aber die Bewerbung selbst entsteht vollständig außerhalb. `contactEmail` wird gespeichert (`src/lib/db/index.ts:16`) und gepflegt (`ApplicationModal.svelte:544-552`), danach nie wieder verwendet: kein `mailto:` für eine Bewerbung, keine PDF-Erzeugung, kein Editor. Das angehängte PDF ist die Stellenanzeige, nicht die eigene Bewerbung.
 
 **Soll:** Aus einer Karte heraus entsteht ein Anschreiben, wird mit dem Lebenslauf zu einer versandfertigen PDF verbunden und an den Mailclient übergeben — komplett lokal. Aufgeteilt in #44 bis #47, strikt in dieser Reihenfolge.
@@ -517,6 +521,8 @@ Zwei Entscheidungen sind bewusst gegen die naheliegende Variante gefallen. Erste
 **Einschränkung, die im UI benannt wird:** `mailto:` kann keine Anhänge tragen. RFC 6068 kennt keinen Attachment-Parameter, kein Mailclient unterstützt einen. Der Mail-Knopf füllt Empfänger, Betreff und Anschreiben-Klartext vor, die Datei hängt der Nutzer selbst an; auf Geräten mit Web Share Level 2 reicht ein zusätzlicher Knopf die PDF direkt an die Mail-App weiter.
 
 ### 44 — Profil und globaler Lebenslauf (Einstellungen, OPFS, Backup)
+
+**Status:** ✅ Erledigt in [900152b](https://github.com/dstN/bewerby/commit/900152b) (#44, geschlossen). Abweichung vom Entwurf: die Profil-Validierung liegt in einem reinen Modul (`src/lib/utils/profile.ts`) neben dem Runes-Store, damit der Backup-Serializer und dessen Tests in der DOM-freien node-Umgebung sie nutzen können, ohne eine `.svelte.ts` zu importieren.
 
 **Ist:** Es gibt keinen Ort für den eigenen Lebenslauf. `src/lib/utils/opfs.ts` verwaltet ausschließlich die angehängte Stellenanzeige, und `Application` (`src/lib/db/index.ts:9-32`) kennt nur `pdfName`/`pdfRef` für ebendiese. Absenderdaten für einen Briefkopf existieren nirgends.
 
@@ -528,11 +534,15 @@ Zwei Entscheidungen sind bewusst gegen die naheliegende Variante gefallen. Erste
 
 ### 45 — Anschreiben-Editor (Markdown mit Live-Vorschau und Vorlage)
 
+**Status:** ✅ Erledigt in [ce4d73d](https://github.com/dstN/bewerby/commit/ce4d73d) (#45, geschlossen). Abweichung vom Entwurf: die Platzhalter der Vorlage heißen in beiden Sprachen gleich (`{{title}}`, `{{company}}`, …). Sprachspezifische Namen ließen sich vom Locale-Guardrail nicht von einem echten Übersetzungsfehler unterscheiden; die deutschen Aliasse (`{{firma}}`, `{{titel}}`, …) bleiben in `applyTemplate` unterstützt.
+
 **Ist:** Es gibt kein Feld und keine Oberfläche für ein Anschreiben. `notes` (`src/lib/db/index.ts:18`) ist ein Notizfeld, kein Dokument.
 
 **Soll:** Ein natives `<textarea>` mit Markdown, einer Toolbar, die über `selectionStart`/`selectionEnd` Auszeichnung einfügt statt DOM zu manipulieren, und einer Vorschau ohne `aria-live`. Dazu ein eigenes, abhängigkeitsfreies Markdown-Modul (`src/lib/utils/markdown.ts`) mit HTML-Escaping vor der Formatierung, das zugleich den Klartext für `mailto:` und die Blöcke für den PDF-Renderer liefert. Eine Vorlage mit Platzhaltern für Firma, Titel, Ansprechpartner, Anrede, Ort, Datum und Referenznummer füllt sich aus genau den Feldern, die der Parser aus #48 ohnehin schon liefert.
 
 ### 46 — Anschreiben-PDF erzeugen und mit dem Lebenslauf zusammenführen
+
+**Status:** ✅ Erledigt in [2daf830](https://github.com/dstN/bewerby/commit/2daf830) (#46, geschlossen). Bestätigt: Schrift ist Helvetica, nicht Lexend (fontkit liest kein woff2). Zusätzlich nötig geworden: nicht in WinAnsi kodierbare Zeichen werden verworfen, sonst hätte ein einzelnes Emoji den gesamten Export scheitern lassen.
 
 **Ist:** Es gibt keinerlei PDF-Erzeugung. `pdfjs-dist` wird ausschließlich lesend verwendet; der einzige PDF-Schreiber im Repo ist der Testhelfer `tests/e2e/fixtures/make-pdf.ts`, der nie ausgeliefert wird.
 
@@ -541,6 +551,8 @@ Zwei Entscheidungen sind bewusst gegen die naheliegende Variante gefallen. Erste
 **Bewusste Einschränkung:** die PDF setzt in Helvetica, nicht in Lexend. WinAnsi deckt Umlaute und ß ab, das Ergebnis ist korrekt, nur nicht markengleich. Lexend einzubetten bräuchte `@pdf-lib/fontkit` und eine TTF; im Repo liegen ausschließlich `.woff2`, die fontkit nicht liest.
 
 ### 47 — Versand-Dialog: gemeinsame oder getrennte Dateien, mailto, Web Share
+
+**Status:** ✅ Erledigt in [2daf830](https://github.com/dstN/bewerby/commit/2daf830) (#47, geschlossen).
 
 **Ist:** `contactEmail` führt nirgendwohin. Auf der Karte (`src/routes/+page.svelte:393-470`) taucht die Adresse nicht auf, und es gibt keinen Weg von einer Bewerbung zu einer E-Mail.
 
@@ -551,6 +563,8 @@ Bewusst ein eigener Dialog statt eines weiteren Abschnitts in `ApplicationModal.
 `buildMailtoUrl` bekommt einen Längenschutz: überschreitet die kodierte URL rund 1900 Zeichen, wird der Body gekürzt und stattdessen das Kopieren in die Zwischenablage angeboten — Outlook unter Windows schneidet lange `mailto:` still ab, ohne Fehlermeldung.
 
 ### 48 — Stellenanzeigen-Parser quellen- und branchenunabhängig machen (Layout statt Vokabular)
+
+**Status:** ✅ Erledigt in [ca8af0d](https://github.com/dstN/bewerby/commit/ca8af0d) (#48, geschlossen). Abweichung vom Entwurf: die Quellprofil-Registry wurde **nicht** gebaut. Der generische Pfad löst alle fünf Anzeigen, ein Profil hätte nichts beigetragen. Zwei Befunde kamen erst aus der Messung: `AB` (schwedische Rechtsform) matchte case-insensitiv „ab sofort" und meldete das Eintrittsdatum als Arbeitgeber; und die Boilerplate-Erkennung löschte den Firmennamen, weil Jobbörsen ihn in jeden Seitenkopf drucken — Wiederholung muss mit Randlage zusammenfallen.
 
 **Ist:** `parseJobDetailsFromText` (`src/lib/utils/pdf.ts:130-483`) wurde gegen fünf reale Anzeigen gemessen — vier Ausdrucke der Arbeitsagentur-Jobsuche, einer von fenecon.de, alle über Chrome „Als PDF drucken" erzeugt. Ergebnis: **0/5 Ansprechpartner, 0/5 Gehälter, 0/5 Orte, 2/5 falsche Telefonnummern, 1/5 komplett unbrauchbare Kopfdaten.** Bei fenecon liefert der Parser `company` = `F R O N T E N D` und `title` = `( M / W / D )`, weil die Überschrift gesperrt gesetzt ist und jedes Zeichen ein eigenes Textitem bildet. Bei zwei BA-Anzeigen landet die Referenznummer als Telefonnummer im Feld, weil `nonPhoneContextRegex` (`src/lib/utils/pdf.ts:441`) den Bindestrich in `Referenz-Nr.:` nicht abdeckt.
 
