@@ -354,5 +354,20 @@
 		"privacyLink": "How your data is stored",
 		"dataHeading": "Where is my data?",
 		"dataBody": "Entries live in your browser's IndexedDB, attached PDFs in OPFS. Clear your browser data and the applications are gone. That is what the file export under Backup & Sync is for."
+	},
+	"coverLetter": {
+		"heading": "Cover letter",
+		"label": "Cover letter (Markdown)",
+		"hint": "Formatting: **bold**, *italic*, bullet list with - at the start of a line, numbered with 1.",
+		"previewHeading": "Preview",
+		"previewEmpty": "The preview appears as soon as you start writing.",
+		"bold": "Bold",
+		"italic": "Italic",
+		"bulletList": "Bullet list",
+		"numberedList": "Numbered list",
+		"insertTemplate": "Insert template",
+		"templateConfirm": "The cover letter is not empty. Inserting the template replaces the current text. Continue?",
+		"templateInserted": "Template inserted.",
+		"defaultTemplate": "{{location}}, {{date}}\n\nApplication for {{title}}\nReference: {{reference}}\n\n{{salutation}}\n\n[Describe why you are applying and what you bring.]\n\nKind regards\n{{sender}}"
 	}
 }

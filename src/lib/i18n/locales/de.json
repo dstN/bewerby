@@ -354,5 +354,20 @@
 		"privacyLink": "Wie die Daten gespeichert werden",
 		"dataHeading": "Wo liegen meine Daten?",
 		"dataBody": "Die Einträge liegen in der IndexedDB deines Browsers, angehängte PDFs im OPFS. Löschst du die Browserdaten, sind die Bewerbungen weg. Dafür gibt es unter Backup & Sync den Export als Datei."
+	},
+	"coverLetter": {
+		"heading": "Anschreiben",
+		"label": "Anschreiben (Markdown)",
+		"hint": "Formatierung: **fett**, *kursiv*, Aufzählung mit - am Zeilenanfang, nummeriert mit 1.",
+		"previewHeading": "Vorschau",
+		"previewEmpty": "Die Vorschau erscheint, sobald du schreibst.",
+		"bold": "Fett",
+		"italic": "Kursiv",
+		"bulletList": "Aufzählung",
+		"numberedList": "Nummerierte Liste",
+		"insertTemplate": "Vorlage einfügen",
+		"templateConfirm": "Das Anschreiben ist nicht leer. Durch die Vorlage wird der bisherige Text ersetzt. Fortfahren?",
+		"templateInserted": "Vorlage eingefügt.",
+		"defaultTemplate": "{{location}}, den {{date}}\n\nBewerbung als {{title}}\nReferenz: {{reference}}\n\n{{salutation}}\n\n[Hier beschreibst du, warum du dich bewirbst und was du mitbringst.]\n\nMit freundlichen Grüßen\n{{sender}}"
 	}
 }

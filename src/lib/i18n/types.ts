@@ -54,6 +54,21 @@ export type TranslationKeys = {
 		sortPriority: string;
 		sortDate: string;
 	};
+	coverLetter: {
+		heading: string;
+		label: string;
+		hint: string;
+		previewHeading: string;
+		previewEmpty: string;
+		bold: string;
+		italic: string;
+		bulletList: string;
+		numberedList: string;
+		insertTemplate: string;
+		templateConfirm: string;
+		templateInserted: string;
+		defaultTemplate: string;
+	};
 	landing: {
 		headline: string;
 		lead: string;
