@@ -88,4 +88,85 @@ test.describe('Backup export/import roundtrip', () => {
 		// OPFS under a freshly assigned ref (see prepareImportRows()).
 		await expect(dialog.getByRole('button', { name: 'Anzeigen' })).toBeVisible();
 	});
+
+	test('the stored CV, an application-specific CV and the cover letter survive the roundtrip', async ({
+		page
+	}) => {
+		// The unit tests cover this against a fake OPFS; this one runs it through
+		// the real thing, a real Dexie database and a real file input, because
+		// the orphan sweep on boot is what would silently eat the CVs.
+		await page.goto('/settings');
+		await page.locator('.doc-upload input[type="file"]').setInputFiles({
+			name: 'lebenslauf.pdf',
+			mimeType: 'application/pdf',
+			buffer: makeMinimalPdf(['Lebenslauf', 'Petra Musterfrau'])
+		});
+		await expect(page.locator('.doc-current')).toHaveText('lebenslauf.pdf');
+
+		await page.goto('/board');
+		await page.getByRole('button', { name: 'Bewerbung hinzufügen' }).click();
+		const modal = page.locator('dialog.modal-content');
+		await modal.locator('#title').fill('Pflegefachkraft');
+		await modal.locator('#company').fill('Klinikum Musterstadt gGmbH');
+		await modal.getByRole('button', { name: 'Speichern' }).click();
+		await expect(modal).toBeHidden();
+
+		await page.getByRole('button', { name: 'Bewerbung vorbereiten' }).first().click();
+		const dispatch = page.locator('dialog.dispatch-dialog');
+		await dispatch.locator('input[type="file"][accept=".pdf"]').setInputFiles({
+			name: 'lebenslauf-pflege.pdf',
+			mimeType: 'application/pdf',
+			buffer: makeMinimalPdf(['Lebenslauf', 'Schwerpunkt Pflege'])
+		});
+		await expect(dispatch.locator('.cv-state')).toContainText('lebenslauf-pflege.pdf');
+		await dispatch
+			.locator('#dispatch-letter')
+			.fill(['Guten Tag,', '', 'ich bewerbe mich bei Ihnen.'].join('\n'));
+		await dispatch.getByRole('button', { name: 'Speichern' }).click();
+		await expect(dispatch).toBeHidden();
+
+		await page.goto('/backup');
+		const [download] = await Promise.all([
+			page.waitForEvent('download'),
+			page.getByRole('button', { name: 'Als JSON exportieren' }).click()
+		]);
+		const exported = JSON.parse(readFileSync((await download.path())!, 'utf-8'));
+
+		expect(exported.version).toBe(3);
+		expect(exported.profile.cvName).toBe('lebenslauf.pdf');
+		expect(exported.applications[0].cvName).toBe('lebenslauf-pflege.pdf');
+		expect(exported.applications[0].coverLetter).toContain('ich bewerbe mich');
+		// Job ad (none here), application CV and the profile CV are separate files.
+		expect(Object.keys(exported.pdfs)).toHaveLength(2);
+
+		await page.goto('/settings');
+		await Promise.all([
+			page.waitForEvent('load'),
+			page.getByRole('button', { name: 'Alle Daten unwiderruflich löschen' }).click()
+		]);
+		await page.goto('/settings');
+		await expect(page.locator('.doc-current')).toHaveText('Noch kein Lebenslauf hinterlegt.');
+
+		await page.goto('/backup');
+		await page.getByRole('radio', { name: /ersetzen/i }).check();
+		await page.locator('input[type="file"][accept=".json"]').setInputFiles({
+			name: 'backup.json',
+			mimeType: 'application/json',
+			buffer: Buffer.from(JSON.stringify(exported))
+		});
+		await expect(page.locator('.status-msg.success-msg')).toBeVisible();
+
+		await page.goto('/settings');
+		await expect(page.locator('.doc-current')).toHaveText('lebenslauf.pdf');
+
+		await page.goto('/board');
+		await page.getByRole('button', { name: 'Bewerbung vorbereiten' }).first().click();
+		await expect(dispatch.locator('.cv-state')).toContainText('lebenslauf-pflege.pdf');
+		await expect(dispatch.locator('#dispatch-letter')).toHaveValue(/ich bewerbe mich/);
+
+		// A reload runs cleanupOrphanedPdfs; the CVs must still be there after it.
+		await page.reload();
+		await page.getByRole('button', { name: 'Bewerbung vorbereiten' }).first().click();
+		await expect(dispatch.locator('.cv-state')).toContainText('lebenslauf-pflege.pdf');
+	});
 });
