@@ -97,7 +97,7 @@ async function visibleCompanies(page: Page): Promise<string[]> {
 }
 
 async function open(page: Page, applications: ReturnType<typeof board>) {
-	await page.goto('/');
+	await page.goto('/board');
 	await seedApplications(page, applications);
 	await expect(cards(page)).toHaveCount(applications.length);
 }

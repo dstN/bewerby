@@ -40,7 +40,8 @@ const A11Y_TAGS = [
 ];
 
 const ROUTES: Array<{ path: string; name: string }> = [
-	{ path: '/', name: 'Kanban board' },
+	{ path: '/', name: 'Landing' },
+	{ path: '/board', name: 'Kanban board' },
 	{ path: '/analytics', name: 'Analytics' },
 	{ path: '/backup', name: 'Backup' },
 	{ path: '/settings', name: 'Settings' },
@@ -99,7 +100,7 @@ for (const theme of ['light', 'dark'] as const) {
 		}
 
 		test('the board populated with applications has no violations', async ({ page }) => {
-			await gotoWithTheme(page, '/', theme);
+			await gotoWithTheme(page, '/board', theme);
 			await seedApplications(page, representativeBoard());
 
 			// Cards, the coloured/specular variants, the tag overflow chip, the
@@ -119,14 +120,14 @@ for (const theme of ['light', 'dark'] as const) {
 		});
 
 		test('the application dialog has no violations', async ({ page }) => {
-			await gotoWithTheme(page, '/', theme);
+			await gotoWithTheme(page, '/board', theme);
 			await page.getByRole('button', { name: 'Bewerbung hinzufügen' }).click();
 			await expect(page.locator('dialog.modal-content')).toBeVisible();
 			await expectNoViolations(page);
 		});
 
 		test('the date picker popover has no violations', async ({ page }) => {
-			await gotoWithTheme(page, '/', theme);
+			await gotoWithTheme(page, '/board', theme);
 			await page.getByRole('button', { name: 'Bewerbung hinzufügen' }).click();
 			const dialog = page.locator('dialog.modal-content');
 			await expect(dialog).toBeVisible();
@@ -192,7 +193,7 @@ test.describe('Accessibility details axe cannot assert on its own', () => {
 	});
 
 	test('the live region announces a status change without moving focus', async ({ page }) => {
-		await page.goto('/');
+		await page.goto('/board');
 		await seedApplications(page, representativeBoard());
 
 		const liveRegion = page.locator('.sr-only[aria-live="polite"]');

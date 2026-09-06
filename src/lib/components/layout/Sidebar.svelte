@@ -10,14 +10,16 @@
 	}: { collapsed?: boolean; mobileOpen?: boolean; inert?: boolean } = $props();
 
 	const navItems = [
-		{ href: '/', labelKey: 'nav.kanban', icon: 'kanban' },
+		{ href: '/board', labelKey: 'nav.kanban', icon: 'kanban' },
 		{ href: '/analytics', labelKey: 'nav.analytics', icon: 'chart' },
 		{ href: '/backup', labelKey: 'nav.backup', icon: 'backup' },
 		{ href: '/settings', labelKey: 'nav.settings', icon: 'settings' }
 	] as const;
 
+	// Every nav target is now a real sub-path, so the exact-match special case
+	// for '/' is gone - that entry became the landing page, which is reached
+	// through the logo rather than the navigation.
 	function isActive(href: string): boolean {
-		if (href === '/') return page.url.pathname === '/';
 		return page.url.pathname.startsWith(href);
 	}
 

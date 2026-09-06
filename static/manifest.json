@@ -3,7 +3,7 @@
 	"name": "bewerby",
 	"short_name": "bewerby",
 	"description": "DSGVO-konformer Bewerbungsmanager. Verwalte deine Bewerbungen lokal und sicher im Browser.",
-	"start_url": "/",
+	"start_url": "/board",
 	"scope": "/",
 	"display": "standalone",
 	"background_color": "#ffffff",
@@ -58,7 +58,7 @@
 		{
 			"name": "Neue Bewerbung",
 			"short_name": "Neu",
-			"url": "/?new=1",
+			"url": "/board?new=1",
 			"icons": [{ "src": "/app-icons/web-app-manifest-192x192.png", "sizes": "192x192" }]
 		},
 		{

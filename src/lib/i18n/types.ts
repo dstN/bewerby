@@ -54,6 +54,26 @@ export type TranslationKeys = {
 		sortPriority: string;
 		sortDate: string;
 	};
+	landing: {
+		headline: string;
+		lead: string;
+		stepsHeading: string;
+		step1Title: string;
+		step1Body: string;
+		step2Title: string;
+		step2Body: string;
+		step3Title: string;
+		step3Body: string;
+		factsHeading: string;
+		fact1: string;
+		fact2: string;
+		fact3: string;
+		fact4: string;
+		cta: string;
+		privacyLink: string;
+		dataHeading: string;
+		dataBody: string;
+	};
 	application: {
 		title: string;
 		company: string;

@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 
 test('the sidebar version tag matches package.json (single source of truth)', async ({ page }) => {
 	const pkg = JSON.parse(readFileSync('package.json', 'utf-8'));
-	await page.goto('/');
+	await page.goto('/board');
 	await expect(page.locator('.version-tag')).toHaveText(`v${pkg.version}`);
 });
 
@@ -17,7 +17,7 @@ test.describe('Kanban board CRUD', () => {
 	test('creates, edits, moves via the status select, and deletes an application', async ({
 		page
 	}) => {
-		await page.goto('/');
+		await page.goto('/board');
 
 		await page.getByRole('button', { name: 'Bewerbung hinzufügen' }).click();
 		const dialog = page.locator('dialog.modal-content');
@@ -61,7 +61,7 @@ test.describe('Kanban board CRUD', () => {
 	});
 
 	test('cancels application creation without saving anything', async ({ page }) => {
-		await page.goto('/');
+		await page.goto('/board');
 		await page.getByRole('button', { name: 'Bewerbung hinzufügen' }).click();
 		const dialog = page.locator('dialog.modal-content');
 		await dialog.locator('#title').fill('Wird verworfen');
@@ -73,10 +73,10 @@ test.describe('Kanban board CRUD', () => {
 	test('the manifest "New application" shortcut (?new=1) opens the add dialog and cleans the URL', async ({
 		page
 	}) => {
-		await page.goto('/?new=1');
+		await page.goto('/board?new=1');
 		const dialog = page.locator('dialog.modal-content');
 		await expect(dialog).toBeVisible();
-		await expect(page).toHaveURL(/\/(\?.*)?$/);
+		await expect(page).toHaveURL(/\/board(\?.*)?$/);
 		await expect(page).not.toHaveURL(/new=1/);
 	});
 });

@@ -311,5 +311,25 @@
 		"moveFailed": "Verschieben fehlgeschlagen. Bitte versuche es erneut.",
 		"pdfSaveFailed": "Fehler beim Speichern der PDF: ",
 		"pdfScanFailed": "Fehler beim Scannen der PDF: "
+	},
+	"landing": {
+		"headline": "Deine Bewerbungen bleiben auf deinem Gerät.",
+		"lead": "bewerby ist ein Kanban-Board für Bewerbungen. Kein Konto, keine Übertragung, keine Auswertung.",
+		"stepsHeading": "In drei Schritten",
+		"step1Title": "Stelle anlegen",
+		"step1Body": "Titel, Firma, Ansprechpartner. Oder die Stellenanzeige als PDF hochladen; bewerby liest die Felder aus.",
+		"step2Title": "Unterlagen vorbereiten",
+		"step2Body": "Anschreiben im Editor, Lebenslauf aus den Einstellungen. Beides als PDF exportieren.",
+		"step3Title": "Karte weiterschieben",
+		"step3Body": "Von Entwurf über Versendet bis Zusage. Erinnerungen stellst du dir selbst.",
+		"factsHeading": "Was bewerby nicht tut",
+		"fact1": "Keine Registrierung",
+		"fact2": "Keine Cookies",
+		"fact3": "Keine Analyse",
+		"fact4": "Läuft offline",
+		"cta": "Board öffnen",
+		"privacyLink": "Wie die Daten gespeichert werden",
+		"dataHeading": "Wo liegen meine Daten?",
+		"dataBody": "Die Einträge liegen in der IndexedDB deines Browsers, angehängte PDFs im OPFS. Löschst du die Browserdaten, sind die Bewerbungen weg. Dafür gibt es unter Backup & Sync den Export als Datei."
 	}
 }

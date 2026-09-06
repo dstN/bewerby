@@ -10,7 +10,7 @@ test.describe('Backup export/import roundtrip', () => {
 	test('a PDF attachment survives export, erase-all-data, and re-import; a manipulated file is rejected', async ({
 		page
 	}) => {
-		await page.goto('/');
+		await page.goto('/board');
 
 		// Create one application with a real PDF attachment.
 		await page.getByRole('button', { name: 'Bewerbung hinzufügen' }).click();
@@ -49,7 +49,7 @@ test.describe('Backup export/import roundtrip', () => {
 			page.waitForEvent('load'),
 			page.getByRole('button', { name: 'Alle Daten unwiderruflich löschen' }).click()
 		]);
-		await page.goto('/');
+		await page.goto('/board');
 		await expect(page.locator('.card')).toHaveCount(0);
 
 		// A manipulated backup (missing a required field) must be rejected
@@ -65,7 +65,7 @@ test.describe('Backup export/import roundtrip', () => {
 		await expect(page.locator('.status-msg.error-msg')).toHaveText(
 			'Einige Einträge im Backup entsprechen nicht dem Datenmodell.'
 		);
-		await page.goto('/');
+		await page.goto('/board');
 		await expect(page.locator('.card')).toHaveCount(0);
 
 		// The real, unmodified export restores the application and its PDF.
@@ -79,7 +79,7 @@ test.describe('Backup export/import roundtrip', () => {
 			'Datenbank erfolgreich wiederhergestellt!'
 		);
 
-		await page.goto('/');
+		await page.goto('/board');
 		const restoredCard = page.locator('.card', { hasText: 'Fabrikam AG' });
 		await expect(restoredCard).toBeVisible();
 		await restoredCard.locator('.card-open-btn').click();

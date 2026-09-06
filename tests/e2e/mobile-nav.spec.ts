@@ -4,7 +4,7 @@ test.use({ viewport: { width: 390, height: 844 } });
 
 test.describe('Mobile navigation (390px viewport)', () => {
 	const routes: Array<{ path: string; heading: string }> = [
-		{ path: '/', heading: 'Kanban-Board' },
+		{ path: '/board', heading: 'Kanban-Board' },
 		{ path: '/analytics', heading: 'Statistiken' },
 		{ path: '/backup', heading: 'Backup & Sync' },
 		{ path: '/settings', heading: 'Einstellungen' }
@@ -21,7 +21,7 @@ test.describe('Mobile navigation (390px viewport)', () => {
 			await expect(drawer).toHaveClass(/mobile-open/);
 
 			await drawer.getByRole('link', { name: route.heading, exact: true }).click();
-			await expect(page).toHaveURL(new RegExp(route.path === '/' ? '/$' : route.path + '$'));
+			await expect(page).toHaveURL(new RegExp(route.path + '$'));
 			await expect(page.getByRole('heading', { level: 1 })).toHaveText(route.heading);
 
 			// Navigating closes the drawer automatically (afterNavigate hook).
@@ -32,7 +32,7 @@ test.describe('Mobile navigation (390px viewport)', () => {
 	test('the kanban board reflows into a single column instead of forcing horizontal scroll', async ({
 		page
 	}) => {
-		await page.goto('/');
+		await page.goto('/board');
 		const board = page.locator('.kanban-board');
 		await expect(board).toBeVisible();
 

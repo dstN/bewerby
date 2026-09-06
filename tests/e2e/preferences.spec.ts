@@ -56,7 +56,7 @@ test.describe('Theme preference', () => {
 
 test.describe('Language preference', () => {
 	test('switches the whole UI and persists across a reload', async ({ page }) => {
-		await page.goto('/');
+		await page.goto('/board');
 		await expect(page.getByRole('heading', { level: 1 })).toHaveText('Kanban-Board');
 
 		await page.getByRole('button', { name: /DE –/ }).click();
@@ -78,7 +78,7 @@ test.describe('Language preference', () => {
 
 	test('switching back to German restores German', async ({ page }) => {
 		await page.addInitScript(() => localStorage.setItem('bewerby-locale', 'en'));
-		await page.goto('/');
+		await page.goto('/board');
 		await page.getByRole('button', { name: /EN –/ }).click();
 		await expect(page.getByRole('heading', { level: 1 })).toHaveText('Kanban-Board');
 		await expect(page.locator('html')).toHaveAttribute('lang', 'de');
@@ -87,7 +87,7 @@ test.describe('Language preference', () => {
 	test('renders no raw translation keys on any route in either language', async ({ page }) => {
 		for (const locale of ['de', 'en']) {
 			await page.addInitScript((value) => localStorage.setItem('bewerby-locale', value), locale);
-			for (const route of ['/', '/analytics', '/backup', '/settings', '/kontakt']) {
+			for (const route of ['/', '/board', '/analytics', '/backup', '/settings', '/kontakt']) {
 				await page.goto(route);
 				await expect(page.locator('#main-content')).toBeVisible();
 				// i18n's resolve() returns the key itself when it cannot find a

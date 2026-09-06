@@ -19,6 +19,7 @@ const CACHE_NAME = `bewerby-cache-${version}`;
 // reloaded one, would hit nothing but this worker's offline fallback.
 const PRERENDERED_ROUTES = [
 	'/',
+	'/board',
 	'/analytics',
 	'/backup',
 	'/settings',

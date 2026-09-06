@@ -311,5 +311,25 @@
 		"moveFailed": "Move failed. Please try again.",
 		"pdfSaveFailed": "Failed to save the PDF: ",
 		"pdfScanFailed": "Failed to scan the PDF: "
+	},
+	"landing": {
+		"headline": "Your applications stay on your device.",
+		"lead": "bewerby is a kanban board for job applications. No account, no transfer, no tracking.",
+		"stepsHeading": "In three steps",
+		"step1Title": "Add a position",
+		"step1Body": "Title, company, contact. Or upload the job ad as a PDF and let bewerby read the fields.",
+		"step2Title": "Prepare your documents",
+		"step2Body": "Write the cover letter in the editor, take the CV from your settings. Export both as PDF.",
+		"step3Title": "Move the card along",
+		"step3Body": "From draft through sent to offer. You set your own reminders.",
+		"factsHeading": "What bewerby does not do",
+		"fact1": "No sign-up",
+		"fact2": "No cookies",
+		"fact3": "No analytics",
+		"fact4": "Works offline",
+		"cta": "Open the board",
+		"privacyLink": "How your data is stored",
+		"dataHeading": "Where is my data?",
+		"dataBody": "Entries live in your browser's IndexedDB, attached PDFs in OPFS. Clear your browser data and the applications are gone. That is what the file export under Backup & Sync is for."
 	}
 }

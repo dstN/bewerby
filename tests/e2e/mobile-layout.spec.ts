@@ -16,6 +16,7 @@ import { representativeBoard, seedApplications } from './fixtures/seed.js';
 
 const ROUTES = [
 	'/',
+	'/board',
 	'/analytics',
 	'/backup',
 	'/settings',
@@ -81,7 +82,7 @@ for (const viewport of PHONE_VIEWPORTS) {
 		}
 
 		test('the populated board keeps all content inside the viewport', async ({ page }) => {
-			await page.goto('/');
+			await page.goto('/board');
 			await seedApplications(page, representativeBoard());
 			await expect(page.locator('.card')).toHaveCount(5);
 			await settled(page);
@@ -89,7 +90,7 @@ for (const viewport of PHONE_VIEWPORTS) {
 		});
 
 		test('the application dialog keeps all content inside the viewport', async ({ page }) => {
-			await page.goto('/');
+			await page.goto('/board');
 			await page.getByRole('button', { name: 'Bewerbung hinzufügen' }).click();
 			await expect(page.locator('dialog.modal-content')).toBeVisible();
 			await settled(page);
@@ -113,7 +114,7 @@ test.describe('The board search field on a phone', () => {
 	test.use({ viewport: { width: 390, height: 844 } });
 
 	test('fits inside its filter bar instead of running off the right edge', async ({ page }) => {
-		await page.goto('/');
+		await page.goto('/board');
 		const input = page.locator('.search-input-wrapper input');
 		await expect(input).toBeVisible();
 
@@ -131,7 +132,7 @@ test.describe('The board search field on a phone', () => {
 	});
 
 	test('leaves room for the search icon rather than typing underneath it', async ({ page }) => {
-		await page.goto('/');
+		await page.goto('/board');
 		const input = page.locator('.search-input-wrapper input');
 		await input.fill('Contoso');
 
@@ -147,7 +148,7 @@ test.describe('The board search field on a phone', () => {
 	});
 
 	test('still filters the board once typed into', async ({ page }) => {
-		await page.goto('/');
+		await page.goto('/board');
 		await seedApplications(page, representativeBoard());
 		await expect(page.locator('.card')).toHaveCount(5);
 
@@ -157,7 +158,7 @@ test.describe('The board search field on a phone', () => {
 	});
 
 	test('every filter control stays inside the filter bar', async ({ page }) => {
-		await page.goto('/');
+		await page.goto('/board');
 		const barBox = (await page.locator('.filter-bar').boundingBox())!;
 		const selects = page.locator('.filter-dropdowns select');
 		const count = await selects.count();
@@ -181,7 +182,7 @@ test.describe('The board search field on a phone', () => {
 	 * stack one per row - is what actually catches that.
 	 */
 	test('filter selects stack full-width instead of cramming onto one row', async ({ page }) => {
-		await page.goto('/');
+		await page.goto('/board');
 		const barBox = (await page.locator('.filter-bar').boundingBox())!;
 		const selects = page.locator('.filter-dropdowns select');
 		const count = await selects.count();
@@ -202,7 +203,7 @@ test.describe('The board search field on a phone', () => {
 
 test.describe('Sizing rules that keep the layout honest', () => {
 	test('border-box sizing is applied globally, not patched per component', async ({ page }) => {
-		await page.goto('/');
+		await page.goto('/board');
 		await expect(page.locator('#main-content')).toBeVisible();
 
 		// Sampling a few unrelated elements rather than asserting on the rule

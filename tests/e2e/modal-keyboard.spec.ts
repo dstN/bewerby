@@ -8,7 +8,7 @@ test.describe('Application dialog keyboard path', () => {
 	test('Tab wraps focus inside the dialog and Escape returns focus to the trigger', async ({
 		page
 	}) => {
-		await page.goto('/');
+		await page.goto('/board');
 
 		const addButton = page.getByRole('button', { name: 'Bewerbung hinzufügen' });
 		await addButton.focus();
@@ -57,7 +57,7 @@ test.describe('Application dialog keyboard path', () => {
 	});
 
 	test('Escape with unsaved changes asks for confirmation before closing', async ({ page }) => {
-		await page.goto('/');
+		await page.goto('/board');
 		await page.getByRole('button', { name: 'Bewerbung hinzufügen' }).click();
 		const dialog = page.locator('dialog.modal-content');
 		await dialog.locator('#title').fill('Ungespeichert');
