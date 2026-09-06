@@ -84,6 +84,10 @@ export type TranslationKeys = {
 		placeholderContactName: string;
 		placeholderContactEmail: string;
 		placeholderContactPhone: string;
+		location: string;
+		referenceNumber: string;
+		placeholderLocation: string;
+		placeholderReferenceNumber: string;
 		priorities: {
 			low: string;
 			medium: string;
@@ -101,6 +105,15 @@ export type TranslationKeys = {
 			errorCorrupted: string;
 			errorNoText: string;
 			dismissError: string;
+			review: {
+				heading: string;
+				hint: string;
+				uncertain: string;
+				apply: string;
+				dismiss: string;
+				nothingFound: string;
+				applied: string;
+			};
 		};
 	};
 	datepicker: {

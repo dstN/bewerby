@@ -94,8 +94,21 @@
 			"errorEncrypted": "The PDF is password-protected and can't be read.",
 			"errorCorrupted": "The PDF file is corrupted or invalid.",
 			"errorNoText": "No extractable text was found in the PDF (it may be scanned images with no text recognition).",
-			"dismissError": "Dismiss error message"
-		}
+			"dismissError": "Dismiss error message",
+			"review": {
+				"heading": "Detected details",
+				"hint": "Check the suggestions and take what fits. Uncertain values are not pre-selected.",
+				"uncertain": "uncertain",
+				"apply": "Apply",
+				"dismiss": "Discard",
+				"nothingFound": "Nothing could be read reliably from this PDF. Please fill in the fields manually.",
+				"applied": "Details applied."
+			}
+		},
+		"location": "Work location",
+		"referenceNumber": "Reference number",
+		"placeholderLocation": "e.g. Dresden",
+		"placeholderReferenceNumber": "e.g. 10001-1003492160-S"
 	},
 	"datepicker": {
 		"today": "Today",

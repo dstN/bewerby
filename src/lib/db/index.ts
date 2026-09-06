@@ -29,6 +29,10 @@ export interface Application {
 	pdfName?: string;
 	/** OPFS file name holding the attached PDF (see $lib/utils/opfs.ts). */
 	pdfRef?: string;
+	/** Work location as advertised. Optional and unindexed, so no schema bump. */
+	location?: string;
+	/** The employer's own reference for the posting ("Referenz-Nr.", "Kennziffer"). */
+	referenceNumber?: string;
 }
 
 /** Pre-v2 shape, kept only so the migration below can read old rows. */
@@ -137,6 +141,10 @@ export function isValidApplication(value: unknown): value is Application {
 		Array.isArray(app.history) &&
 		app.history.every(isValidStatusHistoryEntry) &&
 		(app.pdfName === undefined || typeof app.pdfName === 'string') &&
-		(app.pdfRef === undefined || typeof app.pdfRef === 'string')
+		(app.pdfRef === undefined || typeof app.pdfRef === 'string') &&
+		// Added after the format-2 backups shipped, so they must stay optional -
+		// requiring them here would make every existing export fail to import.
+		(app.location === undefined || typeof app.location === 'string') &&
+		(app.referenceNumber === undefined || typeof app.referenceNumber === 'string')
 	);
 }

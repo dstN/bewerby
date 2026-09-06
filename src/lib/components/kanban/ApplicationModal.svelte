@@ -3,11 +3,12 @@
 	import { t } from '$lib/i18n/index.svelte.js';
 	import { db, type Application } from '$lib/db/index.js';
 	import {
-		extractTextFromPdf,
-		parseJobDetailsFromText,
+		extractJobDocument,
+		parseJobDocument,
 		validatePdfFile,
 		PdfProcessingError,
-		type PdfErrorCode
+		type PdfErrorCode,
+		type ParsedJobField
 	} from '$lib/utils/pdf.js';
 	import { writePdfToOpfs, readPdfFromOpfs, deletePdfFromOpfs } from '$lib/utils/opfs.js';
 	import DatePicker from '$lib/components/common/DatePicker.svelte';
@@ -66,6 +67,8 @@
 	let contactName = $state(initialApp?.contactName ?? '');
 	let contactEmail = $state(initialApp?.contactEmail ?? '');
 	let contactPhone = $state(initialApp?.contactPhone ?? '');
+	let location = $state(initialApp?.location ?? '');
+	let referenceNumber = $state(initialApp?.referenceNumber ?? '');
 	let priority = $state<'low' | 'medium' | 'high'>(initialApp?.priority ?? 'medium');
 	let status = $state<Application['status']>(initialApp?.status ?? initialStat);
 	let reminderInterval = $state<Application['reminderInterval']>(
@@ -86,6 +89,21 @@
 	let isParsingPdf = $state(false);
 	let isViewingPdf = $state(false);
 	let pdfError = $state<string | null>(null);
+
+	/**
+	 * What the parser read out of the uploaded ad, shown for confirmation
+	 * instead of being written straight into the form. Autofill used to happen
+	 * silently and only into empty fields, so a wrong guess beat a missing one
+	 * and the user never learned either had happened.
+	 */
+	type ReviewEntry = {
+		field: ParsedJobField;
+		labelKey: string;
+		value: string;
+		uncertain: boolean;
+		selected: boolean;
+	};
+	let review = $state<ReviewEntry[] | null>(null);
 	let appliedDateStr = $state(
 		formatDateForInput(initialApp ? initialApp.appliedAt || initialApp.createdAt : undefined)
 	);
@@ -100,6 +118,8 @@
 			contactName,
 			contactEmail,
 			contactPhone,
+			location,
+			referenceNumber,
 			priority,
 			status,
 			reminderInterval,
@@ -219,6 +239,104 @@
 		announcer.announce(message);
 	}
 
+	const REVIEW_FIELDS: { field: ParsedJobField; labelKey: string }[] = [
+		{ field: 'title', labelKey: 'application.title' },
+		{ field: 'company', labelKey: 'application.company' },
+		{ field: 'location', labelKey: 'application.location' },
+		{ field: 'salary', labelKey: 'application.salary' },
+		{ field: 'contactName', labelKey: 'application.contactName' },
+		{ field: 'contactEmail', labelKey: 'application.contactEmail' },
+		{ field: 'contactPhone', labelKey: 'application.contactPhone' },
+		{ field: 'referenceNumber', labelKey: 'application.referenceNumber' },
+		{ field: 'url', labelKey: 'application.url' }
+	];
+
+	function currentValue(field: ParsedJobField): string {
+		switch (field) {
+			case 'title':
+				return title;
+			case 'company':
+				return company;
+			case 'location':
+				return location;
+			case 'salary':
+				return salary;
+			case 'contactName':
+				return contactName;
+			case 'contactEmail':
+				return contactEmail;
+			case 'contactPhone':
+				return contactPhone;
+			case 'referenceNumber':
+				return referenceNumber;
+			case 'url':
+				return url;
+		}
+	}
+
+	function assignValue(field: ParsedJobField, value: string) {
+		switch (field) {
+			case 'title':
+				title = value;
+				break;
+			case 'company':
+				company = value;
+				break;
+			case 'location':
+				location = value;
+				break;
+			case 'salary':
+				salary = value;
+				break;
+			case 'contactName':
+				contactName = value;
+				break;
+			case 'contactEmail':
+				contactEmail = value;
+				break;
+			case 'contactPhone':
+				contactPhone = value;
+				break;
+			case 'referenceNumber':
+				referenceNumber = value;
+				break;
+			case 'url':
+				url = value;
+				break;
+		}
+	}
+
+	function buildReview(
+		info: Record<ParsedJobField, string>,
+		confidence: Partial<Record<ParsedJobField, 'high' | 'low'>>
+	): ReviewEntry[] {
+		return REVIEW_FIELDS.filter(({ field }) => info[field]).map(({ field, labelKey }) => {
+			const uncertain = confidence[field] !== 'high';
+			return {
+				field,
+				labelKey,
+				value: info[field],
+				uncertain,
+				// Pre-selected only where the target is still empty *and* the
+				// value is a confident one - never overwrite the user's typing,
+				// never nudge them into accepting a guess.
+				selected: !currentValue(field) && !uncertain
+			};
+		});
+	}
+
+	function applyReview() {
+		if (!review) return;
+		let applied = 0;
+		for (const entry of review) {
+			if (!entry.selected) continue;
+			assignValue(entry.field, entry.value);
+			applied += 1;
+		}
+		review = null;
+		if (applied > 0) announcer.announce(t('application.pdf.review.applied'));
+	}
+
 	async function handlePdfUpload(event: Event) {
 		const target = event.target as HTMLInputElement;
 		const file = target.files?.[0];
@@ -228,6 +346,7 @@
 		if (!file) return;
 
 		pdfError = null;
+		review = null;
 		isParsingPdf = true;
 
 		try {
@@ -251,16 +370,14 @@
 		}
 
 		try {
-			const text = await extractTextFromPdf(file);
-			const parsed = parseJobDetailsFromText(text);
-
-			// Autofill extracted job details (only if field is currently empty)
-			if (!title) title = parsed.title;
-			if (!company) company = parsed.company;
-			if (!contactName) contactName = parsed.contactName;
-			if (!contactEmail) contactEmail = parsed.contactEmail;
-			if (!contactPhone) contactPhone = parsed.contactPhone;
-			if (!url) url = parsed.url;
+			const doc = await extractJobDocument(file);
+			const parsed = parseJobDocument(doc, { fileName: file.name });
+			review = buildReview(parsed.info, parsed.confidence);
+			announcer.announce(
+				review.length > 0
+					? t('application.pdf.review.heading')
+					: t('application.pdf.review.nothingFound')
+			);
 		} catch (err) {
 			console.error('Failed to parse PDF:', err);
 			if (err instanceof PdfProcessingError) {
@@ -324,6 +441,8 @@
 			contactName: contactName.trim(),
 			contactEmail: contactEmail.trim(),
 			contactPhone: contactPhone.trim(),
+			location: location.trim(),
+			referenceNumber: referenceNumber.trim(),
 			priority,
 			status,
 			tags: $state.snapshot(tags),
@@ -459,6 +578,39 @@
 				</div>
 			{/if}
 
+			{#if review}
+				{#if review.length === 0}
+					<p class="review-empty">{t('application.pdf.review.nothingFound')}</p>
+				{:else}
+					<fieldset class="review-panel">
+						<legend>{t('application.pdf.review.heading')}</legend>
+						<p class="review-hint" id="review-hint">{t('application.pdf.review.hint')}</p>
+						<ul class="review-list" aria-describedby="review-hint">
+							{#each review as entry (entry.field)}
+								<li>
+									<label class="review-item">
+										<input type="checkbox" bind:checked={entry.selected} />
+										<span class="review-label">{t(entry.labelKey)}</span>
+										<span class="review-value">{entry.value}</span>
+										{#if entry.uncertain}
+											<span class="review-uncertain">{t('application.pdf.review.uncertain')}</span>
+										{/if}
+									</label>
+								</li>
+							{/each}
+						</ul>
+						<div class="review-actions">
+							<button type="button" class="btn-review-apply" onclick={applyReview}>
+								{t('application.pdf.review.apply')}
+							</button>
+							<button type="button" class="btn-review-dismiss" onclick={() => (review = null)}>
+								{t('application.pdf.review.dismiss')}
+							</button>
+						</div>
+					</fieldset>
+				{/if}
+			{/if}
+
 			<div class="form-grid">
 				<div class="form-group col-span-2">
 					<label for="title">{t('application.title')} *</label>
@@ -524,6 +676,26 @@
 						type="text"
 						bind:value={salary}
 						placeholder={t('application.placeholderSalary')}
+					/>
+				</div>
+
+				<div class="form-group">
+					<label for="location">{t('application.location')}</label>
+					<input
+						id="location"
+						type="text"
+						bind:value={location}
+						placeholder={t('application.placeholderLocation')}
+					/>
+				</div>
+
+				<div class="form-group">
+					<label for="referenceNumber">{t('application.referenceNumber')}</label>
+					<input
+						id="referenceNumber"
+						type="text"
+						bind:value={referenceNumber}
+						placeholder={t('application.placeholderReferenceNumber')}
 					/>
 				</div>
 
@@ -857,6 +1029,130 @@
 		transition:
 			border-color var(--duration-fast) ease,
 			background-color var(--duration-fast) ease;
+	}
+
+	.review-panel {
+		margin: -10px 0 20px;
+		padding: 12px 14px 14px;
+		border: 1px solid var(--border-default);
+		border-radius: var(--radius-md);
+		background-color: var(--surface-2);
+	}
+
+	.review-panel legend {
+		padding: 0 6px;
+		font-size: 13px;
+		font-weight: 600;
+		color: var(--text-primary);
+	}
+
+	.review-hint,
+	.review-empty {
+		margin: 0 0 10px;
+		font-size: 12px;
+		line-height: 1.5;
+		color: var(--text-secondary);
+	}
+
+	.review-empty {
+		margin: -10px 0 20px;
+		padding: 10px 12px;
+		border: 1px solid var(--border-default);
+		border-radius: var(--radius-md);
+		background-color: var(--surface-2);
+	}
+
+	.review-list {
+		list-style: none;
+		margin: 0 0 12px;
+		padding: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+	}
+
+	.review-item {
+		display: flex;
+		align-items: baseline;
+		flex-wrap: wrap;
+		gap: 8px;
+		padding: 6px 8px;
+		border-radius: var(--radius-sm);
+		font-size: 13px;
+		cursor: pointer;
+	}
+
+	.review-item:hover {
+		background-color: var(--surface-3);
+	}
+
+	.review-item input {
+		flex-shrink: 0;
+		align-self: center;
+	}
+
+	.review-label {
+		min-width: 96px;
+		color: var(--text-secondary);
+	}
+
+	.review-value {
+		flex: 1;
+		min-width: 0;
+		color: var(--text-primary);
+		font-weight: 500;
+		overflow-wrap: anywhere;
+	}
+
+	/* The semantic warning colour measures 4.07:1 (light) and 4.51:1 (dark) on
+	   this surface - short of the 7:1 this project holds itself to - so the
+	   badge carries its meaning in the word and the outline instead, and takes
+	   the text colour that does clear AAA (8.6:1 in both themes). */
+	.review-uncertain {
+		flex-shrink: 0;
+		padding: 1px 6px;
+		border: 1px solid var(--border-strong);
+		border-radius: var(--radius-pill);
+		color: var(--text-secondary);
+		font-size: 11px;
+		font-weight: 600;
+	}
+
+	.review-actions {
+		display: flex;
+		gap: 8px;
+	}
+
+	.btn-review-apply,
+	.btn-review-dismiss {
+		padding: 6px 14px;
+		border-radius: var(--radius-md);
+		font-family: inherit;
+		font-size: 13px;
+		font-weight: 600;
+		cursor: pointer;
+		transition: background-color var(--duration-fast) ease;
+	}
+
+	.btn-review-apply {
+		border: none;
+		background-color: var(--color-accent-600);
+		color: white;
+	}
+
+	.btn-review-apply:hover {
+		background-color: var(--color-accent-700);
+	}
+
+	.btn-review-dismiss {
+		border: 1px solid var(--border-strong);
+		background: transparent;
+		color: var(--text-secondary);
+	}
+
+	.btn-review-dismiss:hover {
+		background-color: var(--surface-3);
+		color: var(--text-primary);
 	}
 
 	.pdf-error-banner {

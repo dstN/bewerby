@@ -87,13 +87,15 @@ E-Mail: jobs@musterfirma.de
 	});
 
 	it('returns empty contact fields for text with no extractable contact info', () => {
-		// company intentionally falls back to the first line of the document
-		// (see the "Fallback 2" comment in parseJobDetailsFromText) - only
-		// email/phone/title have no such fallback and should stay empty.
+		// There is no longer a "first line of the document" fallback for the
+		// company: it blindly promoted page furniture to an employer name, and
+		// because autofill only writes into empty fields, a wrong value beat a
+		// missing one. Every field now stays empty unless something justified it.
 		const result = parseJobDetailsFromText('Just some unrelated text with no structure.');
 		expect(result.contactEmail).toBe('');
 		expect(result.contactPhone).toBe('');
 		expect(result.title).toBe('');
+		expect(result.company).toBe('');
 	});
 });
 

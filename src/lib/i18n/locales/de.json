@@ -94,8 +94,21 @@
 			"errorEncrypted": "Die PDF ist passwortgeschützt und kann nicht gelesen werden.",
 			"errorCorrupted": "Die PDF-Datei ist beschädigt oder ungültig.",
 			"errorNoText": "In der PDF wurde kein Text gefunden (vermutlich nur eingescannte Bilder ohne Texterkennung).",
-			"dismissError": "Fehlermeldung schließen"
-		}
+			"dismissError": "Fehlermeldung schließen",
+			"review": {
+				"heading": "Erkannte Angaben",
+				"hint": "Prüfe die Vorschläge und übernimm, was passt. Unsichere Werte sind nicht vorausgewählt.",
+				"uncertain": "unsicher",
+				"apply": "Übernehmen",
+				"dismiss": "Verwerfen",
+				"nothingFound": "Aus dieser PDF ließ sich nichts sicher auslesen. Bitte die Felder von Hand ausfüllen.",
+				"applied": "Angaben übernommen."
+			}
+		},
+		"location": "Arbeitsort",
+		"referenceNumber": "Referenznummer",
+		"placeholderLocation": "z. B. Dresden",
+		"placeholderReferenceNumber": "z. B. 10001-1003492160-S"
 	},
 	"datepicker": {
 		"today": "Heute",
