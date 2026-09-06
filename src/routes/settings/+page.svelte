@@ -13,6 +13,69 @@
 	} from '$lib/utils/storage.js';
 	import { eraseAllData } from '$lib/utils/eraseAllData.js';
 	import { onMount } from 'svelte';
+	import { profileStore } from '$lib/stores/profile.svelte.js';
+	import { validatePdfFile, PdfProcessingError, type PdfErrorCode } from '$lib/utils/pdf.js';
+	import { writePdfToOpfs, readPdfFromOpfs, deletePdfFromOpfs } from '$lib/utils/opfs.js';
+	import { announcer } from '$lib/stores/announcer.svelte.js';
+
+	const CV_ERROR_KEYS: Record<PdfErrorCode, string> = {
+		'too-large': 'application.pdf.errorTooLarge',
+		'too-many-pages': 'application.pdf.errorTooManyPages',
+		'not-a-pdf': 'application.pdf.errorNotAPdf',
+		encrypted: 'application.pdf.errorEncrypted',
+		corrupted: 'application.pdf.errorCorrupted',
+		'no-text': 'application.pdf.errorNoText'
+	};
+
+	let cvError = $state<string | null>(null);
+	let isStoringCv = $state(false);
+
+	async function handleCvUpload(event: Event) {
+		const target = event.target as HTMLInputElement;
+		const file = target.files?.[0];
+		// Reset so re-picking the same file after an error fires onchange again.
+		target.value = '';
+		if (!file) return;
+
+		cvError = null;
+		isStoringCv = true;
+		try {
+			await validatePdfFile(file);
+			const previous = profileStore.cvRef;
+			const ref = await writePdfToOpfs(file);
+			profileStore.setCv(ref, file.name);
+			// Only once the new ref is persisted - deleting first would leave
+			// the profile pointing at a file that no longer exists.
+			if (previous && previous !== ref) await deletePdfFromOpfs(previous);
+			announcer.announce(file.name);
+		} catch (err) {
+			const code = err instanceof PdfProcessingError ? err.code : undefined;
+			cvError = code ? t(CV_ERROR_KEYS[code]) : t('application.pdf.errorCorrupted');
+			announcer.announce(cvError);
+		} finally {
+			isStoringCv = false;
+		}
+	}
+
+	async function removeCv() {
+		const ref = profileStore.cvRef;
+		if (!ref || !confirm(t('settings.cvRemoveConfirm'))) return;
+		profileStore.clearCv();
+		await deletePdfFromOpfs(ref);
+	}
+
+	async function viewCv() {
+		const ref = profileStore.cvRef;
+		if (!ref) return;
+		const blob = await readPdfFromOpfs(ref);
+		if (!blob) {
+			cvError = t('application.pdf.viewError');
+			return;
+		}
+		const url = URL.createObjectURL(blob);
+		window.open(url, '_blank', 'noopener,noreferrer');
+		setTimeout(() => URL.revokeObjectURL(url), 60_000);
+	}
 
 	let permissionState = $derived(getNotificationPermissionState());
 
@@ -163,6 +226,123 @@
 					)}
 				</p>
 			{/if}
+		</section>
+
+		<!-- Application documents: the CV and the sender block a cover letter needs -->
+		<section class="settings-card">
+			<h2 class="card-title">
+				<svg
+					width="20"
+					height="20"
+					viewBox="0 0 24 24"
+					fill="none"
+					aria-hidden="true"
+					class="card-icon"
+				>
+					<path
+						d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8zM14 3v5h5M9 13h6M9 17h4"
+						stroke="currentColor"
+						stroke-width="1.5"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					/>
+				</svg>
+				{t('settings.documentsTitle')}
+			</h2>
+			<p class="card-desc">{t('settings.documentsDesc')}</p>
+
+			<div class="doc-block">
+				<h3 class="doc-heading">{t('settings.cvLabel')}</h3>
+				<p class="doc-hint" id="cv-hint">{t('settings.cvHint')}</p>
+
+				{#if profileStore.cvName}
+					<p class="doc-current">{profileStore.cvName}</p>
+				{:else}
+					<p class="doc-current doc-empty">{t('settings.cvNone')}</p>
+				{/if}
+
+				<div class="doc-actions">
+					<label class="btn-primary doc-upload">
+						<input
+							type="file"
+							accept=".pdf"
+							class="sr-only"
+							onchange={handleCvUpload}
+							aria-describedby="cv-hint"
+							disabled={isStoringCv}
+						/>
+						{profileStore.cvRef ? t('settings.cvReplace') : t('settings.cvUpload')}
+					</label>
+					{#if profileStore.cvRef}
+						<button type="button" class="btn-flat" onclick={viewCv}>{t('settings.cvView')}</button>
+						<button type="button" class="btn-flat" onclick={removeCv}>
+							{t('settings.cvRemove')}
+						</button>
+					{/if}
+				</div>
+
+				{#if cvError}
+					<p class="doc-error" role="alert">{cvError}</p>
+				{/if}
+			</div>
+
+			<div class="doc-block">
+				<h3 class="doc-heading">{t('settings.senderLabel')}</h3>
+				<p class="doc-hint">{t('settings.senderHint')}</p>
+
+				<div class="sender-grid">
+					<div class="sender-field">
+						<label for="senderName">{t('settings.senderName')}</label>
+						<input
+							id="senderName"
+							type="text"
+							value={profileStore.value.senderName}
+							placeholder={t('settings.placeholderSenderName')}
+							oninput={(e) => profileStore.update({ senderName: e.currentTarget.value })}
+						/>
+					</div>
+					<div class="sender-field">
+						<label for="senderStreet">{t('settings.senderStreet')}</label>
+						<input
+							id="senderStreet"
+							type="text"
+							value={profileStore.value.senderStreet}
+							placeholder={t('settings.placeholderSenderStreet')}
+							oninput={(e) => profileStore.update({ senderStreet: e.currentTarget.value })}
+						/>
+					</div>
+					<div class="sender-field">
+						<label for="senderCity">{t('settings.senderCity')}</label>
+						<input
+							id="senderCity"
+							type="text"
+							value={profileStore.value.senderCity}
+							placeholder={t('settings.placeholderSenderCity')}
+							oninput={(e) => profileStore.update({ senderCity: e.currentTarget.value })}
+						/>
+					</div>
+					<div class="sender-field">
+						<label for="senderEmail">{t('settings.senderEmail')}</label>
+						<input
+							id="senderEmail"
+							type="email"
+							value={profileStore.value.senderEmail}
+							placeholder={t('settings.placeholderSenderEmail')}
+							oninput={(e) => profileStore.update({ senderEmail: e.currentTarget.value })}
+						/>
+					</div>
+					<div class="sender-field">
+						<label for="senderPhone">{t('settings.senderPhone')}</label>
+						<input
+							id="senderPhone"
+							type="tel"
+							value={profileStore.value.senderPhone}
+							placeholder={t('settings.placeholderSenderPhone')}
+							oninput={(e) => profileStore.update({ senderPhone: e.currentTarget.value })}
+						/>
+					</div>
+				</div>
+			</div>
 		</section>
 
 		<!-- Right to erasure -->
@@ -334,6 +514,125 @@
 	.status-badge.denied {
 		background-color: var(--status-danger-bg);
 		color: var(--color-danger);
+	}
+
+	.doc-block {
+		margin-top: 18px;
+		padding-top: 16px;
+		border-top: 1px solid var(--border-subtle);
+	}
+
+	.doc-heading {
+		margin: 0 0 4px;
+		font-size: 14px;
+		font-weight: 600;
+		color: var(--text-primary);
+	}
+
+	.doc-hint {
+		margin: 0 0 10px;
+		font-size: 12px;
+		line-height: 1.5;
+		color: var(--text-secondary);
+	}
+
+	.doc-current {
+		margin: 0 0 10px;
+		font-size: 13px;
+		font-weight: 500;
+		color: var(--text-primary);
+		overflow-wrap: anywhere;
+	}
+
+	.doc-empty {
+		font-weight: 400;
+		color: var(--text-secondary);
+	}
+
+	.doc-actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+	}
+
+	/* A label wrapping a file input, so it needs the button's affordances
+	   spelled out - it is not a <button>. */
+	.doc-upload {
+		display: inline-flex;
+		align-items: center;
+	}
+
+	.doc-upload:focus-within {
+		outline: 2px solid var(--color-accent-500);
+		outline-offset: 2px;
+	}
+
+	.btn-flat {
+		padding: 8px 16px;
+		background: transparent;
+		color: var(--text-secondary);
+		border: 1px solid var(--border-strong);
+		border-radius: var(--radius-md);
+		font-family: inherit;
+		font-size: 13px;
+		font-weight: 500;
+		cursor: pointer;
+		transition:
+			background-color var(--duration-fast) ease,
+			color var(--duration-fast) ease;
+	}
+
+	.btn-flat:hover {
+		background-color: var(--surface-2);
+		color: var(--text-primary);
+	}
+
+	.doc-error {
+		margin: 10px 0 0;
+		padding: 8px 10px;
+		background-color: var(--status-danger-bg);
+		border: 1px solid var(--status-danger-border);
+		border-radius: var(--radius-md);
+		color: var(--color-danger);
+		font-size: 12px;
+	}
+
+	.sender-grid {
+		display: grid;
+		grid-template-columns: repeat(2, 1fr);
+		gap: 12px;
+	}
+
+	.sender-field {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+	}
+
+	.sender-field label {
+		font-size: 12px;
+		font-weight: 500;
+		color: var(--text-secondary);
+	}
+
+	.sender-field input {
+		padding: 8px 10px;
+		background-color: var(--surface-0);
+		border: 1px solid var(--border-default);
+		border-radius: var(--radius-md);
+		color: var(--text-primary);
+		font-family: inherit;
+		font-size: 13px;
+	}
+
+	.sender-field input:focus-visible {
+		border-color: var(--color-accent-500);
+	}
+
+	@media (max-width: 768px) {
+		.sender-grid {
+			grid-template-columns: 1fr;
+		}
 	}
 
 	.btn-primary {

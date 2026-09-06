@@ -7,19 +7,20 @@ import {
 	buildBackupPayload,
 	parseBackupPayload,
 	prepareImportRows,
-	BACKUP_FORMAT_VERSION
+	BACKUP_FORMAT_VERSION,
+	READABLE_BACKUP_VERSIONS
 } from './backup.js';
 
 // Stand-in for OPFS (unavailable under Node/vitest): a Map keyed by the same
 // kind of ref string writePdfToOpfs would hand out, so the payload/roundtrip
 // logic is exercised exactly as it runs in the browser.
-function makeFakeOpfs() {
+function makeFakeOpfs(prefix = 'pdf') {
 	const files = new Map<string, Blob>();
 	let counter = 0;
 	return {
 		files,
 		writePdfToOpfs: async (blob: Blob) => {
-			const ref = `pdf-${++counter}.pdf`;
+			const ref = `${prefix}-${++counter}.pdf`;
 			files.set(ref, blob);
 			return ref;
 		},
@@ -136,7 +137,7 @@ describe('prepareImportRows', () => {
 			pdfs: { 'old-ref.pdf': await blobToBase64(new Blob([new Uint8Array([1, 2, 3]) as BlobPart])) }
 		};
 
-		const rows = await prepareImportRows(payload, opfs.writePdfToOpfs);
+		const { rows } = await prepareImportRows(payload, opfs.writePdfToOpfs);
 
 		expect(rows).toHaveLength(1);
 		expect(rows[0].pdfRef).not.toBe('old-ref.pdf');
@@ -152,7 +153,7 @@ describe('prepareImportRows', () => {
 			applications: [baseApp({ id: 7 })],
 			pdfs: {}
 		};
-		const rows = await prepareImportRows(payload, opfs.writePdfToOpfs);
+		const { rows } = await prepareImportRows(payload, opfs.writePdfToOpfs);
 		expect(rows[0].id).toBeUndefined();
 	});
 
@@ -164,7 +165,7 @@ describe('prepareImportRows', () => {
 			applications: [baseApp()],
 			pdfs: {}
 		};
-		const rows = await prepareImportRows(payload, opfs.writePdfToOpfs);
+		const { rows } = await prepareImportRows(payload, opfs.writePdfToOpfs);
 		expect(rows[0].pdfRef).toBeUndefined();
 	});
 });
@@ -200,7 +201,7 @@ describe('end-to-end backup roundtrip with a PDF, through a real Dexie database'
 		expect(parsed.ok).toBe(true);
 		if (!parsed.ok) return;
 
-		const rows = await prepareImportRows(parsed.data, opfs.writePdfToOpfs);
+		const { rows } = await prepareImportRows(parsed.data, opfs.writePdfToOpfs);
 		await targetDb.transaction('rw', targetDb.applications, async () => {
 			await targetDb.applications.bulkAdd(rows);
 		});
@@ -216,5 +217,143 @@ describe('end-to-end backup roundtrip with a PDF, through a real Dexie database'
 		await expect(restoredBlob?.text()).resolves.toBe(await pdfBlob.text());
 
 		targetDb.close();
+	});
+});
+
+describe('backup format versioning', () => {
+	it('writes the current version', () => {
+		expect(BACKUP_FORMAT_VERSION).toBe(3);
+	});
+
+	it('still reads a version-2 file', async () => {
+		// Version 3 only adds the profile block and the per-application CV, so
+		// every backup users already exported has to keep importing. A bare
+		// equality check on the current version would silently orphan them.
+		const legacy = JSON.stringify({
+			version: 2,
+			exportedAt: Date.now(),
+			applications: [baseApp()],
+			pdfs: {}
+		});
+
+		const parsed = parseBackupPayload(legacy);
+		expect(parsed.ok).toBe(true);
+		if (!parsed.ok) return;
+		expect(parsed.data.version).toBe(2);
+		expect(parsed.data.applications).toHaveLength(1);
+		expect(parsed.data.profile).toBeUndefined();
+	});
+
+	it('rejects a version outside the readable range', () => {
+		const future = JSON.stringify({
+			version: 99,
+			exportedAt: Date.now(),
+			applications: [],
+			pdfs: {}
+		});
+		expect(parseBackupPayload(future)).toEqual({ ok: false, error: 'format' });
+		expect(READABLE_BACKUP_VERSIONS).not.toContain(99);
+	});
+});
+
+describe('profile and CV attachments in a backup', () => {
+	it('carries the global CV, a per-application CV and the job ad', async () => {
+		const opfs = makeFakeOpfs();
+		const adRef = await opfs.writePdfToOpfs(new Blob(['job ad'], { type: 'application/pdf' }));
+		const appCvRef = await opfs.writePdfToOpfs(
+			new Blob(['tailored cv'], { type: 'application/pdf' })
+		);
+		const globalCvRef = await opfs.writePdfToOpfs(
+			new Blob(['default cv'], { type: 'application/pdf' })
+		);
+
+		const payload = await buildBackupPayload(
+			[baseApp({ pdfRef: adRef, cvRef: appCvRef, coverLetter: '**Sehr geehrte**' })],
+			opfs.readPdfFromOpfs,
+			{
+				cvRef: globalCvRef,
+				cvName: 'lebenslauf.pdf',
+				senderName: 'Petra Musterfrau',
+				senderStreet: 'Musterweg 1',
+				senderCity: '12345 Musterstadt',
+				senderEmail: 'petra@example.com',
+				senderPhone: '+49 30 12345678'
+			}
+		);
+
+		expect(Object.keys(payload.pdfs).sort()).toEqual([adRef, appCvRef, globalCvRef].sort());
+		expect(payload.profile?.senderName).toBe('Petra Musterfrau');
+	});
+
+	it('remaps every ref on import, including the profile CV', async () => {
+		const source = makeFakeOpfs();
+		const adRef = await source.writePdfToOpfs(new Blob(['job ad'], { type: 'application/pdf' }));
+		const appCvRef = await source.writePdfToOpfs(
+			new Blob(['tailored cv'], { type: 'application/pdf' })
+		);
+		const globalCvRef = await source.writePdfToOpfs(
+			new Blob(['default cv'], { type: 'application/pdf' })
+		);
+
+		const payload = await buildBackupPayload(
+			[baseApp({ pdfRef: adRef, cvRef: appCvRef })],
+			source.readPdfFromOpfs,
+			{
+				cvRef: globalCvRef,
+				cvName: 'lebenslauf.pdf',
+				senderName: 'Petra Musterfrau',
+				senderStreet: '',
+				senderCity: '',
+				senderEmail: '',
+				senderPhone: ''
+			}
+		);
+
+		// A distinct prefix, so a ref that was wrongly reused verbatim is
+		// visible rather than masked by both fakes counting from one.
+		const target = makeFakeOpfs('imported');
+		const { rows, profile } = await prepareImportRows(payload, target.writePdfToOpfs);
+
+		// Refs from a foreign export must never be reused verbatim - they could
+		// collide with a file this browser already holds.
+		expect(rows[0].pdfRef).not.toBe(adRef);
+		expect(rows[0].cvRef).not.toBe(appCvRef);
+		expect(profile?.cvRef).not.toBe(globalCvRef);
+
+		expect(await target.readPdfFromOpfs(rows[0].cvRef!).then((b) => b?.text())).toBe('tailored cv');
+		expect(await target.readPdfFromOpfs(profile!.cvRef!).then((b) => b?.text())).toBe('default cv');
+	});
+
+	it('preserves the cover letter through a roundtrip', async () => {
+		const opfs = makeFakeOpfs();
+		const payload = await buildBackupPayload(
+			[
+				baseApp({
+					coverLetter: ['Sehr geehrte Frau Musterfrau,', '', '**mit Interesse**'].join('\n')
+				})
+			],
+			opfs.readPdfFromOpfs
+		);
+		const parsed = parseBackupPayload(JSON.stringify(payload));
+		expect(parsed.ok).toBe(true);
+		if (!parsed.ok) return;
+		const { rows } = await prepareImportRows(parsed.data, opfs.writePdfToOpfs);
+		expect(rows[0].coverLetter).toContain('**mit Interesse**');
+	});
+
+	it('degrades a tampered profile block instead of trusting it', async () => {
+		const tampered = JSON.stringify({
+			version: 3,
+			exportedAt: Date.now(),
+			applications: [],
+			pdfs: {},
+			profile: { senderName: { not: 'a string' }, cvRef: 12345 }
+		});
+
+		const parsed = parseBackupPayload(tampered);
+		expect(parsed.ok).toBe(true);
+		if (!parsed.ok) return;
+		expect(parsed.data.profile?.senderName).toBe('');
+		expect(parsed.data.profile?.cvRef).toBeUndefined();
 	});
 });

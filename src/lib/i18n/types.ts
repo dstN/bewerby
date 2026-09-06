@@ -207,6 +207,28 @@ export type TranslationKeys = {
 		stepSelection: string;
 	};
 	settings: {
+		documentsTitle: string;
+		documentsDesc: string;
+		cvLabel: string;
+		cvNone: string;
+		cvUpload: string;
+		cvReplace: string;
+		cvRemove: string;
+		cvView: string;
+		cvRemoveConfirm: string;
+		cvHint: string;
+		senderLabel: string;
+		senderHint: string;
+		senderName: string;
+		senderStreet: string;
+		senderCity: string;
+		senderEmail: string;
+		senderPhone: string;
+		placeholderSenderName: string;
+		placeholderSenderStreet: string;
+		placeholderSenderCity: string;
+		placeholderSenderEmail: string;
+		placeholderSenderPhone: string;
 		title: string;
 		subtitle: string;
 		remindersTitle: string;
@@ -266,6 +288,7 @@ export type TranslationKeys = {
 			storageKeyThemeDesc: string;
 			storageKeyLocaleDesc: string;
 			storageKeyColorsDesc: string;
+			storageKeyProfileDesc: string;
 			storageKeyNotifiedDesc: string;
 			noTrackingTitle: string;
 			noTrackingBody: string;

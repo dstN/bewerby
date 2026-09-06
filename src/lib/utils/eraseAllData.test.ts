@@ -77,6 +77,12 @@ beforeEach(() => {
 	localStorage.setItem('bewerby-theme', 'dark');
 	localStorage.setItem('bewerby-locale', 'en');
 	localStorage.setItem('bewerby_notified_1_123', 'true');
+	// The profile carries the applicant's own name, address, e-mail and phone,
+	// so it is exactly the kind of thing right-to-erasure must not leave behind.
+	localStorage.setItem(
+		'bewerby-profile',
+		JSON.stringify({ senderName: 'Petra Musterfrau', cvRef: 'cv-1.pdf' })
+	);
 });
 
 afterEach(() => {
@@ -104,6 +110,13 @@ describe('eraseAllData', () => {
 		const { eraseAllData } = await loadEraser();
 		await eraseAllData();
 		expect(removedOpfsEntries).toEqual([]);
+	});
+
+	it('leaves no trace of the applicant profile behind', async () => {
+		expect(localStorage.getItem('bewerby-profile')).not.toBeNull();
+		const { eraseAllData } = await loadEraser();
+		await eraseAllData();
+		expect(localStorage.getItem('bewerby-profile')).toBeNull();
 	});
 
 	it('clears every localStorage key, including settings and reminder markers', async () => {

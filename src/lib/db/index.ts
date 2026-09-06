@@ -33,6 +33,14 @@ export interface Application {
 	location?: string;
 	/** The employer's own reference for the posting ("Referenz-Nr.", "Kennziffer"). */
 	referenceNumber?: string;
+	/** The cover letter for this application, as Markdown. */
+	coverLetter?: string;
+	/**
+	 * OPFS file name of a CV specific to this application. When unset the
+	 * global one from the profile store is used instead.
+	 */
+	cvRef?: string;
+	cvName?: string;
 }
 
 /** Pre-v2 shape, kept only so the migration below can read old rows. */
@@ -145,6 +153,9 @@ export function isValidApplication(value: unknown): value is Application {
 		// Added after the format-2 backups shipped, so they must stay optional -
 		// requiring them here would make every existing export fail to import.
 		(app.location === undefined || typeof app.location === 'string') &&
-		(app.referenceNumber === undefined || typeof app.referenceNumber === 'string')
+		(app.referenceNumber === undefined || typeof app.referenceNumber === 'string') &&
+		(app.coverLetter === undefined || typeof app.coverLetter === 'string') &&
+		(app.cvRef === undefined || typeof app.cvRef === 'string') &&
+		(app.cvName === undefined || typeof app.cvName === 'string')
 	);
 }

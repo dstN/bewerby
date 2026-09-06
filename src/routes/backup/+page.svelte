@@ -3,6 +3,7 @@
 	import { db } from '$lib/db/index.js';
 	import { readPdfFromOpfs, writePdfToOpfs } from '$lib/utils/opfs.js';
 	import { buildBackupPayload, parseBackupPayload, prepareImportRows } from '$lib/utils/backup.js';
+	import { profileStore } from '$lib/stores/profile.svelte.js';
 
 	// File System Access API isn't part of lib.dom.d.ts yet; declare just enough
 	// of it for the feature-detected local dump below.
@@ -29,7 +30,11 @@
 	async function exportDatabase() {
 		try {
 			const applications = await db.applications.toArray();
-			const backupData = await buildBackupPayload(applications, readPdfFromOpfs);
+			const backupData = await buildBackupPayload(
+				applications,
+				readPdfFromOpfs,
+				profileStore.value
+			);
 			const json = JSON.stringify(backupData, null, 2);
 			const blob = new Blob([json], { type: 'application/json' });
 			const url = URL.createObjectURL(blob);
@@ -68,7 +73,10 @@
 				return;
 			}
 
-			const rowsToInsert = await prepareImportRows(parsed.data, writePdfToOpfs);
+			const { rows: rowsToInsert, profile: importedProfile } = await prepareImportRows(
+				parsed.data,
+				writePdfToOpfs
+			);
 
 			// The whole write happens in one transaction, so a failure partway
 			// through (e.g. a bulkAdd constraint error) rolls back completely
@@ -79,6 +87,13 @@
 				}
 				await db.applications.bulkAdd(rowsToInsert);
 			});
+
+			// Only after the rows are committed, and only on a replace - merging
+			// into an existing setup must not silently overwrite the sender
+			// details this browser already holds. Version-2 files carry none.
+			if (importedProfile && importMode === 'replace') {
+				profileStore.replaceAll(importedProfile);
+			}
 
 			importStatus = 'backup.successImport';
 		} catch (err) {

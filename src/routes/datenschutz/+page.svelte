@@ -66,6 +66,10 @@
 						<td>{t('legal.datenschutz.storageKeyColorsDesc')}</td>
 					</tr>
 					<tr>
+						<td><code>bewerby-profile</code></td>
+						<td>{t('legal.datenschutz.storageKeyProfileDesc')}</td>
+					</tr>
+					<tr>
 						<td><code>bewerby_notified_*</code></td>
 						<td>{t('legal.datenschutz.storageKeyNotifiedDesc')}</td>
 					</tr>

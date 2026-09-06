@@ -13,6 +13,7 @@
 	import { cleanupOrphanedPdfs } from '$lib/utils/opfs.js';
 	import { requestPersistentStorage } from '$lib/utils/storage.js';
 	import { announcer } from '$lib/stores/announcer.svelte.js';
+	import { profileStore } from '$lib/stores/profile.svelte.js';
 
 	let { children } = $props();
 
@@ -62,10 +63,17 @@
 		});
 	}
 
+	// Every OPFS file that is still referenced by something. cleanupOrphanedPdfs
+	// deletes whatever is not in this set, so a ref that is missed here is data
+	// loss on the next boot - which is why the profile's global CV and the
+	// per-application CV have to be listed alongside the job ad, and why
+	// profileStore.init() runs before this does.
 	async function cleanupOrphanedPdfsOnStartup() {
 		const applications = await db.applications.toArray();
 		const validRefs = new Set(
-			applications.map((app) => app.pdfRef).filter((ref): ref is string => !!ref)
+			[...applications.flatMap((app) => [app.pdfRef, app.cvRef]), profileStore.cvRef].filter(
+				(ref): ref is string => !!ref
+			)
 		);
 		await cleanupOrphanedPdfs(validRefs);
 	}
@@ -79,6 +87,8 @@
 	onMount(() => {
 		i18n.init();
 		colorStore.init();
+		// Before the orphan sweep: it reads profileStore.cvRef.
+		profileStore.init();
 		cleanupOrphanedPdfsOnStartup();
 		requestPersistentStorage();
 		registerBackgroundSyncBestEffort();

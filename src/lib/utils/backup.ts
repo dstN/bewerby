@@ -1,6 +1,16 @@
 import { isValidApplication, type Application } from '$lib/db/index.js';
+import { parseProfile, type Profile } from '$lib/utils/profile.js';
 
-export const BACKUP_FORMAT_VERSION = 2;
+/** Written by every new export. */
+export const BACKUP_FORMAT_VERSION = 3;
+
+/**
+ * Read, not written. Version 3 only *adds* the profile block and the per-
+ * application CV, so a version-2 file is still a complete, valid backup.
+ * Rejecting it outright - as a bare equality check on the current version
+ * would - would render every backup users already exported unreadable.
+ */
+export const READABLE_BACKUP_VERSIONS = [2, 3];
 
 export interface BackupPayload {
 	version: number;
@@ -8,6 +18,8 @@ export interface BackupPayload {
 	applications: Application[];
 	/** OPFS ref -> base64-encoded PDF bytes, so an attached PDF survives the roundtrip. */
 	pdfs: Record<string, string>;
+	/** Absent in version 2 files. */
+	profile?: Profile;
 }
 
 export async function blobToBase64(blob: Blob): Promise<string> {
@@ -30,19 +42,30 @@ export function base64ToBlob(base64: string, mimeType = 'application/pdf'): Blob
 /** Gathers every application row plus the actual bytes of every attached PDF. */
 export async function buildBackupPayload(
 	applications: Application[],
-	readPdf: (ref: string) => Promise<Blob | null>
+	readPdf: (ref: string) => Promise<Blob | null>,
+	profile?: Profile
 ): Promise<BackupPayload> {
 	const pdfs: Record<string, string> = {};
+
+	// Every OPFS-backed file the backup has to carry: the job ad and the
+	// application-specific CV per row, plus the profile's global CV.
+	const refs = new Set<string>();
 	for (const app of applications) {
-		if (!app.pdfRef) continue;
-		const blob = await readPdf(app.pdfRef);
+		if (app.pdfRef) refs.add(app.pdfRef);
+		if (app.cvRef) refs.add(app.cvRef);
+	}
+	if (profile?.cvRef) refs.add(profile.cvRef);
+
+	for (const ref of refs) {
+		const blob = await readPdf(ref);
 		if (blob) {
-			pdfs[app.pdfRef] = await blobToBase64(blob);
+			pdfs[ref] = await blobToBase64(blob);
 		} else {
-			console.warn(`Backup: PDF for ${app.pdfRef} is missing from OPFS, skipping it`);
+			console.warn(`Backup: PDF for ${ref} is missing from OPFS, skipping it`);
 		}
 	}
-	return { version: BACKUP_FORMAT_VERSION, exportedAt: Date.now(), applications, pdfs };
+
+	return { version: BACKUP_FORMAT_VERSION, exportedAt: Date.now(), applications, pdfs, profile };
 }
 
 export type BackupParseResult =
@@ -65,7 +88,11 @@ export function parseBackupPayload(json: string): BackupParseResult {
 	if (!data || typeof data !== 'object') return { ok: false, error: 'format' };
 	const record = data as Record<string, unknown>;
 
-	if (record.version !== BACKUP_FORMAT_VERSION || !Array.isArray(record.applications)) {
+	if (
+		typeof record.version !== 'number' ||
+		!READABLE_BACKUP_VERSIONS.includes(record.version) ||
+		!Array.isArray(record.applications)
+	) {
 		return { ok: false, error: 'format' };
 	}
 
@@ -80,10 +107,13 @@ export function parseBackupPayload(json: string): BackupParseResult {
 	return {
 		ok: true,
 		data: {
-			version: BACKUP_FORMAT_VERSION,
+			version: record.version,
 			exportedAt: typeof record.exportedAt === 'number' ? record.exportedAt : Date.now(),
 			applications: candidateApps as Application[],
-			pdfs
+			pdfs,
+			// parseProfile re-validates field by field, so a tampered profile
+			// block degrades to an empty one rather than reaching localStorage.
+			profile: record.profile ? parseProfile(JSON.stringify(record.profile)) : undefined
 		}
 	};
 }
@@ -102,17 +132,27 @@ export function parseBackupPayload(json: string): BackupParseResult {
 export async function prepareImportRows(
 	payload: BackupPayload,
 	writePdf: (blob: Blob) => Promise<string>
-): Promise<Application[]> {
+): Promise<{ rows: Application[]; profile?: Profile }> {
 	const refRemap = new Map<string, string>();
 	for (const [oldRef, base64] of Object.entries(payload.pdfs)) {
 		const newRef = await writePdf(base64ToBlob(base64));
 		refRemap.set(oldRef, newRef);
 	}
 
-	return payload.applications.map((app) => {
+	const rows = payload.applications.map((app) => {
 		const row: Application = { ...app };
 		delete row.id;
 		row.pdfRef = row.pdfRef ? refRemap.get(row.pdfRef) : undefined;
+		row.cvRef = row.cvRef ? refRemap.get(row.cvRef) : undefined;
 		return row;
 	});
+
+	const profile = payload.profile
+		? {
+				...payload.profile,
+				cvRef: payload.profile.cvRef ? refRemap.get(payload.profile.cvRef) : undefined
+			}
+		: undefined;
+
+	return { rows, profile };
 }

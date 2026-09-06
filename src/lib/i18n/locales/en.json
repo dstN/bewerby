@@ -210,7 +210,29 @@
 		"privacyItem2Desc": "There is no central database. No registration required.",
 		"privacyItem3Title": "Offline-First",
 		"privacyItem3Desc": "Bewerby works completely offline. The application can be installed as a PWA on desktop or smartphone.",
-		"privacyPolicyLink": "View the full privacy policy"
+		"privacyPolicyLink": "View the full privacy policy",
+		"documentsTitle": "Application documents",
+		"documentsDesc": "Store your CV once instead of uploading it with every application. Like everything else, it stays on this device.",
+		"cvLabel": "CV",
+		"cvNone": "No CV stored yet.",
+		"cvUpload": "Upload CV (PDF)",
+		"cvReplace": "Replace",
+		"cvRemove": "Remove",
+		"cvView": "View",
+		"cvRemoveConfirm": "Remove the stored CV?",
+		"cvHint": "Used for every application that has no CV of its own.",
+		"senderLabel": "Sender details",
+		"senderHint": "Shown in the letterhead of the generated cover letter.",
+		"senderName": "Name",
+		"senderStreet": "Street and number",
+		"senderCity": "Postcode and city",
+		"senderEmail": "Email",
+		"senderPhone": "Phone",
+		"placeholderSenderName": "First name Last name",
+		"placeholderSenderStreet": "1 Example Road",
+		"placeholderSenderCity": "12345 Exampletown",
+		"placeholderSenderEmail": "name@example.com",
+		"placeholderSenderPhone": "+49 30 12345678"
 	},
 	"legal": {
 		"impressum": {
@@ -232,7 +254,7 @@
 			"storageIndexedDbTitle": "IndexedDB (database \"bewerby-db\")",
 			"storageIndexedDbDesc": "Holds every application record: job title, company, contact details, notes, priority, status, tags, dates, and the history of status changes.",
 			"storageOpfsTitle": "Origin Private File System (OPFS)",
-			"storageOpfsDesc": "Holds the binary content of uploaded cover-letter PDFs. Each application only references a file name in this storage.",
+			"storageOpfsDesc": "Holds the binary data of uploaded PDFs: job ads, the stored CV, and optionally a separate CV per application. Each application only references a file name in this store.",
 			"storageLocalTitle": "localStorage",
 			"storageLocalDesc": "Holds only strictly technical, non-personal settings: your chosen color theme, chosen language, custom color labels, and internal markers for which reminders have already been shown. Since these entries are purely functional and serve no tracking purpose, no cookie consent is required for them.",
 			"storageTableKeyHeader": "Key",
@@ -251,7 +273,8 @@
 			"contactFormBody": "If you use the contact form, your name, email address, and message are forwarded by email to the controller. This is processed by a script on infrastructure the controller also operates themselves - not by a third party. It is not stored in a database, only delivered by email. The legal basis is Art. 6(1)(f) GDPR (legitimate interest in responding to your inquiry).",
 			"contactRightsTitle": "Contact for inquiries",
 			"changesTitle": "Changes to this policy",
-			"changesBody": "This policy will be updated whenever the actual data processing changes."
+			"changesBody": "This policy will be updated whenever the actual data processing changes.",
+			"storageKeyProfileDesc": "Sender details for the cover letter (name, address, email, phone) and the reference to the stored CV"
 		},
 		"nutzungsbedingungen": {
 			"title": "Terms of Use",
