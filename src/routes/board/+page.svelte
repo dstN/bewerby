@@ -5,6 +5,7 @@
 	import { db, type Application } from '$lib/db/index.js';
 	import { t, i18n } from '$lib/i18n/index.svelte.js';
 	import ApplicationModal from '$lib/components/kanban/ApplicationModal.svelte';
+	import ApplicationDispatchDialog from '$lib/components/application/ApplicationDispatchDialog.svelte';
 	import { colorStore } from '$lib/stores/colors.svelte.js';
 	import { deletePdfFromOpfs } from '$lib/utils/opfs.js';
 	import { announcer } from '$lib/stores/announcer.svelte.js';
@@ -121,6 +122,12 @@
 		selectedApp = null;
 		modalInitialStatus = status;
 		showModal = true;
+	}
+
+	let dispatchApp = $state<Application | null>(null);
+
+	function openDispatch(app: Application) {
+		dispatchApp = app;
 	}
 
 	function openEditModal(app: Application) {
@@ -450,6 +457,25 @@
 									{/each}
 								</select>
 								<button
+									class="btn-card-dispatch"
+									onclick={(e) => {
+										e.stopPropagation();
+										openDispatch(app);
+									}}
+									aria-label={t('dispatch.open')}
+									title={t('dispatch.open')}
+								>
+									<svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+										<path
+											d="M4 6h16v12H4zM4 7l8 6 8-6"
+											stroke="currentColor"
+											stroke-width="1.5"
+											stroke-linecap="round"
+											stroke-linejoin="round"
+										/>
+									</svg>
+								</button>
+								<button
 									class="btn-card-delete"
 									onclick={(e) => {
 										e.stopPropagation();
@@ -474,6 +500,10 @@
 			</div>
 		{/each}
 	</div>
+
+	{#if dispatchApp}
+		<ApplicationDispatchDialog application={dispatchApp} onclose={() => (dispatchApp = null)} />
+	{/if}
 
 	<!-- Modal -->
 	{#if showModal}
@@ -941,6 +971,26 @@
 		padding: 3px 4px;
 		max-width: 90px;
 		cursor: pointer;
+	}
+
+	.btn-card-dispatch {
+		border: none;
+		background: transparent;
+		color: var(--text-tertiary);
+		cursor: pointer;
+		padding: 4px;
+		border-radius: var(--radius-sm);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		transition:
+			background-color var(--duration-fast) ease,
+			color var(--duration-fast) ease;
+	}
+
+	.btn-card-dispatch:hover {
+		background-color: var(--surface-2);
+		color: var(--color-accent-text);
 	}
 
 	.btn-card-delete {

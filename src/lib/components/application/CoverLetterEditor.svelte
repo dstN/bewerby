@@ -108,7 +108,7 @@
 			<!-- A plain region, deliberately not aria-live: announcing the preview
 			     on every keystroke would make the editor unusable with a screen
 			     reader, and the textarea already reports what was typed. -->
-			<h4 id="{id}-preview-heading">{t('coverLetter.previewHeading')}</h4>
+			<h3 id="{id}-preview-heading">{t('coverLetter.previewHeading')}</h3>
 			<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 			<!-- The pane scrolls once a letter grows past its max-height, and a
 			     scroll container with no focusable child is unreachable by
@@ -173,7 +173,7 @@
 	}
 
 	.pane label,
-	.pane h4 {
+	.pane h3 {
 		margin: 0 0 4px;
 		font-size: 12px;
 		font-weight: 500;

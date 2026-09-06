@@ -97,6 +97,21 @@ for (const viewport of PHONE_VIEWPORTS) {
 			expect(await overflowingElements(page)).toEqual([]);
 		});
 
+		test('the dispatch dialog keeps all content inside the viewport', async ({ page }) => {
+			await page.goto('/board');
+			await page.getByRole('button', { name: 'Bewerbung hinzufügen' }).click();
+			const modal = page.locator('dialog.modal-content');
+			await modal.locator('#title').fill('Pflegefachkraft');
+			await modal.locator('#company').fill('Klinikum Musterstadt gGmbH');
+			await modal.getByRole('button', { name: 'Speichern' }).click();
+			await expect(modal).toBeHidden();
+
+			await page.getByRole('button', { name: 'Bewerbung vorbereiten' }).first().click();
+			await expect(page.locator('dialog.dispatch-dialog')).toBeVisible();
+			await settled(page);
+			expect(await overflowingElements(page)).toEqual([]);
+		});
+
 		test('the document itself never scrolls sideways', async ({ page }) => {
 			await page.goto('/');
 			await seedApplications(page, representativeBoard());

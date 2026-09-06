@@ -126,6 +126,25 @@ for (const theme of ['light', 'dark'] as const) {
 			await expectNoViolations(page);
 		});
 
+		test('the dispatch dialog has no violations', async ({ page }) => {
+			await gotoWithTheme(page, '/board', theme);
+			await seedApplications(page, representativeBoard());
+			await expect(page.locator('.card').first()).toBeVisible();
+
+			await page.getByRole('button', { name: 'Bewerbung vorbereiten' }).first().click();
+			const dispatch = page.locator('dialog.dispatch-dialog');
+			await expect(dispatch).toBeVisible();
+
+			// With a letter written, the Markdown preview is rendered too - an
+			// empty dialog would skip that half of the component.
+			await dispatch
+				.locator('#dispatch-letter')
+				.fill(['Guten Tag,', '', '- **Punkt eins**', '- Punkt zwei'].join('\n'));
+			await expect(dispatch.locator('.preview strong')).toBeVisible();
+
+			await expectNoViolations(page);
+		});
+
 		test('the date picker popover has no violations', async ({ page }) => {
 			await gotoWithTheme(page, '/board', theme);
 			await page.getByRole('button', { name: 'Bewerbung hinzufügen' }).click();
