@@ -100,6 +100,12 @@
 		if (!file) return;
 
 		error = null;
+		// Each upload writes a new OPFS file, so replacing the CV a second time
+		// within one dialog session used to strand the one in between: persist()
+		// only ever deletes `originalCvRef`, the file the row pointed at when the
+		// dialog opened. The boot sweep collected them eventually, but until then
+		// they were bytes on disk with no owner.
+		const superseded = cvRef;
 		try {
 			await validatePdfFile(file);
 			cvRef = await writePdfToOpfs(file);
@@ -107,6 +113,12 @@
 		} catch (err) {
 			const code = err instanceof PdfProcessingError ? err.code : undefined;
 			error = code ? t(PDF_ERROR_KEYS[code]) : t('dispatch.errorGenerate');
+			return;
+		}
+		// Deliberately not `originalCvRef`: that one is still referenced by the
+		// stored row and is persist()'s to delete, once the new reference is safe.
+		if (superseded && superseded !== originalCvRef) {
+			await deletePdfFromOpfs(superseded);
 		}
 	}
 
