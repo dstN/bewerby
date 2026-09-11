@@ -61,7 +61,9 @@ export function getReminderDueAt(app: Application): number | null {
 	// than a wrong one.
 	if (!intervalMs) return null;
 
-	const sentEvent = app.history.find((h) => h.status === 'sent');
+	// Same guard as in analytics.ts: a row missing `history` should fall back
+	// to appliedAt/createdAt below, not take the reminder engine down with it.
+	const sentEvent = (app.history ?? []).find((h) => h.status === 'sent');
 	const anchor = sentEvent?.timestamp ?? app.appliedAt ?? app.createdAt;
 	return anchor + intervalMs;
 }

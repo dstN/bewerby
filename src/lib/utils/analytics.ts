@@ -52,10 +52,13 @@ export function computeApplicationStats(list: AnalyticsRow[]): ApplicationStats 
 
 		// Calculate response time from history log
 		// Time from 'sent' -> first 'interview' or 'rejected'
-		const sentEvent = app.history.find((h) => h.status === 'sent');
-		const responseEvent = app.history.find(
-			(h) => h.status === 'interview' || h.status === 'rejected'
-		);
+		// `history` is required on the type, but a row written past TypeScript
+		// (a hand-edited record, a put() with a partial object) can arrive
+		// without it — and one such row used to throw here and take the whole
+		// statistics page down rather than just counting as having no events.
+		const history = app.history ?? [];
+		const sentEvent = history.find((h) => h.status === 'sent');
+		const responseEvent = history.find((h) => h.status === 'interview' || h.status === 'rejected');
 
 		if (sentEvent && responseEvent && responseEvent.timestamp > sentEvent.timestamp) {
 			const durationDays = (responseEvent.timestamp - sentEvent.timestamp) / (1000 * 60 * 60 * 24);

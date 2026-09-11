@@ -428,9 +428,11 @@
 		if (!application) {
 			history = [{ status, timestamp: status === 'sent' ? parsedAppliedAt : now }];
 		} else if (statusChanged) {
-			history = [...application.history, { status, timestamp: now }];
+			// `?? []` on both branches: saving a row that somehow lost its history
+			// repairs it into a valid empty log instead of writing undefined back.
+			history = [...(application.history ?? []), { status, timestamp: now }];
 		} else {
-			history = application.history;
+			history = application.history ?? [];
 		}
 
 		const appData: Omit<Application, 'id'> = {

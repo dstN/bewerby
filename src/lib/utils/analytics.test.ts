@@ -20,6 +20,18 @@ describe('computeApplicationStats', () => {
 		expect(stats.response).toEqual({ avg: 0, best: 0, worst: 0, count: 0 });
 	});
 
+	it('survives a row whose history field is missing', () => {
+		// Not reachable through the UI, but a record written past TypeScript can
+		// arrive like this — a put() with a partial object replaces the row and
+		// drops every field it omits. One such row used to throw inside .find()
+		// and take the whole statistics page down.
+		const broken = { status: 'sent' } as unknown as AnalyticsRow;
+		const stats = computeApplicationStats([broken, row('sent'), row('interview')]);
+		expect(stats.counts.sent).toBe(2);
+		expect(stats.counts.interview).toBe(1);
+		expect(stats.response.count).toBe(0);
+	});
+
 	it('counts each status independently', () => {
 		const stats = computeApplicationStats([
 			row('draft'),
