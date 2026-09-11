@@ -184,11 +184,27 @@
 		margin: 0;
 	}
 
+	/*
+	 * `table-layout: fixed` because the automatic algorithm sizes columns by their
+	 * content's minimum width, and the longest key (`bewerby_custom_colors`) has no
+	 * break opportunity — so at 320px the table ran 3px past the viewport instead
+	 * of wrapping. Only 3px, and only on Linux, where Lexend renders a shade wider
+	 * than on Windows: the reason this passed locally while failing in CI. Fixed
+	 * layout takes the widths from the header row rather than from the content, so
+	 * the outcome no longer depends on font metrics.
+	 */
 	.storage-table {
 		width: 100%;
+		table-layout: fixed;
 		border-collapse: collapse;
 		margin-top: 8px;
 		font-size: 12px;
+	}
+
+	/* The key column holds identifiers, the purpose column holds prose. Without
+	   this split the fixed algorithm would give both an equal share. */
+	.storage-table th:first-child {
+		width: 40%;
 	}
 
 	.storage-table th,
@@ -210,6 +226,9 @@
 		background-color: var(--surface-2);
 		padding: 2px 6px;
 		border-radius: var(--radius-sm);
+		/* Storage keys are single unbroken tokens, so without this they would
+		   overflow their column however wide the column is told to be. */
+		overflow-wrap: anywhere;
 	}
 
 	.legal-card address {
