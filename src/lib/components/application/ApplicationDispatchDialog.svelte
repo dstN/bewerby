@@ -116,13 +116,23 @@
 	}
 
 	async function persist() {
-		if (!application.id) return;
-		await db.applications.update(application.id, {
+		// Both of these used to pass silently. `id` is optional on Application,
+		// so a row that never reached the database returned here and the caller
+		// went on to report success; and Dexie's update() resolves with the
+		// number of rows it changed rather than rejecting, so a key matching
+		// nothing is a no-op that looks exactly like a successful write.
+		if (!application.id) {
+			throw new Error('The application has no id, so there is no row to update.');
+		}
+		const changed = await db.applications.update(application.id, {
 			coverLetter,
 			cvRef,
 			cvName,
 			updatedAt: Date.now()
 		});
+		if (changed === 0) {
+			throw new Error(`No application row matched id ${application.id}.`);
+		}
 		// Only once the row points at the new file: deleting first would orphan
 		// a live reference if the write had failed.
 		if (originalCvRef && originalCvRef !== cvRef) {
@@ -131,7 +141,17 @@
 	}
 
 	async function save() {
-		await persist();
+		error = null;
+		try {
+			await persist();
+		} catch (err) {
+			// Staying open matters: the cover letter and the uploaded CV only live
+			// in this component's state until the write lands, so closing on a
+			// failed save is what actually loses them.
+			console.error('Saving the dispatch dialog failed:', err);
+			error = t('dispatch.errorSave');
+			return;
+		}
 		announcer.announce(t('dispatch.saved'));
 		close();
 	}

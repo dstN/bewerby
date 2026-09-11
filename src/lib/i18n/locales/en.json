@@ -403,6 +403,7 @@
 		"downloaded": "PDF downloaded.",
 		"save": "Save",
 		"saved": "Saved.",
+		"errorSave": "Saving failed. Your changes are still here, try again.",
 		"close": "Close"
 	}
 }

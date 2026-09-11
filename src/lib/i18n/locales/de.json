@@ -403,6 +403,7 @@
 		"downloaded": "PDF heruntergeladen.",
 		"save": "Speichern",
 		"saved": "Gespeichert.",
+		"errorSave": "Speichern fehlgeschlagen. Die Änderungen sind noch da, versuch es erneut.",
 		"close": "Schließen"
 	}
 }
