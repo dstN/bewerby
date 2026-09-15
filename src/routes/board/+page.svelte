@@ -179,7 +179,9 @@
 		draggedId = id;
 		if (event.dataTransfer) {
 			event.dataTransfer.effectAllowed = 'move';
-			event.dataTransfer.setData('text/plain', id.toString());
+			// Firefox will not start a drag whose dataTransfer is empty. The
+			// payload is never read back - see handleDrop.
+			event.dataTransfer.setData('text/plain', String(id));
 		}
 	}
 
@@ -192,7 +194,13 @@
 	// select, so both mausfreie and mouse paths move a card identically.
 	async function moveApp(id: number, targetStatus: Status) {
 		const app = ($applicationsStore ?? []).find((a) => a.id === id);
-		if (!app || app.status === targetStatus) return;
+		if (!app) {
+			// A move that does nothing and says nothing looks exactly like a
+			// dead drop target - name the row instead.
+			console.warn(`Cannot move application ${String(id)}: no row with that id`);
+			return;
+		}
+		if (app.status === targetStatus) return;
 
 		const now = Date.now();
 		const currentHistory = $state.snapshot(app.history) || [];
@@ -218,10 +226,17 @@
 		event.preventDefault();
 		activeDragOverColumn = null;
 
-		const idStr = event.dataTransfer?.getData('text/plain') || draggedId?.toString();
-		if (!idStr) return;
+		// The id comes from the dragstart this page saw, not from dataTransfer.
+		// Reading it back as text and parseInt()ing it used to break silently
+		// for every key that is not a plain integer - a row written past
+		// TypeScript (see analytics.ts) has one - and matched a stray text
+		// drop from any other window against a card by accident. draggedId is
+		// the row key exactly as the status <select> hands it to moveApp().
+		const id = draggedId;
+		draggedId = null;
+		if (id === null) return;
 
-		await moveApp(parseInt(idStr, 10), targetStatus);
+		await moveApp(id, targetStatus);
 	}
 
 	async function handleStatusSelect(event: Event, id: number) {
