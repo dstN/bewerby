@@ -93,6 +93,7 @@
 			76185 Karlsruhe<br />
 			Deutschland
 		</address>
+		<p>{t('legal.datenschutz.hostingProcessing')}</p>
 	</section>
 
 	<section class="legal-card">

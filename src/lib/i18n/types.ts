@@ -344,6 +344,7 @@ export type TranslationKeys = {
 			noTrackingBody: string;
 			hostingTitle: string;
 			hostingBody: string;
+			hostingProcessing: string;
 			rightsTitle: string;
 			rightsBody: string;
 			contactFormTitle: string;
