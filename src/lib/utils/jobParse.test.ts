@@ -1,7 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
-import { parseJobDocument, parseJobDetailsFromText, type ParsedJobInfo } from './jobParse.js';
+import {
+	parseJobDocument,
+	parseJobDetailsFromText,
+	parseJobText,
+	type ParsedJobInfo
+} from './jobParse.js';
 import type { DocLine, JobDocument } from './jobText.js';
 
 const FIXTURE_DIR = path.join(process.cwd(), 'src/lib/utils/fixtures/job-postings');
@@ -183,6 +188,33 @@ describe('parseJobDocument - independent of the profession', () => {
 
 		expect(info.title).toBe('Pflegefachkraft (m/w/d)');
 		expect(info.company).toBe('Musterbetrieb GmbH');
+	});
+});
+
+describe('parseJobText', () => {
+	it('carries the per-field confidence through, which the review panel needs', () => {
+		const result = parseJobText(
+			[
+				'Musterbetrieb GmbH',
+				'Wir suchen eine/n',
+				'Pflegefachkraft (m/w/d)',
+				'Ansprechpartner: Frau Anna Muster',
+				'E-Mail: bewerbung@musterbetrieb.de'
+			].join('\n')
+		);
+
+		expect(result.info.contactEmail).toBe('bewerbung@musterbetrieb.de');
+		expect(result.confidence.contactEmail).toBe('high');
+		// The invariant the panel relies on: no confidence without a value.
+		for (const field of Object.keys(result.confidence)) {
+			expect(result.info[field as keyof typeof result.info]).not.toBe('');
+		}
+	});
+
+	it('returns an empty result for text that carries nothing, rather than throwing', () => {
+		const result = parseJobText('   ');
+		expect(result.info.company).toBe('');
+		expect(result.confidence).toEqual({});
 	});
 });
 

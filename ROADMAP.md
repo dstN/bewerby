@@ -702,6 +702,130 @@ Nach der Korrektur: **0 axe-Verstöße** über die gesamte Scan-Matrix (Routen �
 
 ---
 
+---
+
+## Nach v1.2.0 — Nachweis-Export, Erinnerungen und Anzeigen-Import (v1.3.0)
+
+Ohne eigenes GitHub-Issue, auf Nutzerwunsch direkt umgesetzt — aus demselben
+Grund wie #37 und die v1.1.0-Härtung hier dokumentiert: nichts soll
+stillschweigend passieren.
+
+**Auslöser:** Drei Aufträge aus der Praxis — (1) ein Export, mit dem sich
+Bewerbungen bei der Agentur für Arbeit nachweisen lassen, (2) eine Frage zum
+Erinnerungsverhalten, aus der eine Änderung wurde, (3) der offene Punkt aus
+`.agents/plans/issues.md`: Import nicht nur per PDF.
+
+### A — Nachweis der Bewerbungsbemühungen als PDF und CSV
+
+**Ist:** Die Daten für einen Vermittlungsnachweis lagen vollständig im Board,
+waren aber nur abzuschreiben.
+
+**Umgesetzt:** Zwei Buttons in der Board-Kopfzeile. Beide Formate rendern aus
+**einer** Funktion (`toExportRows` in `src/lib/utils/applicationExport.ts`),
+damit sie sich über Datum, Reihenfolge und Status-Wortlaut nicht uneinig
+werden können. Exportiert wird, was die Filterleiste gerade zeigt.
+
+- **CSV**: `;`-getrennt, CRLF, mit UTF-8-BOM — das ist, was ein deutsches
+  Excel per Doppelklick korrekt öffnet. Komma-getrennt landet dort alles in
+  Spalte A, ohne BOM ist jeder Umlaut Mojibake. Zellen, die mit `=`, `+`,
+  `-` oder `@` beginnen, werden mit einem Apostroph entschärft: Die Datei
+  wird von jemand anderem auf einem unbekannten Rechner geöffnet, und der
+  Inhalt stammt aus einer geparsten Anzeige.
+- **PDF** (`applicationListPdf.ts`): A4-Tabelle, Kopfzeile auf jeder Seite
+  wiederholt, Seitennummerierung — bei einem Papiernachweis soll auffallen,
+  wenn ein Blatt fehlt. pdf-lib wird dynamisch importiert wie in
+  `coverLetterPdf.ts`, die Seitengeometrie von dort geteilt statt kopiert.
+
+Das Datum ist `getAppliedAt()` aus `reminders.ts` — derselbe Anker, ab dem
+die Wiedervorlage zählt. „Wann habe ich mich beworben" darf nicht zwei
+verschiedene Daten haben.
+
+**Bewusst nicht gebaut:** echtes `.xlsx`. Das bräuchte SheetJS (~600 KB
+Fremdcode) oder rund 100 Zeilen ZIP-Plumbing von Hand, um eine Datei zu
+erzeugen, die dasselbe zeigt wie die CSV.
+
+### B — Erinnerungen: absoluter Termin statt Intervall ab Bewerbungsdatum
+
+**Ist (Frage des Nutzers, am Code geprüft):** Eine Erinnerung feuerte genau
+einmal; `bewerby_notified_<id>_<dueAt>` in `localStorage` sperrte die
+Wiederholung. Ein geändertes Intervall wurde weiterhin **ab dem
+Bewerbungsdatum** gerechnet — 7d → 14d bei einer 20 Tage alten Bewerbung war
+also sofort fällig statt in 14 Tagen.
+
+**Umgesetzt:** Neues optionales Feld `reminderAt` (absoluter Zeitstempel).
+`getReminderDueAt` liest es, wenn vorhanden, und fällt sonst auf die
+bisherige Intervall-Rechnung zurück — Zeilen aus älteren Builds verhalten
+sich unverändert. Im Modal setzt eine Intervalländerung `Date.now() +
+Intervall`; die neue Option „Eigenes Datum" öffnet den vorhandenen
+`DatePicker`. Ein Speichern, das das Intervall nicht anfasst, lässt einen
+fälligen Termin in Ruhe — das war schon vorher die Regel und bleibt es.
+
+### C — Anzeigen-Import per Freitext und per Link
+
+**Ist:** Import ging nur über ein PDF. Der offene Punkt fragte zusätzlich
+nach Freitext und nach URL-Import.
+
+**Umgesetzt, beides.** Drei Wege, ein Parser, ein Review-Panel — kein Weg
+kann ein Feld schreiben, nach dem ein anderer gefragt hätte.
+
+- **Freitext**: `parseJobText` (neuer Einstiegspunkt in `jobParse.ts`, gibt
+  anders als `parseJobDetailsFromText` die Confidence mit zurück).
+- **Link**: `POST /api/fetch-ad`, die einzige Route mit `prerender = false`.
+  schema.org-`JobPosting`-JSON-LD wird zuerst gelesen und mit `high`
+  markiert — das sind Arbeitgeberdaten, keine Heuristik —, sonst der
+  Seitentext.
+
+**Zum Datenschutz, nachdem der erste Einwand dagegen teilweise falsch war:**
+Die CSP braucht **keine** Aufweitung, weil der Browser nur mit `'self'`
+spricht; und der Arbeitgeber sieht die IP unseres Servers statt der des
+Nutzers, gegenüber dem direkten Öffnen des Links also _weniger_ Preisgabe.
+Richtig bleibt: Der Server erfährt den Link. Gegenmaßnahmen: Link nur im
+POST-Body (nie in der Query, also nie im Apache-Log), nichts gespeichert
+oder gecacht, Feature optional, Offenlegung in der Datenschutzerklärung nach
+Art. 6 Abs. 1 lit. b DSGVO in beiden Locales.
+
+**Sicherheit (der tragende Teil):** `src/lib/server/urlGuard.ts`, unter
+`$lib/server`, damit SvelteKit ihn gar nicht erst in Client-Code bündeln
+kann. Nur `https:`, keine eingebetteten Credentials, **alle** aufgelösten
+Adressen müssen öffentlich sein (ein Host mit einer öffentlichen _und_ einer
+privaten Antwort käme sonst durch), IPv4-mapped IPv6 wird nach den
+IPv4-Regeln beurteilt. Redirects werden von Hand verfolgt und **pro Hop neu
+geprüft** — ein öffentlicher Host, der `302 http://127.0.0.1:8443`
+antwortet, hebelt eine einmalige Prüfung sonst komplett aus. Dazu 8 s
+Timeout, 3 Redirects, 2 MB inkrementell gelesen, ein einziger Fehlerstatus
+nach oben (401/403/404 zu unterscheiden ist genau die Sonde, die ein
+SSRF-Versuch zurückhaben will) und ein Rate-Limit pro IP.
+
+**Bekannte Restlücke, benannt statt wegdefiniert:** DNS prüfen und `fetch()`
+danach erneut auflösen lassen ist ein TOCTOU-Fenster (DNS-Rebinding).
+`assertPublicUrl` gibt die geprüften Adressen bereits zurück, damit die
+Verbindung später über einen eigenen Dispatcher daran gebunden werden kann.
+
+**Gegen echte Seiten gemessen:** Arbeitsagentur, StepStone und LinkedIn
+liefern eine lesbare Seite; **Indeed blockiert** automatisierte Abrufe (403).
+Seiten, die ihre Anzeige rein clientseitig rendern, liefern nur die Hülle.
+Jeder Fehlerfall verweist auf das Einfügefeld, das deshalb darunter stehen
+bleibt statt ersetzt zu werden.
+
+### Unterwegs gefunden und mitbehoben
+
+- `identifier.name` („req") statt `identifier.value` als Referenznummer
+  gelesen — schema.org' `PropertyValue` trägt das Label in `name`.
+- `<b>Svelte</b>.` wurde beim Tag-Strippen zu „Svelte ."; Leerzeichen vor
+  Satzzeichen werden jetzt entfernt.
+- Der neue Einfügen-Button hatte im Dark Mode 2,7:1 Kontrast
+  (`--color-accent-600` ist für weiße Schrift _darauf_ gedacht) — jetzt
+  `--color-accent-text`.
+- Ein E2E-Locator matchte „Anzeigen" als Teilstring des neuen Labels
+  „Stattdessen Anzeigentext einfügen"; jetzt `exact`.
+
+**Verifikation:** `npm run lint`, `npm run check`, `npx vitest run`
+(405/405) und `npx playwright test` (133/133, keine Flakes) laufen
+fehlerfrei durch. Der SSRF-Guard wurde zusätzlich gegen den laufenden
+Produktionsbuild geprüft (`tests/e2e/fetch-ad.spec.ts`), der Listen-PDF-Renderer
+gegen einen echten Render über 90 Zeilen: 3 Seiten, Kopfzeile je Seite bei
+y=775, letzte Datenzeile bei y=87, Fußzeile bei y=44,7 — keine Kollision.
+
 ## Verifikation für v1
 
 - `npm run lint` und `npm run check` laufen fehlerfrei durch.

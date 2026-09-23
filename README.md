@@ -1,15 +1,17 @@
 # bewerby
 
-A privacy-first job application tracker. Kanban board, PDF autofill,
-analytics, backups, and follow-up reminders — all running entirely in your
-browser, with nothing sent to a server.
+A privacy-first job application tracker. Kanban board, job-ad autofill,
+analytics, backups, proof-of-applications export and follow-up reminders —
+all running in your browser, with your application data never leaving it.
 
 ## Why
 
 - **Local-only by construction.** Every application, PDF, and setting lives
   in this browser's IndexedDB and OPFS. There is no account, no backend
-  database, and no analytics/telemetry - see [ARCHITECTURE.md](ARCHITECTURE.md)
-  for exactly where data lives and why.
+  database, and no analytics/telemetry. The single server endpoint that
+  exists, the optional job-ad link import, receives one public URL and
+  stores nothing - see [ARCHITECTURE.md](ARCHITECTURE.md) for exactly where
+  data lives, what that endpoint does, and why.
 - **Offline-first PWA.** Installable, and every route keeps working without a
   network connection once it's been loaded once.
 - **German/English UI**, switchable at any time.
@@ -18,24 +20,34 @@ browser, with nothing sent to a server.
 
 - Kanban board (draft → sent → interview → accepted/rejected) with both
   drag-and-drop and a keyboard/touch-friendly per-card status control.
-- PDF autofill: upload a job posting or cover letter and key fields
-  (company, title, contact details) are extracted automatically via
-  best-effort text heuristics.
+- Three ways to fill in a posting, all feeding the same review panel so
+  nothing is written without being shown first: upload the **PDF**, **paste
+  the ad's text**, or **give it a link** - the last one fetched server-side
+  through `/api/fetch-ad`, which reads schema.org `JobPosting` data when the
+  page has it. That endpoint receives one public URL and nothing else; see
+  [ARCHITECTURE.md](ARCHITECTURE.md) for what it does and does not give away.
 - Analytics: funnel/conversion rates and response-time stats.
+- Proof of applications for the Agentur für Arbeit: date, company and status
+  of everything currently on the board, as a print-ready **PDF** or a
+  **CSV** a German Excel opens correctly.
 - Backup & restore: JSON export/import (attached PDFs included), plus an
   optional local-directory dump via the File System Access API.
-- Configurable follow-up reminders via the Notifications API.
+- Follow-up reminders via the Notifications API - a fixed interval, or a
+  date you pick yourself. Changing the interval restarts the countdown from
+  that moment, not from the day you applied.
 - One-button right to erasure: wipes IndexedDB, OPFS, localStorage, caches,
   and any pending notifications.
 
 ## Tech stack
 
-- SvelteKit 2 / Svelte 5 (runes), fully client-rendered
-  (`ssr = false`, `prerender = true` - see [ARCHITECTURE.md](ARCHITECTURE.md))
+- SvelteKit 2 / Svelte 5 (runes). Every _page_ is client-rendered and
+  prerendered (`ssr = false`, `prerender = true`); the sole exception is the
+  `/api/fetch-ad` endpoint - see [ARCHITECTURE.md](ARCHITECTURE.md)
 - [Dexie](https://dexie.org/) 4 over IndexedDB for application data; OPFS for
   attached PDFs
 - [pdf.js](https://mozilla.github.io/pdf.js/) for client-side PDF text
-  extraction
+  extraction, [pdf-lib](https://pdf-lib.js.org/) (dynamically imported) for
+  generating cover letters and the proof-of-applications list
 - Hand-written CSS with design tokens (`src/app.css`) - no CSS framework
 - `@sveltejs/adapter-node`, deployed via a small Phusion Passenger-compatible
   entry point (`app.cjs`) - see [DEPLOYMENT.md](DEPLOYMENT.md)
@@ -77,14 +89,16 @@ adding to either.
 
 ```text
 src/
-  routes/            the app's pages: kanban board (/), analytics, backup,
+  routes/            the app's pages: landing (/), board, analytics, backup,
                       settings, plus impressum/datenschutz
+    api/fetch-ad/     the one non-prerendered route: server-side job-ad fetch
   lib/
     components/       Kanban board + application dialog, layout (sidebar/
                        nav), shared UI (date picker, ...)
     db/                Dexie schema and migrations
-    utils/             PDF parsing, backup serialization, reminders,
-                       analytics, OPFS helpers
+    server/            server-only code (SSRF guard) - never bundled to a client
+    utils/             PDF/HTML parsing, backup serialization, reminders,
+                       analytics, application export, OPFS helpers
     i18n/              de/en translations + typed accessor
   service-worker.ts   offline precache and fetch strategy
 tests/e2e/            Playwright specs

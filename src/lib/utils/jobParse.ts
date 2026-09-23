@@ -466,15 +466,20 @@ export function parseJobDocument(doc: JobDocument, hints: ParseHints = {}): Pars
 }
 
 /**
- * Text-only entry point, kept for callers that have no layout information.
- * It runs the same pipeline over a document of uniform type size, which means
- * the typography signal deliberately yields nothing and the structural signals
- * carry the result on their own.
+ * Text-only entry point, for callers that have no layout information - a
+ * pasted job ad, say. It runs the same pipeline over a document of uniform
+ * type size, which means the typography signal deliberately yields nothing
+ * and the structural signals carry the result on their own.
  */
-export function parseJobDetailsFromText(text: string, hints: ParseHints = {}): ParsedJobInfo {
+export function parseJobText(text: string, hints: ParseHints = {}): ParsedJobResult {
 	const lines: DocLine[] = text
 		.split(/\r?\n/)
 		.map((line, index) => ({ page: 1, y: 10_000 - index * 12, size: 12, bold: false, text: line }));
 
-	return parseJobDocument({ text, lines, pageCount: 1 }, hints).info;
+	return parseJobDocument({ text, lines, pageCount: 1 }, hints);
+}
+
+/** The same parse, without the per-field confidence. */
+export function parseJobDetailsFromText(text: string, hints: ParseHints = {}): ParsedJobInfo {
+	return parseJobText(text, hints).info;
 }

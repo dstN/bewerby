@@ -102,6 +102,13 @@
 	</section>
 
 	<section class="legal-card">
+		<h2>{t('legal.datenschutz.adFetchTitle')}</h2>
+		<p>{t('legal.datenschutz.adFetchBody')}</p>
+		<p>{t('legal.datenschutz.adFetchStorage')}</p>
+		<p>{t('legal.datenschutz.adFetchThirdParty')}</p>
+	</section>
+
+	<section class="legal-card">
 		<h2>{t('legal.datenschutz.contactFormTitle')}</h2>
 		<p>{t('legal.datenschutz.contactFormBody')}</p>
 	</section>

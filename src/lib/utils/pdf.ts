@@ -5,6 +5,7 @@ import type { DocLine, JobDocument } from './jobText.js';
 export type { DocLine, DocBlock, JobDocument } from './jobText.js';
 export {
 	parseJobDetailsFromText,
+	parseJobText,
 	parseJobDocument,
 	type ParsedJobInfo,
 	type ParsedJobField,

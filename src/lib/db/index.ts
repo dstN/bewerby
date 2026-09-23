@@ -20,7 +20,15 @@ export interface Application {
 	status: 'draft' | 'sent' | 'interview' | 'accepted' | 'rejected';
 	tags: string[];
 	cardColor?: string;
-	reminderInterval: '24h' | '48h' | '7d' | '14d' | 'none';
+	reminderInterval: '24h' | '48h' | '7d' | '14d' | 'custom' | 'none';
+	/**
+	 * Absolute timestamp the follow-up is due at. Set whenever the user picks
+	 * an interval or a date themselves, so changing the setting restarts the
+	 * countdown from that moment instead of from the application date. Unset on
+	 * rows written before this existed - those still fall back to the
+	 * interval-from-`sent` math in $lib/utils/reminders.ts.
+	 */
+	reminderAt?: number;
 	lastReminderSent?: number;
 	appliedAt?: number;
 	createdAt: number;
@@ -104,7 +112,7 @@ export const db = new BewerbyDatabase();
 
 const VALID_STATUSES = ['draft', 'sent', 'interview', 'accepted', 'rejected'] as const;
 const VALID_PRIORITIES = ['low', 'medium', 'high'] as const;
-const VALID_REMINDER_INTERVALS = ['24h', '48h', '7d', '14d', 'none'] as const;
+const VALID_REMINDER_INTERVALS = ['24h', '48h', '7d', '14d', 'custom', 'none'] as const;
 
 function isValidStatus(value: unknown): value is Application['status'] {
 	return typeof value === 'string' && (VALID_STATUSES as readonly string[]).includes(value);
@@ -142,6 +150,7 @@ export function isValidApplication(value: unknown): value is Application {
 		(app.cardColor === undefined || typeof app.cardColor === 'string') &&
 		typeof app.reminderInterval === 'string' &&
 		(VALID_REMINDER_INTERVALS as readonly string[]).includes(app.reminderInterval) &&
+		(app.reminderAt === undefined || typeof app.reminderAt === 'number') &&
 		(app.lastReminderSent === undefined || typeof app.lastReminderSent === 'number') &&
 		(app.appliedAt === undefined || typeof app.appliedAt === 'number') &&
 		typeof app.createdAt === 'number' &&

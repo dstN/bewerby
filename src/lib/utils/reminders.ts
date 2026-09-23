@@ -33,7 +33,8 @@ export async function requestNotificationPermission(): Promise<NotificationPermi
 	return permission;
 }
 
-const INTERVAL_MS: Partial<Record<Application['reminderInterval'], number>> = {
+/** Exported so the editor can anchor a changed interval on "now" the same way. */
+export const INTERVAL_MS: Partial<Record<Application['reminderInterval'], number>> = {
 	'24h': 24 * 60 * 60 * 1000,
 	'48h': 48 * 60 * 60 * 1000,
 	'7d': 7 * 24 * 60 * 60 * 1000,
@@ -41,31 +42,54 @@ const INTERVAL_MS: Partial<Record<Application['reminderInterval'], number>> = {
 };
 
 /**
+ * When this application was actually sent: the first `sent` history entry,
+ * falling back to appliedAt and then createdAt. The reminder anchor and the
+ * "Zeitpunkt der Bewerbung" column of the Arbeitsamt export are the same
+ * date by definition, so they read it from here rather than each rebuilding
+ * the fallback chain.
+ *
+ * `history` is required on the type, but a row written past TypeScript (an
+ * old import, a hand-edited IndexedDB entry) can be missing it - see
+ * analytics.ts for the same guard.
+ */
+export function getAppliedAt(
+	app: Pick<Application, 'history' | 'appliedAt' | 'createdAt'>
+): number {
+	const sentEvent = (app.history ?? []).find((h) => h.status === 'sent');
+	return sentEvent?.timestamp ?? app.appliedAt ?? app.createdAt;
+}
+
+/**
  * The single source of truth for "when is a follow-up reminder due for this
  * application" - used by both the board's in-app alert banner and the
  * notification-firing engine below, so they can never drift out of sync with
  * each other the way two separately hand-copied interval mappings could.
  *
- * Anchored on when the application actually entered the "sent" status (the
- * first `history` entry with that status), not on `updatedAt` - editing
- * unrelated fields, changing the card color, or dragging the card without
- * changing its status must not push the follow-up date back.
+ * Reads the row's own `reminderAt` when it has one, and otherwise falls back
+ * to counting the interval from when the application entered "sent" - never
+ * from `updatedAt`, so editing an unrelated field, changing the card color,
+ * or dragging the card without changing its status can't push the follow-up
+ * date back either way.
  */
 export function getReminderDueAt(app: Application): number | null {
 	if (app.reminderInterval === 'none' || app.status === 'accepted' || app.status === 'rejected') {
 		return null;
 	}
+	// An explicit due date always wins: it is what the user last chose, either
+	// by picking a day outright or by changing the interval (which the editor
+	// anchors on the moment of the change, not on the application date).
+	if (app.reminderAt !== undefined) return app.reminderAt;
+
 	const intervalMs = INTERVAL_MS[app.reminderInterval];
 	// Falls through for any unrecognized value (e.g. data written by an older
-	// build) instead of throwing or mis-scheduling - no reminder is safer
-	// than a wrong one.
+	// build, or 'custom' on a row whose reminderAt went missing) instead of
+	// throwing or mis-scheduling - no reminder is safer than a wrong one.
 	if (!intervalMs) return null;
 
-	// Same guard as in analytics.ts: a row missing `history` should fall back
-	// to appliedAt/createdAt below, not take the reminder engine down with it.
-	const sentEvent = (app.history ?? []).find((h) => h.status === 'sent');
-	const anchor = sentEvent?.timestamp ?? app.appliedAt ?? app.createdAt;
-	return anchor + intervalMs;
+	// Rows predating reminderAt keep the original behaviour: counted from when
+	// the application entered "sent", so editing an unrelated field never
+	// pushes an already-pending follow-up back.
+	return getAppliedAt(app) + intervalMs;
 }
 
 function notifiedKey(appId: number, dueAt: number): string {

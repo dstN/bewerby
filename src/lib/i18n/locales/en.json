@@ -46,7 +46,21 @@
 		"sortDefault": "Default",
 		"sortColor": "Color",
 		"sortPriority": "Priority",
-		"sortDate": "Date"
+		"sortDate": "Date",
+		"export": {
+			"actionPdf": "Proof (PDF)",
+			"actionCsv": "Proof (CSV)",
+			"working": "Generating …",
+			"hintPdf": "Creates a print-ready list of the applications shown here for the employment agency.",
+			"hintCsv": "Downloads the applications shown here as a spreadsheet (CSV) for Excel or LibreOffice.",
+			"columnDate": "Date applied",
+			"columnCompany": "Company",
+			"columnStatus": "Status",
+			"pdfHeading": "Record of job applications",
+			"pdfGenerated": "Generated on {date} · {count} applications",
+			"pdfPage": "Page {page} of {total}",
+			"doneAnnouncement": "Exported {count} applications."
+		}
 	},
 	"application": {
 		"title": "Job Title",
@@ -108,7 +122,28 @@
 		"location": "Work location",
 		"referenceNumber": "Reference number",
 		"placeholderLocation": "e.g. Dresden",
-		"placeholderReferenceNumber": "e.g. 10001-1003492160-S"
+		"placeholderReferenceNumber": "e.g. 10001-1003492160-S",
+		"paste": {
+			"toggle": "Paste the ad text instead",
+			"label": "Job posting text",
+			"placeholder": "Paste the job posting here - together with the imprint or contact details if you have them.",
+			"hint": "Select everything on the posting page and paste it. Including the imprint and contact block helps identify the company and the contact person.",
+			"parse": "Read the text"
+		},
+		"fetch": {
+			"label": "Link to the job posting",
+			"placeholder": "https://…",
+			"parse": "Load posting",
+			"working": "Loading …",
+			"hint": "The page is loaded by our server, not from your machine - so the employer never sees your IP address. Only the link is sent, and nothing is stored.",
+			"errorUrl": "That does not look like a valid https address.",
+			"errorBlocked": "This address is not loaded, for security reasons.",
+			"errorUnreachable": "The page could not be loaded. Many large job boards block automated access - paste the posting text below instead.",
+			"errorNotHtml": "There is no web page at this address. Is it a PDF? Upload it as a file above.",
+			"errorTooLarge": "That page is too large to process.",
+			"errorRateLimited": "Too many requests in a short time. Try again later, or paste the text below.",
+			"errorOffline": "You are offline. Importing from a link needs a connection - pasting the text below works offline."
+		}
 	},
 	"datepicker": {
 		"today": "Today",
@@ -125,7 +160,11 @@
 		"hours24": "24 hours",
 		"hours48": "48 hours",
 		"days7": "7 days",
-		"days14": "14 days"
+		"days14": "14 days",
+		"custom": "Custom date",
+		"customDate": "Remind me on",
+		"customHint": "Reminds you once, exactly on that day.",
+		"intervalHint": "Counts from now whenever you change the interval - not from the date you applied."
 	},
 	"actions": {
 		"save": "Save",
@@ -275,7 +314,11 @@
 			"contactRightsTitle": "Contact for inquiries",
 			"changesTitle": "Changes to this policy",
 			"changesBody": "This policy will be updated whenever the actual data processing changes.",
-			"storageKeyProfileDesc": "Sender details for the cover letter (name, address, email, phone) and the reference to the stored CV"
+			"storageKeyProfileDesc": "Sender details for the cover letter (name, address, email, phone) and the reference to the stored CV",
+			"adFetchTitle": "Importing job postings by link",
+			"adFetchBody": "If you paste a link to a job posting into the application form and choose “Load posting”, that link alone is sent to the bewerby.de server. The server retrieves the posting and returns the extracted text to you. The legal basis is Art. 6(1)(b) GDPR, as the retrieval happens solely on your explicit request.",
+			"adFetchStorage": "The link is not stored, not cached and not logged. It travels in the request body (POST), not in the address bar, so that it does not appear in the web server’s access logs either. Those logs therefore show that the import feature was used, but not which posting was retrieved. The retention period for the access logs themselves is the one stated under “Hosting” above.",
+			"adFetchThirdParty": "The operator of the retrieved page sees the bewerby server’s IP address, not yours. Compared with opening the link directly in your browser, this discloses less about you to third parties, not more. Your application data – entries, PDFs, profile – is never transmitted; it still does not leave your device. The feature is optional: you can paste the posting text instead, in which case no retrieval happens at all."
 		},
 		"nutzungsbedingungen": {
 			"title": "Terms of Use",
@@ -334,7 +377,8 @@
 		"deleteFailed": "Delete failed. Please try again.",
 		"moveFailed": "Move failed. Please try again.",
 		"pdfSaveFailed": "Failed to save the PDF: ",
-		"pdfScanFailed": "Failed to scan the PDF: "
+		"pdfScanFailed": "Failed to scan the PDF: ",
+		"exportFailed": "The export could not be created."
 	},
 	"landing": {
 		"headline": "Your applications stay on your device.",

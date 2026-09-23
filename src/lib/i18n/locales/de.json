@@ -46,7 +46,21 @@
 		"sortDefault": "Standard",
 		"sortColor": "Farbe",
 		"sortPriority": "Priorität",
-		"sortDate": "Datum"
+		"sortDate": "Datum",
+		"export": {
+			"actionPdf": "Nachweis (PDF)",
+			"actionCsv": "Nachweis (CSV)",
+			"working": "Wird erstellt …",
+			"hintPdf": "Erstellt eine druckfertige Liste der angezeigten Bewerbungen für die Agentur für Arbeit.",
+			"hintCsv": "Lädt die angezeigten Bewerbungen als Tabelle (CSV) für Excel oder LibreOffice herunter.",
+			"columnDate": "Bewerbungsdatum",
+			"columnCompany": "Firma",
+			"columnStatus": "Status",
+			"pdfHeading": "Nachweis der Bewerbungsbemühungen",
+			"pdfGenerated": "Erstellt am {date} · {count} Bewerbungen",
+			"pdfPage": "Seite {page} von {total}",
+			"doneAnnouncement": "{count} Bewerbungen exportiert."
+		}
 	},
 	"application": {
 		"title": "Jobtitel",
@@ -108,7 +122,28 @@
 		"location": "Arbeitsort",
 		"referenceNumber": "Referenznummer",
 		"placeholderLocation": "z. B. Dresden",
-		"placeholderReferenceNumber": "z. B. 10001-1003492160-S"
+		"placeholderReferenceNumber": "z. B. 10001-1003492160-S",
+		"paste": {
+			"toggle": "Stattdessen Anzeigentext einfügen",
+			"label": "Text der Stellenanzeige",
+			"placeholder": "Stellenanzeige hier einfügen - gerne zusammen mit Impressum oder Kontaktdaten.",
+			"hint": "Alles auf der Anzeigenseite markieren und einfügen. Impressum und Kontaktblock mit hineinkopieren hilft beim Erkennen von Firma und Ansprechpartner.",
+			"parse": "Text auswerten"
+		},
+		"fetch": {
+			"label": "Link zur Stellenanzeige",
+			"placeholder": "https://…",
+			"parse": "Anzeige laden",
+			"working": "Wird geladen …",
+			"hint": "Die Seite wird über unseren Server geladen, nicht von deinem Rechner - der Arbeitgeber sieht deine IP-Adresse also nicht. Übertragen wird nur der Link, gespeichert wird nichts.",
+			"errorUrl": "Das sieht nicht nach einer gültigen https-Adresse aus.",
+			"errorBlocked": "Diese Adresse wird aus Sicherheitsgründen nicht geladen.",
+			"errorUnreachable": "Die Seite konnte nicht geladen werden. Viele große Jobbörsen sperren automatisierte Zugriffe - kopiere in dem Fall den Anzeigentext unten hinein.",
+			"errorNotHtml": "Unter dieser Adresse liegt keine Webseite. Ist es ein PDF? Dann lade es oben als Datei hoch.",
+			"errorTooLarge": "Die Seite ist zu groß zum Auswerten.",
+			"errorRateLimited": "Zu viele Abrufe in kurzer Zeit. Versuche es später noch einmal oder füge den Text unten ein.",
+			"errorOffline": "Du bist offline. Der Link-Import braucht eine Verbindung - der Anzeigentext unten funktioniert auch offline."
+		}
 	},
 	"datepicker": {
 		"today": "Heute",
@@ -125,7 +160,11 @@
 		"hours24": "24 Stunden",
 		"hours48": "48 Stunden",
 		"days7": "7 Tage",
-		"days14": "14 Tage"
+		"days14": "14 Tage",
+		"custom": "Eigenes Datum",
+		"customDate": "Erinnern am",
+		"customHint": "Es wird genau an diesem Tag einmalig erinnert.",
+		"intervalHint": "Zählt ab jetzt, sobald du das Intervall änderst - nicht ab dem Bewerbungsdatum."
 	},
 	"actions": {
 		"save": "Speichern",
@@ -275,7 +314,11 @@
 			"contactRightsTitle": "Kontakt für Anfragen",
 			"changesTitle": "Änderungen dieser Erklärung",
 			"changesBody": "Diese Erklärung wird angepasst, sobald sich an der tatsächlichen Datenverarbeitung etwas ändert.",
-			"storageKeyProfileDesc": "Absenderdaten für das Anschreiben (Name, Anschrift, E-Mail, Telefon) und der Verweis auf den hinterlegten Lebenslauf"
+			"storageKeyProfileDesc": "Absenderdaten für das Anschreiben (Name, Anschrift, E-Mail, Telefon) und der Verweis auf den hinterlegten Lebenslauf",
+			"adFetchTitle": "Import von Stellenanzeigen per Link",
+			"adFetchBody": "Wenn du im Bewerbungsformular einen Link zu einer Stellenanzeige einfügst und „Anzeige laden“ auswählst, wird ausschließlich dieser Link an den Server von bewerby.de übertragen. Der Server ruft die Anzeige dort ab und gibt dir den ausgelesenen Text zurück. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO, da der Abruf ausschließlich auf deine ausdrückliche Anforderung hin erfolgt.",
+			"adFetchStorage": "Der Link wird nicht gespeichert, nicht zwischengespeichert und nicht protokolliert. Er wird im Anfragetext (POST-Body) übertragen und nicht in der Adresszeile, damit er auch nicht in den Zugriffsprotokollen des Webservers erscheint. Aus diesen Protokollen geht also hervor, dass die Import-Funktion genutzt wurde, nicht aber, welche Stellenanzeige abgerufen wurde. Für die Zugriffsprotokolle selbst gilt die oben unter „Hosting“ genannte Speicherdauer.",
+			"adFetchThirdParty": "Der Betreiber der abgerufenen Seite sieht die IP-Adresse des bewerby-Servers, nicht deine. Gegenüber dem direkten Öffnen des Links im Browser werden damit weniger Daten über dich an Dritte übermittelt, nicht mehr. Deine Bewerbungsdaten – Einträge, PDFs, Profil – werden dabei zu keinem Zeitpunkt übertragen; sie verlassen dein Gerät nach wie vor nicht. Die Funktion ist freiwillig: Der Anzeigentext lässt sich alternativ direkt einfügen, dann findet keinerlei Abruf statt."
 		},
 		"nutzungsbedingungen": {
 			"title": "Nutzungsbedingungen",
@@ -334,7 +377,8 @@
 		"deleteFailed": "Löschen fehlgeschlagen. Bitte versuche es erneut.",
 		"moveFailed": "Verschieben fehlgeschlagen. Bitte versuche es erneut.",
 		"pdfSaveFailed": "Fehler beim Speichern der PDF: ",
-		"pdfScanFailed": "Fehler beim Scannen der PDF: "
+		"pdfScanFailed": "Fehler beim Scannen der PDF: ",
+		"exportFailed": "Der Export konnte nicht erstellt werden."
 	},
 	"landing": {
 		"headline": "Deine Bewerbungen bleiben auf deinem Gerät.",

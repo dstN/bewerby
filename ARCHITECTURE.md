@@ -19,21 +19,109 @@ pdf.js, and one currently-unused icon library), none of which do network
 I/O. This is a deliberate, verified property, not an accident - see the
 codebase audit referenced in [ROADMAP.md](ROADMAP.md).
 
-There are exactly two `fetch()` call sites, both unrelated to application
-data: the service worker's own asset fetches, and the contact form at
-`/kontakt` (`src/routes/kontakt/+page.svelte`), which posts only what the
-visitor types into that form - name, email, message - to
-`https://contact.yinside.de/phpmailer.php`. That's a mail relay on separate
-infrastructure operated by the same person as bewerby.de, not a third-party
-processor, but it is a genuine cross-origin request; the CSP's `connect-src`
-(`vite.config.ts`) explicitly allowlists that one origin, and the
-Datenschutzerklärung (`/datenschutz`) discloses it. No other route makes
-this - or any - network call.
+There are exactly three `fetch()` call sites in client code, none of which
+carry application data:
+
+1. The service worker's own asset fetches.
+2. The contact form at `/kontakt` (`src/routes/kontakt/+page.svelte`), which
+   posts only what the visitor types into that form - name, email, message -
+   to `https://contact.yinside.de/phpmailer.php`. That's a mail relay on
+   separate infrastructure operated by the same person as bewerby.de, not a
+   third-party processor, but it is a genuine cross-origin request; the
+   CSP's `connect-src` (`vite.config.ts`) explicitly allowlists that one
+   origin.
+3. The job-ad link import, which posts one public URL to this app's own
+   `/api/fetch-ad` - same origin, nothing else in the body, nothing stored.
+   See "Importing a job ad" below for what that does and does not give away.
+
+All three are disclosed in the Datenschutzerklärung (`/datenschutz`). No
+other route makes this - or any - network call, and no rows, PDFs or profile
+data are part of any of them.
 
 The `Tier 3` "Cloud Sync" card on the Backup page is an honest,
 clearly-labeled placeholder for a _planned_, not yet implemented,
 end-to-end-encrypted sync feature - see the Backlog section of
 [ROADMAP.md](ROADMAP.md).
+
+## Importing a job ad: three routes, one parser
+
+A posting reaches the form three ways, and all of them converge on
+`parseJobText`/`parseJobDocument` and the same review panel, so no route can
+silently write a field another would have asked about:
+
+1. **A PDF**, parsed in the browser with layout information (pdf.js).
+2. **Pasted text** (`application.paste.*`), for a posting copied off a job
+   board along with its Impressum block.
+3. **A link** (`application.fetch.*`), fetched server-side - see below.
+
+### Why the link import goes through the server, and what that costs
+
+A browser cannot fetch a third-party page from page JavaScript at all
+(same-origin policy), so a link import is either server-side or it does not
+exist. The objection to building it was that a server would learn which
+vacancies somebody reads. That is a real cost, and it is a smaller one than
+it first looks:
+
+- The request carries **one public URL and nothing else**. No row, no PDF,
+  no profile, no identifier. Application data still never leaves the device.
+- The URL travels in the **POST body, never the query string**, so Apache's
+  access log - which does record the path and the client IP, and rotates on
+  the schedule stated in the Datenschutzerklärung - records that the import
+  was used, not what for.
+- Nothing is stored, cached or logged by the endpoint itself.
+- The job board sees **our** IP, not the applicant's. For someone applying
+  out of a current position this discloses strictly less to third parties
+  than opening the link themselves would.
+- The feature is optional; the paste box sits directly underneath and works
+  offline, which the link import cannot.
+
+The CSP needs no widening for this: the browser talks to `'self'`, which
+`connect-src` already allows. The route is the only one in the app with
+`prerender = false`, which also means it is the only one where
+`hooks.server.ts` actually runs and sets the security headers - the reason
+that hook was written before there was anything for it to do.
+
+### The SSRF guard is the load-bearing part
+
+An endpoint that fetches a URL handed to it is an open proxy into whatever
+the server can reach and the caller cannot: Plesk on localhost, the hoster's
+private network, cloud metadata at 169.254.169.254, and the wider internet
+under our IP. `src/lib/server/urlGuard.ts` (under `$lib/server`, so SvelteKit
+cannot bundle it into client code) is what makes that not work:
+
+- `https:` only, no embedded credentials.
+- Every address the host resolves to must be public - **all** of them, since
+  a host answering with one public and one private address would otherwise
+  walk straight through a first-match check. IPv4, IPv6 and IPv4-mapped
+  IPv6 (`::ffff:127.0.0.1`) are all judged by the same ranges.
+- Redirects are followed **by hand**, re-running the full check on every
+  hop, because a public host answering `302 http://127.0.0.1:8443` defeats a
+  one-time check completely.
+- Caps: 8 s timeout, 3 redirects, 2 MB body read incrementally, HTML-ish
+  content types only, and one identical error status for every upstream
+  failure so the response cannot be used to probe what exists internally.
+- A per-IP hourly throttle keeps it from becoming a free open proxy.
+
+**The one gap, stated plainly:** validating DNS and then letting `fetch()`
+resolve again is a time-of-check/time-of-use window - an attacker
+controlling a zero-TTL record could answer public on the first lookup and
+private on the second. Closing it means pinning the connection to the
+validated IP through a custom dispatcher; `assertPublicUrl` already returns
+the addresses for exactly that. It is marked as the known ceiling rather
+than quietly assumed away.
+
+### What actually works
+
+Measured against live sites: the Bundesagentur für Arbeit, StepStone and
+LinkedIn all return a readable page; Indeed refuses automated requests
+outright. A page that renders its posting entirely client-side is the other
+expected miss - the server gets the shell, not the ad - and it looks the
+same to the user as a block: not much came back. When a fetch fails for any
+reason the UI says so and points at the paste box, which is why that box
+stays visible underneath rather than being replaced.
+schema.org `JobPosting` JSON-LD - which those boards emit because Google for
+Jobs requires it - is read first and marked `high` confidence, since it is
+the employer's own structured data rather than a guess off the layout.
 
 ### PDF migration history
 
@@ -90,10 +178,22 @@ long - see Reminders below.
 follow-up due" (`getReminderDueAt`), used identically by the in-app alert
 banner and the notification-firing engine so the two can never disagree.
 
-- **Anchor point:** the timestamp of the application's first `sent` history
-  entry (falling back to `appliedAt`, then `createdAt`) - not `updatedAt`.
-  Editing an unrelated field, changing the card color, or dragging the card
-  without changing its status must never push the follow-up date back.
+- **Anchor point:** the row's own `reminderAt` - an absolute timestamp - when
+  it has one. The editor writes it whenever the user picks a date outright
+  ("Eigenes Datum") or changes the interval, anchoring the new countdown on
+  the moment of that change rather than on the application date; re-picking
+  7 days on something sent a month ago would otherwise be due instantly.
+  Saving an edit that leaves the interval alone never touches it.
+- **Anchor point, legacy rows:** `reminderAt` is optional, so anything
+  written before it existed still counts the interval from the timestamp of
+  the application's first `sent` history entry (falling back to `appliedAt`,
+  then `createdAt`) - never `updatedAt`. Editing an unrelated field,
+  changing the card color, or dragging the card without changing its status
+  must never push the follow-up date back, under either anchor.
+- **One-shot:** a reminder fires once per due date, deduplicated by
+  `bewerby_notified_<id>_<dueAt>` in `localStorage`. There is no repeat
+  interval; a second nudge means picking a new date, which yields a new
+  `dueAt` and therefore a new key.
 - **Scheduling:** one precise `setTimeout` for whichever reminder is due
   next, rescheduled automatically whenever the applications table changes
   (via `liveQuery`) - not a polling loop.
@@ -112,6 +212,32 @@ worker, because Background Sync only runs once connectivity returns and
 there is nothing meaningful to reconcile for a 100%-local app with no server
 to sync against. This is stated plainly to the user in Settings rather than
 implied by an ambient "notifications: on" toggle.
+
+## Proof-of-applications export
+
+The Agentur für Arbeit wants a list of who was applied to and when
+(_Eigenbemühungen_). Both formats on `/board` render the same three columns -
+date, company, status - from one function, `toExportRows` in
+`src/lib/utils/applicationExport.ts`, so they can never disagree about the
+date, the ordering or the status wording:
+
+- **CSV** for a spreadsheet: `;`-separated, CRLF, with a UTF-8 BOM, which is
+  what a German Excel opens correctly on a double-click. A comma-separated
+  file lands entirely in column A there, and without the BOM every umlaut is
+  mojibake. Any cell starting with `=`, `+`, `-` or `@` is prefixed with an
+  apostrophe: the file is opened by somebody else on a machine we know
+  nothing about, and the content came out of a parsed job ad.
+- **PDF** for handing in on paper (`applicationListPdf.ts`): an A4 table that
+  repeats its header on every page and numbers the pages, so a missing sheet
+  is visible. pdf-lib is imported dynamically, exactly as in
+  `coverLetterPdf.ts`, and the page geometry is shared with it rather than
+  copied.
+
+The date is `getAppliedAt()` from `reminders.ts` - the same anchor the
+follow-up reminder counts from, because "when did I apply" has to be one
+date, not two. The export takes whatever the board's filter bar currently
+shows; "export what I am looking at" needs no second set of controls to
+explain.
 
 ## Security headers
 

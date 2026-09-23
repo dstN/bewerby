@@ -5,6 +5,7 @@
 	import {
 		extractJobDocument,
 		parseJobDocument,
+		parseJobText,
 		validatePdfFile,
 		PdfProcessingError,
 		type PdfErrorCode,
@@ -12,6 +13,7 @@
 	} from '$lib/utils/pdf.js';
 	import { writePdfToOpfs, readPdfFromOpfs, deletePdfFromOpfs } from '$lib/utils/opfs.js';
 	import DatePicker from '$lib/components/common/DatePicker.svelte';
+	import { INTERVAL_MS } from '$lib/utils/reminders.js';
 	import { colorStore } from '$lib/stores/colors.svelte.js';
 	import { announcer } from '$lib/stores/announcer.svelte.js';
 
@@ -74,6 +76,10 @@
 	let reminderInterval = $state<Application['reminderInterval']>(
 		initialApp?.reminderInterval ?? 'none'
 	);
+	// Only read when the interval is 'custom'; pre-filled with whatever the row
+	// is currently due on so switching to it starts from the real date rather
+	// than from today.
+	let reminderDateStr = $state(formatDateForInput(initialApp?.reminderAt));
 	let cardColor = $state<string | undefined>(initialApp?.cardColor);
 	let notes = $state(initialApp?.notes ?? '');
 	let tagInput = $state('');
@@ -87,6 +93,12 @@
 	let pdfRef = $state<string | undefined>(initialApp?.pdfRef);
 	let originalPdfRef: string | undefined = initialApp?.pdfRef;
 	let isParsingPdf = $state(false);
+	// The paste-an-ad path: same parser, same review panel, no file involved.
+	let pasteOpen = $state(false);
+	let pastedText = $state('');
+	let adUrl = $state('');
+	let isFetchingAd = $state(false);
+	let fetchError = $state<string | null>(null);
 	let isViewingPdf = $state(false);
 	let pdfError = $state<string | null>(null);
 
@@ -123,6 +135,7 @@
 			priority,
 			status,
 			reminderInterval,
+			reminderDateStr,
 			cardColor,
 			notes,
 			tags,
@@ -334,7 +347,105 @@
 			applied += 1;
 		}
 		review = null;
+		pasteOpen = false;
+		pastedText = '';
 		if (applied > 0) announcer.announce(t('application.pdf.review.applied'));
+	}
+
+	/**
+	 * Shows the review panel for a parse result. Fields the source *stated*
+	 * about itself (schema.org JSON-LD on a fetched page) override what the
+	 * heuristics guessed and are marked `high`, because they are the
+	 * employer's own data rather than an inference off the layout.
+	 */
+	function reviewParsed(text: string, stated: Partial<Record<ParsedJobField, string>> = {}) {
+		const parsed = parseJobText(text);
+		const info = { ...parsed.info };
+		const confidence = { ...parsed.confidence };
+		for (const [field, value] of Object.entries(stated)) {
+			if (!value) continue;
+			info[field as ParsedJobField] = value;
+			confidence[field as ParsedJobField] = 'high';
+		}
+		review = buildReview(info, confidence);
+		announcer.announce(
+			review.length > 0
+				? t('application.pdf.review.heading')
+				: t('application.pdf.review.nothingFound')
+		);
+	}
+
+	/**
+	 * Parses an ad the user pasted in as plain text - copied off a job board,
+	 * or the posting plus an Impressum block. Runs the exact same parser and
+	 * feeds the exact same review panel as the PDF path, so neither route can
+	 * silently overwrite a field the other would have asked about.
+	 */
+	function parsePastedAd() {
+		const text = pastedText.trim();
+		if (!text) return;
+		pdfError = null;
+		reviewParsed(text);
+	}
+
+	const FETCH_ERROR_KEYS: Record<string, string> = {
+		'invalid-url': 'application.fetch.errorUrl',
+		blocked: 'application.fetch.errorBlocked',
+		unreachable: 'application.fetch.errorUnreachable',
+		'http-error': 'application.fetch.errorUnreachable',
+		'not-html': 'application.fetch.errorNotHtml',
+		'too-large': 'application.fetch.errorTooLarge',
+		'rate-limited': 'application.fetch.errorRateLimited'
+	};
+
+	/**
+	 * Has the server fetch the posting and parse what comes back.
+	 *
+	 * This is the only request bewerby ever makes with a user's input in it,
+	 * and it carries exactly one thing: the public URL of a job ad, in the
+	 * POST body so it cannot land in an access log. No application data goes
+	 * with it and nothing is stored. Any failure falls back to the paste box,
+	 * which is why that stays open underneath rather than being replaced.
+	 */
+	async function fetchAdFromUrl() {
+		const url = adUrl.trim();
+		if (!url || isFetchingAd) return;
+
+		isFetchingAd = true;
+		fetchError = null;
+		try {
+			const response = await fetch('/api/fetch-ad', {
+				method: 'POST',
+				headers: { 'content-type': 'application/json' },
+				body: JSON.stringify({ url })
+			});
+			const payload: unknown = await response.json();
+			if (!response.ok) {
+				const code = (payload as { error?: string } | null)?.error ?? 'unreachable';
+				const message = t(FETCH_ERROR_KEYS[code] ?? 'application.fetch.errorUnreachable');
+				fetchError = message;
+				announcer.announce(message);
+				return;
+			}
+			const { text, fields } = payload as {
+				text: string;
+				fields: Partial<Record<ParsedJobField, string>>;
+			};
+			// Keep the fetched text in the box: if the parse missed something,
+			// the user can see what the page actually said and correct it.
+			pastedText = text;
+			reviewParsed(text, fields);
+		} catch (err) {
+			console.error('Failed to fetch the job ad:', err);
+			// Offline is the likeliest cause by far in an offline-first app.
+			const message = t(
+				navigator.onLine ? 'application.fetch.errorUnreachable' : 'application.fetch.errorOffline'
+			);
+			fetchError = message;
+			announcer.announce(message);
+		} finally {
+			isFetchingAd = false;
+		}
 	}
 
 	async function handlePdfUpload(event: Event) {
@@ -408,6 +519,26 @@
 		}
 	}
 
+	/**
+	 * The absolute moment this application's follow-up is due.
+	 *
+	 * Changing the interval restarts the countdown here and now - that is the
+	 * whole point of changing it, and anchoring it on the application date
+	 * instead made "remind me again in 7 days" fire instantly on anything sent
+	 * more than a week ago. Leaving the interval alone keeps the pending date
+	 * untouched, so saving an unrelated edit never moves a follow-up.
+	 */
+	function computeReminderAt(): number | undefined {
+		if (reminderInterval === 'none') return undefined;
+		if (reminderInterval === 'custom') return parseDateInput(reminderDateStr);
+		if (!application || reminderInterval === application.reminderInterval) {
+			// undefined on a row written before reminderAt existed, which keeps it
+			// on the interval-from-"sent" fallback in getReminderDueAt().
+			return application?.reminderAt;
+		}
+		return Date.now() + (INTERVAL_MS[reminderInterval] ?? 0);
+	}
+
 	async function handleSubmit(event: SubmitEvent) {
 		event.preventDefault();
 		await save();
@@ -449,6 +580,7 @@
 			status,
 			tags: $state.snapshot(tags),
 			reminderInterval,
+			reminderAt: computeReminderAt(),
 			cardColor: cardColor === 'none' ? undefined : cardColor,
 			notes: notes.trim(),
 			pdfName,
@@ -563,6 +695,67 @@
 					<button type="button" class="btn-view-pdf" onclick={viewPdf} disabled={isViewingPdf}>
 						{t('application.pdf.view')}
 					</button>
+				{/if}
+			</div>
+
+			<div class="paste-import">
+				<button
+					type="button"
+					class="btn-paste-toggle"
+					aria-expanded={pasteOpen}
+					aria-controls="paste-ad"
+					onclick={() => (pasteOpen = !pasteOpen)}
+				>
+					{t('application.paste.toggle')}
+				</button>
+				{#if pasteOpen}
+					<div id="paste-ad">
+						<label class="field-label" for="ad-url">{t('application.fetch.label')}</label>
+						<div class="url-import-row">
+							<input
+								id="ad-url"
+								type="url"
+								inputmode="url"
+								bind:value={adUrl}
+								placeholder={t('application.fetch.placeholder')}
+								onkeydown={(event) => {
+									// Enter inside a <form> would submit the whole dialog.
+									if (event.key === 'Enter') {
+										event.preventDefault();
+										void fetchAdFromUrl();
+									}
+								}}
+							/>
+							<button
+								type="button"
+								class="btn-review-apply"
+								onclick={fetchAdFromUrl}
+								disabled={!adUrl.trim() || isFetchingAd}
+							>
+								{isFetchingAd ? t('application.fetch.working') : t('application.fetch.parse')}
+							</button>
+						</div>
+						<p class="field-hint">{t('application.fetch.hint')}</p>
+						{#if fetchError}
+							<p class="fetch-error" role="alert">{fetchError}</p>
+						{/if}
+
+						<label class="field-label" for="paste-ad-text">{t('application.paste.label')}</label>
+						<textarea
+							id="paste-ad-text"
+							rows="6"
+							bind:value={pastedText}
+							placeholder={t('application.paste.placeholder')}></textarea>
+						<p class="field-hint">{t('application.paste.hint')}</p>
+						<button
+							type="button"
+							class="btn-review-apply"
+							onclick={parsePastedAd}
+							disabled={!pastedText.trim()}
+						>
+							{t('application.paste.parse')}
+						</button>
+					</div>
 				{/if}
 			</div>
 
@@ -743,8 +936,23 @@
 						<option value="48h">{t('reminders.hours48')}</option>
 						<option value="7d">{t('reminders.days7')}</option>
 						<option value="14d">{t('reminders.days14')}</option>
+						<option value="custom">{t('reminders.custom')}</option>
 					</select>
+					{#if reminderInterval !== 'none'}
+						<p class="field-hint">
+							{reminderInterval === 'custom'
+								? t('reminders.customHint')
+								: t('reminders.intervalHint')}
+						</p>
+					{/if}
 				</div>
+
+				{#if reminderInterval === 'custom'}
+					<div class="form-group">
+						<label for="reminderDate">{t('reminders.customDate')}</label>
+						<DatePicker id="reminderDate" bind:value={reminderDateStr} />
+					</div>
+				{/if}
 
 				<div class="form-group col-span-2">
 					<span class="form-label" id="card-color-label">{t('application.cardColor')}</span>
@@ -1046,6 +1254,79 @@
 		font-size: 13px;
 		font-weight: 600;
 		color: var(--text-primary);
+	}
+
+	.paste-import {
+		margin: -8px 0 16px;
+	}
+
+	.btn-paste-toggle {
+		padding: 0;
+		background: none;
+		border: none;
+		font-family: inherit;
+		font-size: 12px;
+		font-weight: 600;
+		/* Not --color-accent-600: that shade is tuned for white text *on* it and
+		   only reaches 2.7:1 as text on the dark surface. --color-accent-text is
+		   the theme-aware pair that clears the contrast bar in both themes. */
+		color: var(--color-accent-text);
+		cursor: pointer;
+		text-decoration: underline;
+	}
+
+	.paste-import .field-label {
+		display: block;
+		margin-top: 12px;
+		font-size: 12px;
+		font-weight: 600;
+		color: var(--text-secondary);
+	}
+
+	.paste-import textarea {
+		width: 100%;
+		margin-top: 6px;
+		resize: vertical;
+	}
+
+	.url-import-row {
+		display: flex;
+		gap: 8px;
+		margin-top: 6px;
+	}
+
+	.url-import-row input {
+		flex: 1;
+		min-width: 0;
+	}
+
+	.paste-import .btn-review-apply {
+		margin-top: 4px;
+		white-space: nowrap;
+	}
+
+	.url-import-row .btn-review-apply {
+		margin-top: 0;
+	}
+
+	.fetch-error {
+		margin: 6px 0 0;
+		font-size: 12px;
+		line-height: 1.4;
+		color: var(--color-danger);
+	}
+
+	@media (max-width: 480px) {
+		.url-import-row {
+			flex-direction: column;
+		}
+	}
+
+	.field-hint {
+		margin: 6px 0 0;
+		font-size: 12px;
+		line-height: 1.4;
+		color: var(--text-secondary);
 	}
 
 	.review-hint,

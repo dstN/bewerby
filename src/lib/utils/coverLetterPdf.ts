@@ -155,9 +155,10 @@ export function toWinAnsi(text: string): string {
 	return out;
 }
 
-const PAGE_WIDTH = 595.28;
-const PAGE_HEIGHT = 841.89;
-const MARGIN = 56.7; // 2 cm
+/** A4 in PDF points, shared with the application-list renderer. */
+export const PAGE_WIDTH = 595.28;
+export const PAGE_HEIGHT = 841.89;
+export const MARGIN = 56.7; // 2 cm
 const BODY_SIZE = 11;
 const SMALL_SIZE = 9;
 const LINE_HEIGHT = 1.45;

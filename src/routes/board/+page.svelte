@@ -10,6 +10,8 @@
 	import { deletePdfFromOpfs } from '$lib/utils/opfs.js';
 	import { announcer } from '$lib/stores/announcer.svelte.js';
 	import { getReminderDueAt } from '$lib/utils/reminders.js';
+	import { buildApplicationCsv, exportFileName } from '$lib/utils/applicationExport.js';
+	import { renderApplicationListPdf } from '$lib/utils/applicationListPdf.js';
 	import { replaceState } from '$app/navigation';
 	import { resolve } from '$app/paths';
 
@@ -171,6 +173,79 @@
 		}
 	}
 
+	let isExporting = $state(false);
+
+	/** Shared by both export formats - see downloadBlob below. */
+	function exportLabels() {
+		return {
+			header: [
+				t('kanban.export.columnDate'),
+				t('kanban.export.columnCompany'),
+				t('kanban.export.columnStatus')
+			] as [string, string, string],
+			status: {
+				draft: t('kanban.columns.draft'),
+				sent: t('kanban.columns.sent'),
+				interview: t('kanban.columns.interview'),
+				accepted: t('kanban.columns.accepted'),
+				rejected: t('kanban.columns.rejected')
+			}
+		};
+	}
+
+	let exportLocale = $derived(i18n.locale === 'de' ? 'de-DE' : 'en-GB');
+
+	function downloadBlob(blob: Blob, fileName: string) {
+		const url = URL.createObjectURL(blob);
+		const anchor = document.createElement('a');
+		anchor.href = url;
+		anchor.download = fileName;
+		document.body.appendChild(anchor);
+		anchor.click();
+		document.body.removeChild(anchor);
+		URL.revokeObjectURL(url);
+		announcer.announce(
+			t('kanban.export.doneAnnouncement').replace('{count}', String(filteredApplications.length))
+		);
+	}
+
+	/**
+	 * Downloads the proof-of-applications list the Agentur für Arbeit asks
+	 * for. Exports whatever the filter bar currently shows rather than adding
+	 * a second set of controls next to it - "export what I am looking at" is
+	 * the only selection rule that needs no explaining.
+	 */
+	function exportCsv() {
+		const csv = buildApplicationCsv(filteredApplications, exportLabels(), exportLocale);
+		downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8' }), exportFileName('csv'));
+	}
+
+	/** The printable version of the same list, for handing in on paper. */
+	async function exportPdf() {
+		isExporting = true;
+		try {
+			const bytes = await renderApplicationListPdf(
+				filteredApplications,
+				{
+					...exportLabels(),
+					heading: t('kanban.export.pdfHeading'),
+					generated: t('kanban.export.pdfGenerated'),
+					pageLabel: t('kanban.export.pdfPage')
+				},
+				exportLocale
+			);
+			downloadBlob(
+				new Blob([bytes as BlobPart], { type: 'application/pdf' }),
+				exportFileName('pdf')
+			);
+		} catch (err) {
+			console.error('Failed to render the application list PDF:', err);
+			alert(t('errors.exportFailed'));
+		} finally {
+			isExporting = false;
+		}
+	}
+
 	// Native drag and drop logic
 	let draggedId = $state<number | null>(null);
 	let activeDragOverColumn = $state<string | null>(null);
@@ -303,12 +378,53 @@
 			<h1>{t('nav.kanban')}</h1>
 			<p class="subtitle">{t('kanban.subtitle')}</p>
 		</div>
-		<button class="btn-primary" onclick={() => openAddModal('draft')}>
-			<svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-				<path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-			</svg>
-			{t('kanban.actions.add')}
-		</button>
+		<div class="header-actions">
+			<button
+				class="btn-secondary"
+				onclick={exportPdf}
+				disabled={filteredApplications.length === 0 || isExporting}
+				title={t('kanban.export.hintPdf')}
+			>
+				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+					<path
+						d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					/>
+				</svg>
+				{isExporting ? t('kanban.export.working') : t('kanban.export.actionPdf')}
+			</button>
+			<button
+				class="btn-secondary"
+				onclick={exportCsv}
+				disabled={filteredApplications.length === 0}
+				title={t('kanban.export.hintCsv')}
+			>
+				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+					<path
+						d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					/>
+				</svg>
+				{t('kanban.export.actionCsv')}
+			</button>
+			<button class="btn-primary" onclick={() => openAddModal('draft')}>
+				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+					<path
+						d="M12 5v14M5 12h14"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+					/>
+				</svg>
+				{t('kanban.actions.add')}
+			</button>
+		</div>
 	</div>
 
 	<!-- Filter Toolbars -->
@@ -625,6 +741,45 @@
 
 	.btn-primary:active {
 		transform: scale(0.98);
+	}
+
+	.header-actions {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: flex-end;
+		gap: 8px;
+	}
+
+	.btn-secondary {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		padding: 8px 16px;
+		background-color: var(--surface-0);
+		color: var(--text-primary);
+		border: 1px solid var(--border-default);
+		border-radius: var(--radius-md);
+		font-family: inherit;
+		font-size: 14px;
+		font-weight: 600;
+		cursor: pointer;
+		transition:
+			background-color var(--duration-fast) ease,
+			transform var(--duration-fast) ease;
+	}
+
+	.btn-secondary:hover:not(:disabled) {
+		background-color: var(--surface-2);
+	}
+
+	.btn-secondary:active:not(:disabled) {
+		transform: scale(0.98);
+	}
+
+	.btn-secondary:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
 	}
 
 	.filter-bar {
@@ -1041,8 +1196,13 @@
 			gap: 12px;
 		}
 
-		.btn-primary {
+		.header-actions {
 			width: 100%;
+		}
+
+		.btn-primary,
+		.btn-secondary {
+			flex: 1;
 			justify-content: center;
 		}
 

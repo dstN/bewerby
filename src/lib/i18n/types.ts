@@ -31,6 +31,20 @@ export type TranslationKeys = {
 			add: string;
 			edit: string;
 		};
+		export: {
+			actionPdf: string;
+			actionCsv: string;
+			working: string;
+			hintPdf: string;
+			hintCsv: string;
+			columnDate: string;
+			columnCompany: string;
+			columnStatus: string;
+			pdfHeading: string;
+			pdfGenerated: string;
+			pdfPage: string;
+			doneAnnouncement: string;
+		};
 		confirmDelete: string;
 		dueAlerts: string;
 		requiresFollowUp: string;
@@ -125,6 +139,27 @@ export type TranslationKeys = {
 		dataBody: string;
 	};
 	application: {
+		fetch: {
+			label: string;
+			placeholder: string;
+			parse: string;
+			working: string;
+			hint: string;
+			errorUrl: string;
+			errorBlocked: string;
+			errorUnreachable: string;
+			errorNotHtml: string;
+			errorTooLarge: string;
+			errorRateLimited: string;
+			errorOffline: string;
+		};
+		paste: {
+			toggle: string;
+			label: string;
+			placeholder: string;
+			hint: string;
+			parse: string;
+		};
 		title: string;
 		company: string;
 		url: string;
@@ -202,6 +237,10 @@ export type TranslationKeys = {
 		hours48: string;
 		days7: string;
 		days14: string;
+		custom: string;
+		customDate: string;
+		customHint: string;
+		intervalHint: string;
 	};
 	actions: {
 		save: string;
@@ -347,6 +386,10 @@ export type TranslationKeys = {
 			hostingProcessing: string;
 			rightsTitle: string;
 			rightsBody: string;
+			adFetchTitle: string;
+			adFetchBody: string;
+			adFetchStorage: string;
+			adFetchThirdParty: string;
 			contactFormTitle: string;
 			contactFormBody: string;
 			contactRightsTitle: string;
@@ -411,5 +454,6 @@ export type TranslationKeys = {
 		moveFailed: string;
 		pdfSaveFailed: string;
 		pdfScanFailed: string;
+		exportFailed: string;
 	};
 };

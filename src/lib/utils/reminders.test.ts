@@ -86,6 +86,35 @@ describe('getReminderDueAt', () => {
 		expect(getReminderDueAt(app)).toBe(1_000_000 + 24 * 60 * 60 * 1000);
 	});
 
+	it('uses an explicit reminderAt instead of counting the interval from "sent"', () => {
+		const app = makeApp({
+			reminderInterval: '7d',
+			history: sentAt(1_000_000),
+			reminderAt: 9_999_999
+		});
+		expect(getReminderDueAt(app)).toBe(9_999_999);
+	});
+
+	it('honours a custom date on an application that was never marked sent', () => {
+		const app = makeApp({ status: 'draft', reminderInterval: 'custom', reminderAt: 4_242_424 });
+		expect(getReminderDueAt(app)).toBe(4_242_424);
+	});
+
+	it('still returns null for "none" and for closed applications with a reminderAt set', () => {
+		expect(getReminderDueAt(makeApp({ reminderInterval: 'none', reminderAt: 5_000 }))).toBeNull();
+		expect(
+			getReminderDueAt(
+				makeApp({ status: 'accepted', reminderInterval: 'custom', reminderAt: 5_000 })
+			)
+		).toBeNull();
+	});
+
+	it('returns null for "custom" without a date rather than guessing one', () => {
+		expect(
+			getReminderDueAt(makeApp({ reminderInterval: 'custom', history: sentAt(1) }))
+		).toBeNull();
+	});
+
 	it('returns null for an unrecognized reminderInterval value instead of miscalculating', () => {
 		const app = makeApp({
 			// Simulates data written by an older/different build - deliberately

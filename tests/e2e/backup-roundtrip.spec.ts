@@ -86,7 +86,9 @@ test.describe('Backup export/import roundtrip', () => {
 		await expect(dialog).toBeVisible();
 		// pdfRef only renders this button once the PDF was actually restored to
 		// OPFS under a freshly assigned ref (see prepareImportRows()).
-		await expect(dialog.getByRole('button', { name: 'Anzeigen' })).toBeVisible();
+		// exact: the dialog also carries "Stattdessen Anzeigentext einfügen",
+		// which a substring match would tie with.
+		await expect(dialog.getByRole('button', { name: 'Anzeigen', exact: true })).toBeVisible();
 	});
 
 	test('the stored CV, an application-specific CV and the cover letter survive the roundtrip', async ({
