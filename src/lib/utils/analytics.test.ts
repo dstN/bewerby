@@ -50,13 +50,62 @@ describe('computeApplicationStats', () => {
 			row('sent'),
 			row('interview'),
 			row('accepted'),
-			row('rejected')
+			row('rejected', [
+				{ status: 'sent', timestamp: 1 },
+				{ status: 'interview', timestamp: 2 },
+				{ status: 'rejected', timestamp: 3 }
+			])
 		]);
 		// sent stage = sent + interview + accepted + rejected (draft excluded)
 		expect(stats.funnel.sent).toBe(4);
-		// selection stage = interview + accepted + rejected (excludes plain "sent")
+		// selection stage = interview + accepted + a rejection after an interview
 		expect(stats.funnel.selection).toBe(3);
 		expect(stats.funnel.success).toBe(1);
+	});
+
+	it('does not count a draft rejected straight from the draft column as sent', () => {
+		const stats = computeApplicationStats([
+			// Posting gone before it was ever sent: archived via "Absage".
+			row('rejected', [
+				{ status: 'draft', timestamp: 1 },
+				{ status: 'rejected', timestamp: 2 }
+			]),
+			// Sent, then rejected.
+			row('rejected', [
+				{ status: 'draft', timestamp: 1 },
+				{ status: 'sent', timestamp: 2 },
+				{ status: 'rejected', timestamp: 3 }
+			]),
+			// Logged after the fact straight into the rejected column: no draft
+			// ever existed, so the entry records a real rejection.
+			row('rejected', [{ status: 'rejected', timestamp: 1 }]),
+			row('draft', [{ status: 'draft', timestamp: 1 }])
+		]);
+		expect(stats.counts.rejected).toBe(3);
+		expect(stats.funnel.sent).toBe(2);
+		expect(stats.funnel.selection).toBe(0);
+	});
+
+	it('does not count a rejection as selection unless it went through an interview', () => {
+		const stats = computeApplicationStats([
+			// Rejected straight after sending: never selected.
+			row('rejected', [
+				{ status: 'sent', timestamp: 1 },
+				{ status: 'rejected', timestamp: 2 }
+			]),
+			// Rejected after the interview: selected, then turned down.
+			row('rejected', [
+				{ status: 'sent', timestamp: 1 },
+				{ status: 'interview', timestamp: 2 },
+				{ status: 'rejected', timestamp: 3 }
+			]),
+			// No history at all (legacy or hand-edited row): nothing proves an interview.
+			row('rejected')
+		]);
+		expect(stats.counts.rejected).toBe(3);
+		expect(stats.funnel.sent).toBe(3);
+		expect(stats.funnel.selection).toBe(1);
+		expect(stats.funnel.selectionRate).toBe(Math.round((1 / 3) * 100));
 	});
 
 	it('computes funnel percentages rounded to the nearest integer', () => {

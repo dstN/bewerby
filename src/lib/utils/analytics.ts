@@ -28,6 +28,24 @@ export interface ApplicationStats {
 }
 
 /**
+ * Whether an application actually went out. Every status past draft implies
+ * it except a rejection: a card dragged from draft straight to "Absage"
+ * (the posting was gone, say) was never sent, and only its history shows
+ * that. A rejection with no draft entry at all - logged after the fact
+ * directly in the rejected column, or a legacy row without history - records
+ * a real rejection and counts.
+ */
+function wasSent(status: AnalyticsRow['status'], history: AnalyticsRow['history']): boolean {
+	if (status === 'draft') return false;
+	if (status !== 'rejected') return true;
+	return (
+		history.some(
+			(h) => h.status === 'sent' || h.status === 'interview' || h.status === 'accepted'
+		) || !history.some((h) => h.status === 'draft')
+	);
+}
+
+/**
  * Computes the status funnel and response-time metrics shown on the
  * analytics page. Pure function of the row list, extracted out of the
  * component's $derived so it can be unit-tested without Svelte reactivity
@@ -39,6 +57,10 @@ export function computeApplicationStats(list: AnalyticsRow[]): ApplicationStats 
 	let interview = 0;
 	let accepted = 0;
 	let rejected = 0;
+	// Rejections that came after an interview. Only those belong in the
+	// selection stage: a rejection straight after sending was never selected.
+	let rejectedAfterInterview = 0;
+	let totalSent = 0;
 
 	const responseTimes: number[] = [];
 
@@ -57,6 +79,10 @@ export function computeApplicationStats(list: AnalyticsRow[]): ApplicationStats 
 		// without it — and one such row used to throw here and take the whole
 		// statistics page down rather than just counting as having no events.
 		const history = app.history ?? [];
+		if (wasSent(app.status, history)) totalSent++;
+		if (app.status === 'rejected' && history.some((h) => h.status === 'interview')) {
+			rejectedAfterInterview++;
+		}
 		const sentEvent = history.find((h) => h.status === 'sent');
 		const responseEvent = history.find((h) => h.status === 'interview' || h.status === 'rejected');
 
@@ -66,10 +92,12 @@ export function computeApplicationStats(list: AnalyticsRow[]): ApplicationStats 
 		}
 	});
 
-	// Funnel accumulation:
-	// Sent stage includes anything that reached "sent", "interview", "accepted", or "rejected"
-	const totalSent = sent + interview + accepted + rejected;
-	const totalSelection = interview + accepted + rejected;
+	// Funnel accumulation. Each stage is a subset of the one before: a
+	// rejection after an interview also has "interview" in its history, so it
+	// counts as sent too.
+	// Accepted stays in unconditionally: an offer implies selection, and
+	// leaving it out would push the success rate past 100 %.
+	const totalSelection = interview + accepted + rejectedAfterInterview;
 	const totalSuccess = accepted;
 
 	// Percentages

@@ -263,6 +263,25 @@ date, not two. The export takes whatever the board's filter bar currently
 shows; "export what I am looking at" needs no second set of controls to
 explain.
 
+## Statistics funnel: counted from the history, not the column
+
+`computeApplicationStats` (`src/lib/utils/analytics.ts`) sorts every row into
+three nested stages - sent, selection, offer - and the column a card sits
+in is not enough to place it, because "Absage" is where both a rejection
+and an abandoned draft end up:
+
+- **Sent:** every status past draft, except a rejection whose history shows
+  it came straight from draft without ever being sent. A rejection with no
+  draft entry at all (logged after the fact directly in that column, or a
+  legacy row without history) records a real rejection and counts.
+- **Selection:** interviews, offers, and only those rejections whose history
+  contains an interview. Offers count unconditionally - leaving one out
+  would push the success rate past 100 %.
+
+Each stage is a subset of the one before, so no rate can exceed 100 %. Both
+the board and the edit dialog append every status change to `history`,
+which is what makes it trustworthy here.
+
 ## Collapsible cards
 
 A collapsed card keeps company, priority, date and the dispatch/delete
