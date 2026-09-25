@@ -86,6 +86,19 @@ describe('computeApplicationStats', () => {
 		expect(stats.funnel.selection).toBe(0);
 	});
 
+	it('counts an old row whose history stops short of its status as sent', () => {
+		// Before 2026-08-18 the edit dialog changed a status without logging
+		// it: created as a draft, set to "Absage" in the dialog, the history
+		// still reads [draft]. That cannot prove the card was never sent.
+		const stats = computeApplicationStats([
+			row('rejected', [{ status: 'draft', timestamp: 1 }]),
+			row('interview', [{ status: 'draft', timestamp: 1 }])
+		]);
+		expect(stats.funnel.sent).toBe(2);
+		// An interview is only proven by the status itself, not by the gap.
+		expect(stats.funnel.selection).toBe(1);
+	});
+
 	it('does not count a rejection as selection unless it went through an interview', () => {
 		const stats = computeApplicationStats([
 			// Rejected straight after sending: never selected.
@@ -142,6 +155,22 @@ describe('computeApplicationStats', () => {
 		expect(stats.response.best).toBe(3);
 		expect(stats.response.worst).toBe(7);
 		expect(stats.response.avg).toBe(5);
+	});
+
+	it('measures the response from the send, not from an earlier rejection', () => {
+		// Archived as a draft, later sent and turned down: the first "rejected"
+		// entry predates the send and must not hide the real response.
+		const day = 24 * 60 * 60 * 1000;
+		const stats = computeApplicationStats([
+			row('rejected', [
+				{ status: 'draft', timestamp: 0 },
+				{ status: 'rejected', timestamp: 1 * day },
+				{ status: 'sent', timestamp: 2 * day },
+				{ status: 'rejected', timestamp: 6 * day }
+			])
+		]);
+		expect(stats.response.count).toBe(1);
+		expect(stats.response.avg).toBe(4);
 	});
 
 	it('ignores response time when the response event precedes the sent event (bad/out-of-order data)', () => {

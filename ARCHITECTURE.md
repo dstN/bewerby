@@ -283,7 +283,13 @@ and an abandoned draft end up:
 
 Each stage is a subset of the one before, so no rate can exceed 100 %. Both
 the board and the edit dialog append every status change to `history`,
-which is what makes it trustworthy here.
+which is what makes it trustworthy here - since 2026-08-18. Before that the
+edit dialog changed a status without logging it, so an old row's history
+can stop short of its current status (created as a draft, set to "Absage"
+in the dialog: `[draft]`). A rejection whose history does not end in
+"rejected" is therefore counted as sent: that history proves nothing either
+way. Response times measure from the first "sent" to the first interview or
+rejection _after_ it, so a rejection logged before the send is ignored.
 
 ## Collapsible cards
 

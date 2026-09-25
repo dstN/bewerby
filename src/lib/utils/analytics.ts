@@ -67,9 +67,16 @@ export function computeApplicationStats(list: AnalyticsRow[]): ApplicationStats 
 			rejectedAfterInterview++;
 		}
 		const sentEvent = history.find((h) => h.status === 'sent');
-		const responseEvent = history.find((h) => h.status === 'interview' || h.status === 'rejected');
+		// The first response *after* the send: a card archived as a draft and
+		// sent later carries an earlier "rejected" entry that is no response.
+		const responseEvent =
+			sentEvent &&
+			history.find(
+				(h) =>
+					(h.status === 'interview' || h.status === 'rejected') && h.timestamp > sentEvent.timestamp
+			);
 
-		if (sentEvent && responseEvent && responseEvent.timestamp > sentEvent.timestamp) {
+		if (sentEvent && responseEvent) {
 			const durationDays = (responseEvent.timestamp - sentEvent.timestamp) / (1000 * 60 * 60 * 24);
 			responseTimes.push(durationDays);
 		}

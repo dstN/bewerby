@@ -72,6 +72,10 @@ export function wasSent(app: Pick<Application, 'status' | 'history'>): boolean {
 	if (app.status === 'draft') return false;
 	if (app.status !== 'rejected') return true;
 	const history = app.history ?? [];
+	// Before 2026-08-18 the edit dialog changed a status without logging it,
+	// so an old row's history can stop short of the rejection it is in. That
+	// history proves nothing about sending; count it, like a row without one.
+	if (history.at(-1)?.status !== 'rejected') return true;
 	return (
 		history.some(
 			(h) => h.status === 'sent' || h.status === 'interview' || h.status === 'accepted'
