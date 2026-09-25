@@ -259,9 +259,11 @@ date, the ordering or the status wording:
 
 The date is `getAppliedAt()` from `reminders.ts` - the same anchor the
 follow-up reminder counts from, because "when did I apply" has to be one
-date, not two. The export takes whatever the board's filter bar currently
-shows; "export what I am looking at" needs no second set of controls to
-explain.
+date, not two. The export takes what the board's filter bar currently shows,
+minus everything that was never sent: drafts, and drafts archived straight
+into "Absage". Which rows those are is `wasSent` (also in `reminders.ts`),
+the same rule the statistics funnel counts by - a Nachweis and the "sent"
+stage have to agree on what an application is.
 
 ## Statistics funnel: counted from the history, not the column
 
@@ -270,8 +272,9 @@ three nested stages - sent, selection, offer - and the column a card sits
 in is not enough to place it, because "Absage" is where both a rejection
 and an abandoned draft end up:
 
-- **Sent:** every status past draft, except a rejection whose history shows
-  it came straight from draft without ever being sent. A rejection with no
+- **Sent** (`wasSent` in `reminders.ts`, shared with the export): every
+  status past draft, except a rejection whose history shows it came straight
+  from draft without ever being sent. A rejection with no
   draft entry at all (logged after the fact directly in that column, or a
   legacy row without history) records a real rejection and counts.
 - **Selection:** interviews, offers, and only those rejections whose history

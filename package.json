@@ -1,7 +1,7 @@
 {
 	"name": "bewerby",
 	"private": true,
-	"version": "1.4.2",
+	"version": "1.4.3",
 	"type": "module",
 	"engines": {
 		"node": ">=26.0.0"

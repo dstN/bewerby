@@ -1,5 +1,5 @@
 import type { Application } from '$lib/db/index.js';
-import { getAppliedAt } from '$lib/utils/reminders.js';
+import { getAppliedAt, wasSent } from '$lib/utils/reminders.js';
 
 /** Only the three columns a Vermittlungsnachweis actually asks for. */
 export type ExportRow = Pick<
@@ -18,8 +18,8 @@ export type ExportCells = [string, string, string];
 
 /**
  * Turns application rows into the exact cells both output formats print, so
- * the CSV and the PDF can never disagree about which date, which order or
- * which status wording a proof of applications shows.
+ * the CSV and the PDF can never disagree about which rows, which date, which
+ * order or which status wording a proof of applications shows.
  */
 export function toExportRows(
 	apps: ExportRow[],
@@ -34,6 +34,9 @@ export function toExportRows(
 
 	return (
 		apps
+			// A Nachweis lists applications made. Drafts, and drafts archived
+			// straight into "Absage", were never sent and do not belong on it.
+			.filter(wasSent)
 			.map((app) => ({ app, appliedAt: getAppliedAt(app) }))
 			// Oldest first: a Nachweis is read as a chronological log, not as a board.
 			.sort((a, b) => a.appliedAt - b.appliedAt)

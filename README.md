@@ -32,8 +32,8 @@ all running in your browser, with your application data never leaving it.
   [ARCHITECTURE.md](ARCHITECTURE.md) for what it does and does not give away.
 - Analytics: funnel/conversion rates and response-time stats.
 - Proof of applications for the Agentur für Arbeit: date, company and status
-  of everything currently on the board, as a print-ready **PDF** or a
-  **CSV** a German Excel opens correctly.
+  of every application on the board that was actually sent - no drafts - as
+  a print-ready **PDF** or a **CSV** a German Excel opens correctly.
 - Backup & restore: JSON export/import (attached PDFs included), plus an
   optional local-directory dump via the File System Access API.
 - Follow-up reminders via the Notifications API - a fixed interval, or a

@@ -56,16 +56,45 @@ describe('buildApplicationCsv', () => {
 		expect(bodyLines(csv)[0]).toContain('05.03.2026');
 	});
 
-	it('falls back to appliedAt, then createdAt, for a row that was never sent', () => {
+	it('falls back to appliedAt, then createdAt, for a row with no "sent" entry', () => {
+		// A rejection logged after the fact: sent in reality, never "sent" on the board.
 		const noHistory = buildApplicationCsv(
-			[row({ status: 'draft', history: [], appliedAt: AT(2026, 2, 2) })],
+			[row({ status: 'rejected', history: [], appliedAt: AT(2026, 2, 2) })],
 			labels,
 			'de-DE'
 		);
-		expect(bodyLines(noHistory)[0]).toBe('02.02.2026;Acme GmbH;In Arbeit');
+		expect(bodyLines(noHistory)[0]).toBe('02.02.2026;Acme GmbH;Absage');
 
-		const bare = buildApplicationCsv([row({ status: 'draft', history: [] })], labels, 'de-DE');
-		expect(bodyLines(bare)[0]).toBe('01.01.2026;Acme GmbH;In Arbeit');
+		const bare = buildApplicationCsv([row({ status: 'rejected', history: [] })], labels, 'de-DE');
+		expect(bodyLines(bare)[0]).toBe('01.01.2026;Acme GmbH;Absage');
+	});
+
+	it('lists only applications that were actually sent, never drafts', () => {
+		const csv = buildApplicationCsv(
+			[
+				row({ company: 'Draft AG', status: 'draft', history: [{ status: 'draft', timestamp: 1 }] }),
+				row({
+					company: 'Withdrawn AG',
+					status: 'rejected',
+					history: [
+						{ status: 'draft', timestamp: 1 },
+						{ status: 'rejected', timestamp: 2 }
+					]
+				}),
+				row({
+					company: 'Turned Down AG',
+					status: 'rejected',
+					history: [
+						{ status: 'sent', timestamp: AT(2026, 3, 5) },
+						{ status: 'rejected', timestamp: AT(2026, 3, 9) }
+					]
+				}),
+				row({ company: 'Sent AG' })
+			],
+			labels,
+			'de-DE'
+		);
+		expect(bodyLines(csv).map((line) => line.split(';')[1])).toEqual(['Turned Down AG', 'Sent AG']);
 	});
 
 	it('sorts oldest first, whatever order the board hands them over in', () => {

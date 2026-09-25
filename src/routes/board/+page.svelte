@@ -9,7 +9,7 @@
 	import { colorStore } from '$lib/stores/colors.svelte.js';
 	import { deletePdfFromOpfs } from '$lib/utils/opfs.js';
 	import { announcer } from '$lib/stores/announcer.svelte.js';
-	import { getReminderDueAt } from '$lib/utils/reminders.js';
+	import { getReminderDueAt, wasSent } from '$lib/utils/reminders.js';
 	import { buildApplicationCsv, exportFileName } from '$lib/utils/applicationExport.js';
 	import { renderApplicationListPdf } from '$lib/utils/applicationListPdf.js';
 	import { replaceState } from '$app/navigation';
@@ -234,6 +234,9 @@
 	}
 
 	let exportLocale = $derived(i18n.locale === 'de' ? 'de-DE' : 'en-GB');
+	// What the export will actually list: toExportRows drops everything that
+	// was never sent, so the buttons and the announcement count the same way.
+	let exportCount = $derived(filteredApplications.filter(wasSent).length);
 
 	function downloadBlob(blob: Blob, fileName: string) {
 		const url = URL.createObjectURL(blob);
@@ -244,16 +247,14 @@
 		anchor.click();
 		document.body.removeChild(anchor);
 		URL.revokeObjectURL(url);
-		announcer.announce(
-			t('kanban.export.doneAnnouncement').replace('{count}', String(filteredApplications.length))
-		);
+		announcer.announce(t('kanban.export.doneAnnouncement').replace('{count}', String(exportCount)));
 	}
 
 	/**
 	 * Downloads the proof-of-applications list the Agentur für Arbeit asks
-	 * for. Exports whatever the filter bar currently shows rather than adding
-	 * a second set of controls next to it - "export what I am looking at" is
-	 * the only selection rule that needs no explaining.
+	 * for. Exports what the filter bar currently shows rather than adding a
+	 * second set of controls next to it - minus anything never sent, which is
+	 * not an application and has no place on a Nachweis.
 	 */
 	function exportCsv() {
 		const csv = buildApplicationCsv(filteredApplications, exportLabels(), exportLocale);
@@ -422,7 +423,7 @@
 			<button
 				class="btn-secondary"
 				onclick={exportPdf}
-				disabled={filteredApplications.length === 0 || isExporting}
+				disabled={exportCount === 0 || isExporting}
 				title={t('kanban.export.hintPdf')}
 			>
 				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -439,7 +440,7 @@
 			<button
 				class="btn-secondary"
 				onclick={exportCsv}
-				disabled={filteredApplications.length === 0}
+				disabled={exportCount === 0}
 				title={t('kanban.export.hintCsv')}
 			>
 				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">

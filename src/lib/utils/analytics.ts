@@ -1,4 +1,5 @@
 import type { Application } from '$lib/db/index.js';
+import { wasSent } from '$lib/utils/reminders.js';
 
 /** Analytics only ever needs status/history, not every field of a row. */
 export type AnalyticsRow = Pick<Application, 'status' | 'history'>;
@@ -25,24 +26,6 @@ export interface ApplicationStats {
 		worst: number;
 		count: number;
 	};
-}
-
-/**
- * Whether an application actually went out. Every status past draft implies
- * it except a rejection: a card dragged from draft straight to "Absage"
- * (the posting was gone, say) was never sent, and only its history shows
- * that. A rejection with no draft entry at all - logged after the fact
- * directly in the rejected column, or a legacy row without history - records
- * a real rejection and counts.
- */
-function wasSent(status: AnalyticsRow['status'], history: AnalyticsRow['history']): boolean {
-	if (status === 'draft') return false;
-	if (status !== 'rejected') return true;
-	return (
-		history.some(
-			(h) => h.status === 'sent' || h.status === 'interview' || h.status === 'accepted'
-		) || !history.some((h) => h.status === 'draft')
-	);
 }
 
 /**
@@ -79,7 +62,7 @@ export function computeApplicationStats(list: AnalyticsRow[]): ApplicationStats 
 		// without it — and one such row used to throw here and take the whole
 		// statistics page down rather than just counting as having no events.
 		const history = app.history ?? [];
-		if (wasSent(app.status, history)) totalSent++;
+		if (wasSent({ status: app.status, history })) totalSent++;
 		if (app.status === 'rejected' && history.some((h) => h.status === 'interview')) {
 			rejectedAfterInterview++;
 		}

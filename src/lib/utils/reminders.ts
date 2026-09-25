@@ -60,6 +60,26 @@ export function getAppliedAt(
 }
 
 /**
+ * Whether an application actually went out - the rule both the statistics
+ * funnel and the proof-of-applications export count by. Every status past
+ * draft implies it except a rejection: a card dragged from draft straight to
+ * "Absage" (the posting was gone, say) was never sent, and only its history
+ * shows that. A rejection with no draft entry at all - logged after the fact
+ * directly in the rejected column, or a legacy row without history - records
+ * a real rejection and counts.
+ */
+export function wasSent(app: Pick<Application, 'status' | 'history'>): boolean {
+	if (app.status === 'draft') return false;
+	if (app.status !== 'rejected') return true;
+	const history = app.history ?? [];
+	return (
+		history.some(
+			(h) => h.status === 'sent' || h.status === 'interview' || h.status === 'accepted'
+		) || !history.some((h) => h.status === 'draft')
+	);
+}
+
+/**
  * The single source of truth for "when is a follow-up reminder due for this
  * application" - used by both the board's in-app alert banner and the
  * notification-firing engine below, so they can never drift out of sync with
