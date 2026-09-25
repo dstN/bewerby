@@ -53,7 +53,10 @@ export type TranslationKeys = {
 		savedAnnouncement: string;
 		changeStatus: string;
 		addToColumn: string;
-		colorMarker: string;
+		collapseAll: string;
+		expandAll: string;
+		collapseCard: string;
+		expandCard: string;
 		deleteApplication: string;
 		subtitle: string;
 		searchPlaceholder: string;
@@ -379,6 +382,7 @@ export type TranslationKeys = {
 			storageKeyColorsDesc: string;
 			storageKeyProfileDesc: string;
 			storageKeyNotifiedDesc: string;
+			storageKeyCollapsedDesc: string;
 			noTrackingTitle: string;
 			noTrackingBody: string;
 			hostingTitle: string;

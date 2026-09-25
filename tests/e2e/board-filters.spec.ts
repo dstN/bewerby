@@ -266,3 +266,51 @@ test.describe('Sorting', () => {
 		expect(companies[0]).toBe('Blue Yonder');
 	});
 });
+
+test.describe('Collapsing cards', () => {
+	test.beforeEach(async ({ page }) => open(page, board()));
+
+	const card = (page: Page, company: string) => cards(page).filter({ hasText: company });
+
+	test('the dot collapses one card to company, priority, date and icons', async ({ page }) => {
+		// Fabrikam has no colour marker, so this is the grey default dot.
+		const fabrikam = card(page, 'Fabrikam AG');
+		const toggle = fabrikam.locator('.card-collapse-btn');
+		await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+		await toggle.click();
+
+		await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+		await expect(fabrikam.locator('.card-title, .card-tags, .card-status-select')).toHaveCount(0);
+		await expect(fabrikam.locator('.card-priority, .card-date')).toHaveCount(2);
+		await expect(fabrikam.locator('.btn-card-dispatch, .btn-card-delete')).toHaveCount(2);
+		// The others stay open.
+		await expect(page.locator('.card-title')).toHaveCount(2);
+
+		await toggle.click();
+		await expect(fabrikam.locator('.card-title')).toBeVisible();
+	});
+
+	test('the filter-bar button collapses and expands every card', async ({ page }) => {
+		const all = page.locator('.btn-collapse-all');
+		await all.click();
+		await expect(page.locator('.card-title')).toHaveCount(0);
+		await expect(all).toHaveText(/einblenden|Expand all/);
+
+		await all.click();
+		await expect(page.locator('.card-title')).toHaveCount(3);
+		await expect(all).toHaveText(/zuklappen|Collapse all/);
+	});
+});
+
+test('collapsed cards stay collapsed after a reload', async ({ page }) => {
+	await open(page, board());
+	await cards(page).filter({ hasText: 'Fabrikam AG' }).locator('.card-collapse-btn').click();
+	await expect(page.locator('.card-title')).toHaveCount(2);
+
+	await page.reload();
+	await expect(cards(page)).toHaveCount(3);
+	await expect(page.locator('.card-title')).toHaveCount(2);
+	await expect(
+		cards(page).filter({ hasText: 'Fabrikam AG' }).locator('.card-collapse-btn')
+	).toHaveAttribute('aria-expanded', 'false');
+});

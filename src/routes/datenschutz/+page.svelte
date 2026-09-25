@@ -73,6 +73,10 @@
 						<td><code>bewerby_notified_*</code></td>
 						<td>{t('legal.datenschutz.storageKeyNotifiedDesc')}</td>
 					</tr>
+					<tr>
+						<td><code>bewerby-collapsed-cards</code></td>
+						<td>{t('legal.datenschutz.storageKeyCollapsedDesc')}</td>
+					</tr>
 				</tbody>
 			</table>
 		</div>

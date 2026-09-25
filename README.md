@@ -20,6 +20,9 @@ all running in your browser, with your application data never leaving it.
 
 - Kanban board (draft → sent → interview → accepted/rejected) with both
   drag-and-drop and a keyboard/touch-friendly per-card status control.
+  Cards collapse to company, priority, date and their mail/delete buttons -
+  one at a time via the dot in front of the company, or all at once from the
+  filter bar - and stay that way across reloads.
 - Three ways to fill in a posting, all feeding the same review panel so
   nothing is written without being shown first: upload the **PDF**, **paste
   the ad's text**, or **give it a link** - the last one fetched server-side

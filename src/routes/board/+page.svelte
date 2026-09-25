@@ -92,6 +92,45 @@
 		return grouped;
 	});
 
+	// Collapsed cards keep company, priority, date and the icon buttons. The
+	// set of collapsed ids is a view preference, so it lives in localStorage
+	// next to theme and locale rather than on the application record.
+	const COLLAPSED_STORAGE_KEY = 'bewerby-collapsed-cards';
+
+	function readCollapsedIds(): number[] {
+		try {
+			const parsed: unknown = JSON.parse(localStorage.getItem(COLLAPSED_STORAGE_KEY) ?? '[]');
+			return Array.isArray(parsed)
+				? parsed.filter((id: unknown): id is number => Number.isInteger(id))
+				: [];
+		} catch {
+			return [];
+		}
+	}
+
+	const collapsedIds = new SvelteSet<number>(readCollapsedIds());
+
+	$effect(() => {
+		try {
+			localStorage.setItem(COLLAPSED_STORAGE_KEY, JSON.stringify([...collapsedIds]));
+		} catch {
+			// Storage full or blocked: the toggle still works for this session.
+		}
+	});
+	let allCollapsed = $derived(
+		filteredApplications.length > 0 &&
+			filteredApplications.every((app) => collapsedIds.has(app.id!))
+	);
+
+	function toggleAllCollapsed() {
+		if (allCollapsed) collapsedIds.clear();
+		else for (const app of filteredApplications) collapsedIds.add(app.id!);
+	}
+
+	function toggleCollapsed(id: number) {
+		if (!collapsedIds.delete(id)) collapsedIds.add(id);
+	}
+
 	// Get unique tags for filter dropdown
 	let allTags = $derived.by(() => {
 		const list = $applicationsStore ?? [];
@@ -163,6 +202,7 @@
 		try {
 			const app = await db.applications.get(id);
 			await db.applications.delete(id);
+			collapsedIds.delete(id);
 			if (app?.pdfRef) {
 				await deletePdfFromOpfs(app.pdfRef);
 			}
@@ -487,6 +527,15 @@
 				<option value="priority">🔥 {t('kanban.sortPriority')}</option>
 				<option value="date">📅 {t('kanban.sortDate')}</option>
 			</select>
+
+			<button
+				type="button"
+				class="btn-collapse-all"
+				onclick={toggleAllCollapsed}
+				disabled={filteredApplications.length === 0}
+			>
+				{allCollapsed ? t('kanban.expandAll') : t('kanban.collapseAll')}
+			</button>
 		</div>
 	</div>
 
@@ -518,8 +567,10 @@
 
 				<ul class="cards-list">
 					{#each columnApps as app (app.id)}
+						{@const collapsed = collapsedIds.has(app.id!)}
 						<li
 							class="card"
+							class:collapsed
 							class:specular-card={!!app.cardColor && app.cardColor !== 'none'}
 							style:--card-glow-color={app.cardColor && app.cardColor !== 'none'
 								? app.cardColor
@@ -528,43 +579,56 @@
 							ondragstart={(e) => handleDragStart(e, app.id!)}
 							ondragend={handleDragEnd}
 						>
-							<button type="button" class="card-open-btn" onclick={() => openEditModal(app)}>
-								<div class="card-top">
-									<div class="card-company-row">
-										{#if app.cardColor && app.cardColor !== 'none'}
-											<span
-												class="card-color-dot"
-												style:--dot-color={app.cardColor}
-												title={t('kanban.colorMarker')}
-											></span>
-										{/if}
-										<span class="card-company">{app.company}</span>
-									</div>
+							<div class="card-head">
+								<button
+									type="button"
+									class="card-collapse-btn"
+									onclick={() => toggleCollapsed(app.id!)}
+									aria-expanded={!collapsed}
+									aria-label={t(collapsed ? 'kanban.expandCard' : 'kanban.collapseCard').replace(
+										'{company}',
+										app.company
+									)}
+								>
 									<span
-										class="card-priority"
-										class:priority-high={app.priority === 'high'}
-										class:priority-low={app.priority === 'low'}
-									>
-										{t(`application.priorities.${app.priority}`)}
-									</span>
-								</div>
-								<h3 class="card-title">{app.title}</h3>
-
-								{#if app.salary}
-									<span class="card-salary">{app.salary}</span>
-								{/if}
-
-								{#if app.tags.length > 0}
-									<div class="card-tags">
-										{#each app.tags.slice(0, 3) as tag (tag)}
-											<span class="card-tag">{tag}</span>
-										{/each}
-										{#if app.tags.length > 3}
-											<span class="card-tag-more">+{app.tags.length - 3}</span>
-										{/if}
+										class="card-color-dot"
+										class:uncolored={!app.cardColor || app.cardColor === 'none'}
+										style:--dot-color={app.cardColor && app.cardColor !== 'none'
+											? app.cardColor
+											: undefined}
+									></span>
+								</button>
+								<button type="button" class="card-open-btn" onclick={() => openEditModal(app)}>
+									<div class="card-top">
+										<span class="card-company">{app.company}</span>
+										<span
+											class="card-priority"
+											class:priority-high={app.priority === 'high'}
+											class:priority-low={app.priority === 'low'}
+										>
+											{t(`application.priorities.${app.priority}`)}
+										</span>
 									</div>
-								{/if}
-							</button>
+									{#if !collapsed}
+										<h3 class="card-title">{app.title}</h3>
+
+										{#if app.salary}
+											<span class="card-salary">{app.salary}</span>
+										{/if}
+									{/if}
+
+									{#if app.tags.length > 0 && !collapsed}
+										<div class="card-tags">
+											{#each app.tags.slice(0, 3) as tag (tag)}
+												<span class="card-tag">{tag}</span>
+											{/each}
+											{#if app.tags.length > 3}
+												<span class="card-tag-more">+{app.tags.length - 3}</span>
+											{/if}
+										</div>
+									{/if}
+								</button>
+							</div>
 
 							<footer class="card-footer">
 								<span class="card-date">
@@ -573,20 +637,22 @@
 										{ day: 'numeric', month: 'short' }
 									)}
 								</span>
-								<select
-									class="card-status-select"
-									value={app.status}
-									onclick={(e) => e.stopPropagation()}
-									onchange={(e) => {
-										e.stopPropagation();
-										handleStatusSelect(e, app.id!);
-									}}
-									aria-label={t('kanban.changeStatus').replace('{company}', app.company)}
-								>
-									{#each columns as statusOption (statusOption.id)}
-										<option value={statusOption.id}>{t(statusOption.labelKey)}</option>
-									{/each}
-								</select>
+								{#if !collapsed}
+									<select
+										class="card-status-select"
+										value={app.status}
+										onclick={(e) => e.stopPropagation()}
+										onchange={(e) => {
+											e.stopPropagation();
+											handleStatusSelect(e, app.id!);
+										}}
+										aria-label={t('kanban.changeStatus').replace('{company}', app.company)}
+									>
+										{#each columns as statusOption (statusOption.id)}
+											<option value={statusOption.id}>{t(statusOption.labelKey)}</option>
+										{/each}
+									</select>
+								{/if}
 								<button
 									class="btn-card-dispatch"
 									onclick={(e) => {
@@ -839,6 +905,22 @@
 		cursor: pointer;
 	}
 
+	.btn-collapse-all {
+		padding: 6px 12px;
+		background-color: var(--surface-1);
+		border: 1px solid var(--border-strong);
+		border-radius: var(--radius-md);
+		color: var(--text-primary);
+		font-family: inherit;
+		font-size: 13px;
+		white-space: nowrap;
+		cursor: pointer;
+	}
+
+	.btn-collapse-all:hover:not(:disabled) {
+		background-color: var(--surface-2);
+	}
+
 	.kanban-board {
 		display: grid;
 		grid-template-columns: repeat(5, 1fr);
@@ -964,6 +1046,10 @@
 		cursor: pointer;
 	}
 
+	.card.collapsed {
+		gap: 6px;
+	}
+
 	.card:hover {
 		border-color: var(--border-strong);
 		box-shadow: var(--shadow-md);
@@ -1037,10 +1123,30 @@
 		gap: 8px;
 	}
 
-	.card-company-row {
+	.card-head {
 		display: flex;
-		align-items: center;
-		gap: 6px;
+		align-items: flex-start;
+		gap: 2px;
+	}
+
+	/* 24px target (WCAG 2.5.8) around a 10px dot; the negative margin lets it
+	   reach into the card padding instead of pushing the text over. */
+	.card-collapse-btn {
+		display: grid;
+		place-items: center;
+		flex-shrink: 0;
+		width: 24px;
+		height: 24px;
+		margin: -6px 0 -6px -7px;
+		padding: 0;
+		background: none;
+		border: none;
+		border-radius: 50%;
+		cursor: pointer;
+	}
+
+	.card-collapse-btn:hover {
+		background-color: var(--surface-3);
 	}
 
 	.card-color-dot {
@@ -1049,7 +1155,16 @@
 		border-radius: 50%;
 		background-color: var(--dot-color);
 		box-shadow: 0 0 8px var(--dot-color);
-		flex-shrink: 0;
+	}
+
+	.card-color-dot.uncolored {
+		background-color: var(--text-tertiary);
+		box-shadow: none;
+	}
+
+	.card-head .card-open-btn {
+		flex: 1;
+		min-width: 0;
 	}
 
 	.card-company {

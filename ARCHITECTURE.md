@@ -239,6 +239,22 @@ date, not two. The export takes whatever the board's filter bar currently
 shows; "export what I am looking at" needs no second set of controls to
 explain.
 
+## Collapsible cards
+
+A collapsed card keeps company, priority, date and the dispatch/delete
+buttons; title, salary, tags and the status select are not rendered. The
+toggle is the dot in front of the company - a `<button>` of its own with
+`aria-expanded`, sitting _next to_ the card's open button rather than inside
+it, since a button inside a button is invalid HTML. Cards without a colour
+marker get a grey dot so every card has one. The filter bar's "Alle
+zuklappen"/"Alle einblenden" acts on the cards the current filter shows.
+
+The collapsed ids are a view preference, not application data, so they live
+in `localStorage` (`bewerby-collapsed-cards`, listed on `/datenschutz`)
+instead of on the Dexie row - which also keeps them out of backups and the
+`updatedAt` of the application. Deleting a card drops its id; the
+right-to-erasure button clears the key with the rest of `localStorage`.
+
 ## Security headers
 
 Every route is prerendered, and `adapter-node` serves prerendered pages
@@ -272,7 +288,7 @@ to remember to add them.
     import roundtrip with an actual PDF attachment;
   - `board-filters.spec.ts` drives the search/tag/priority/color filters and
     the sort dropdown through the real controls, not the underlying
-    `$derived`;
+    `$derived`, plus collapsing cards singly, all at once and across a reload;
   - `preferences.spec.ts` checks the theme/locale stores against the actual
     no-FOUC behavior in `app.html` - i.e. that the stored value is on
     `<html>` _before_ first paint, not just that the store's state is right;
