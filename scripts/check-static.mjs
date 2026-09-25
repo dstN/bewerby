@@ -11,32 +11,32 @@ import { fileURLToPath } from 'node:url';
 const STATIC_DIR = fileURLToPath(new URL('../static', import.meta.url));
 
 const ALLOWED_FILES = new Set(['.gitignore', '.htaccess', 'manifest.json', 'robots.txt']);
-const ALLOWED_DIRS = new Set(['fonts', 'app-icons', 'screenshots']);
+// Each allowed directory also fixes what may live inside it, at any depth:
+// allowing the directory alone would let a CV dropped into static/fonts/
+// ship exactly the way ROADMAP.md #1 describes.
+const ALLOWED_DIRS = new Map([
+	['fonts', /\.woff2$/],
+	['app-icons', /\.(png|svg|ico)$/],
+	['screenshots', /\.png$/]
+]);
 
-function walk(dir, isRoot) {
+function walk(dir, allowedName) {
 	const violations = [];
 	for (const entry of readdirSync(dir, { withFileTypes: true })) {
 		const full = join(dir, entry.name);
-		if (isRoot && entry.isDirectory()) {
-			if (!ALLOWED_DIRS.has(entry.name)) {
-				violations.push(relative(STATIC_DIR, full) + '/');
-			}
-			continue;
-		}
-		if (isRoot && entry.isFile()) {
-			if (!ALLOWED_FILES.has(entry.name)) {
-				violations.push(relative(STATIC_DIR, full));
-			}
-			continue;
-		}
+		const isRoot = dir === STATIC_DIR;
 		if (entry.isDirectory()) {
-			violations.push(...walk(full, false));
+			const pattern = isRoot ? ALLOWED_DIRS.get(entry.name) : allowedName;
+			if (pattern) violations.push(...walk(full, pattern));
+			else violations.push(relative(STATIC_DIR, full) + '/');
+		} else if (isRoot ? !ALLOWED_FILES.has(entry.name) : !allowedName.test(entry.name)) {
+			violations.push(relative(STATIC_DIR, full));
 		}
 	}
 	return violations;
 }
 
-const violations = walk(STATIC_DIR, true);
+const violations = walk(STATIC_DIR);
 
 if (violations.length > 0) {
 	console.error('\nBuild guard: unexpected file(s) in static/\n');

@@ -469,9 +469,13 @@
 			return;
 		}
 
+		// A second upload in the same edit replaces a file nothing else points
+		// at yet; the stored one (originalPdfRef) is save()'s to delete.
+		const superseded = pdfRef;
 		try {
 			pdfRef = await writePdfToOpfs(file);
 			pdfName = file.name;
+			if (superseded && superseded !== originalPdfRef) await deletePdfFromOpfs(superseded);
 		} catch (err) {
 			console.error('Failed to store PDF:', err);
 			const message = err instanceof Error ? err.message : String(err);

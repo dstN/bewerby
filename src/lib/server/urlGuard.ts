@@ -1,5 +1,5 @@
 import { lookup } from 'node:dns/promises';
-import { isIPv4, isIPv6 } from 'node:net';
+import { isIPv4, isIPv6, type LookupFunction } from 'node:net';
 
 /**
  * Server-Side Request Forgery guard for the job-ad fetcher.
@@ -53,6 +53,14 @@ export function isPrivateAddress(address: string): boolean {
 	// IPv4-mapped/compatible: judge them by the IPv4 rules they really are.
 	const mapped = /^::(ffff:)?(\d{1,3}(?:\.\d{1,3}){3})$/.exec(ip);
 	if (mapped) return isPrivateAddress(mapped[2]);
+	// The same in hex, which is the only form that reaches us from a URL: the
+	// WHATWG parser serializes `[::ffff:127.0.0.1]` as `[::ffff:7f00:1]`.
+	const mappedHex = /^::(ffff:)?([0-9a-f]{1,4}):([0-9a-f]{1,4})$/.exec(ip);
+	if (mappedHex) {
+		const high = parseInt(mappedHex[2], 16);
+		const low = parseInt(mappedHex[3], 16);
+		return isPrivateAddress(`${high >> 8}.${high & 255}.${low >> 8}.${low & 255}`);
+	}
 
 	if (ip === '::' || ip === '::1') return true;
 	if (/^f[cd]/.test(ip)) return true; // fc00::/7 unique local
@@ -63,8 +71,9 @@ export function isPrivateAddress(address: string): boolean {
 
 /**
  * Validates a user-supplied URL and resolves it, refusing anything that
- * points inward. Returns every address the host resolves to, so the caller
- * can pin the connection to one it has actually checked.
+ * points inward, and returns the addresses it checked. This is the up-front
+ * check; the connection itself must still go through publicLookup below, or
+ * a second resolution can answer differently.
  *
  * ALL resolved addresses have to pass, not just the first: a host that
  * answers with both a public and a private address would otherwise be a way
@@ -106,3 +115,27 @@ export async function assertPublicUrl(input: string): Promise<{ url: URL; addres
 
 	return { url, addresses: resolved.map((entry) => entry.address) };
 }
+
+/**
+ * A `lookup` for node:https that applies the same rule at connect time.
+ *
+ * assertPublicUrl resolves the host once to judge it, but a connection made
+ * afterwards resolves it again - and a DNS server that answers with a public
+ * address the first time and 127.0.0.1 the second (rebinding) walks straight
+ * past a check that only ran up front. Handing this to the request instead
+ * makes the address that gets checked the address that gets connected to.
+ */
+export const publicLookup: LookupFunction = (hostname, options, callback) => {
+	lookup(hostname, { family: options.family, all: true })
+		.then((entries) => {
+			if (entries.length === 0) throw new UnsafeUrlError('unresolvable');
+			if (entries.some((entry) => isPrivateAddress(entry.address))) {
+				throw new UnsafeUrlError('private-address');
+			}
+			if (options.all) callback(null, entries);
+			else callback(null, entries[0].address, entries[0].family);
+		})
+		.catch((err: unknown) => {
+			callback(err instanceof Error ? err : new UnsafeUrlError('unresolvable'), '');
+		});
+};

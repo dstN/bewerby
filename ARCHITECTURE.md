@@ -73,7 +73,11 @@ it first looks:
   rate-limit window (40 fetches per IP), so the route cannot serve as a free
   open proxy. Expired entries are swept on every request, which is what lets
   the Datenschutzerklärung promise "up to one hour" rather than "until the
-  next restart".
+  next restart". The IP comes from Passenger's `!~Passenger-Client-Address`
+  header, not the socket - behind Passenger the socket peer is Passenger
+  itself, which would put every visitor into one bucket - and not from
+  `X-Forwarded-For`, which any client can send; Passenger rejects requests
+  that carry a `!~` header of their own.
 - The job board sees **our** IP, not the applicant's. For someone applying
   out of a current position this discloses strictly less to third parties
   than opening the link themselves would.
@@ -98,7 +102,10 @@ cannot bundle it into client code) is what makes that not work:
 - Every address the host resolves to must be public - **all** of them, since
   a host answering with one public and one private address would otherwise
   walk straight through a first-match check. IPv4, IPv6 and IPv4-mapped
-  IPv6 (`::ffff:127.0.0.1`) are all judged by the same ranges.
+  IPv6 are all judged by the same ranges - including the mapped form in hex
+  (`::ffff:7f00:1`), which is the only one that ever arrives from a URL: the
+  WHATWG parser serializes `[::ffff:127.0.0.1]` that way, so a check for the
+  dotted form alone let a bare mapped literal straight through.
 - Redirects are followed **by hand**, re-running the full check on every
   hop, because a public host answering `302 http://127.0.0.1:8443` defeats a
   one-time check completely.
@@ -107,13 +114,18 @@ cannot bundle it into client code) is what makes that not work:
   failure so the response cannot be used to probe what exists internally.
 - A per-IP hourly throttle keeps it from becoming a free open proxy.
 
-**The one gap, stated plainly:** validating DNS and then letting `fetch()`
-resolve again is a time-of-check/time-of-use window - an attacker
-controlling a zero-TTL record could answer public on the first lookup and
-private on the second. Closing it means pinning the connection to the
-validated IP through a custom dispatcher; `assertPublicUrl` already returns
-the addresses for exactly that. It is marked as the known ceiling rather
-than quietly assumed away.
+**Checked address = connected address.** Validating DNS and then letting
+`fetch()` resolve again was a time-of-check/time-of-use window: a zero-TTL
+record answering public on the first lookup and private on the second
+(DNS rebinding) walked through. The request therefore goes over `node:https`
+rather than `fetch()`, because only that takes a `lookup`: `publicLookup`
+applies the same rule at connect time, to the very address the socket uses.
+`assertPublicUrl` still runs up front for the scheme, credentials and bare IP
+literals, which never reach a lookup at all. `fetch()` could only do this
+through an undici dispatcher, and undici is not a dependency of ours - it is
+only present transitively under jsdom. Every early exit destroys the
+response, so a refused or oversized body never keeps a socket open on a
+host the caller chose.
 
 ### What actually works
 
@@ -135,8 +147,12 @@ Dexie's schema v2 (`src/lib/db/index.ts`) migrates every existing row to the
 OPFS-backed `pdfRef` scheme the first time the database opens after an
 upgrade, moving the actual bytes out to OPFS and deleting `pdfBlob` from the
 row once the move succeeds. A row whose migration fails partway (e.g. OPFS
-write error) simply keeps its `pdfBlob` and is retried on the next open,
-rather than losing the attachment.
+write error) keeps its `pdfBlob` rather than losing the attachment - and
+since Dexie runs an upgrade exactly once, the retry lives in an
+`on('ready')` handler that moves whatever is left on every open. Dexie holds
+other queries until it resolves, so the boot-time orphan sweep already sees
+the new `pdfRef`. Without it, such a row kept its PDF in a field nothing
+reads: invisible in the UI and dropped from every backup.
 
 ## Offline support: a fully static SPA shell, precached explicitly
 
@@ -153,7 +169,10 @@ document per route to precache.
 2. Everything under `static/` (`files` from `$service-worker`), with dotfiles
    filtered out - `adapter-node` serves static assets via `sirv`, which
    refuses dotfiles by default and would otherwise fail the whole
-   installation on a single `static/.gitignore`.
+   installation on a single `static/.gitignore`. Because all of it ships to
+   every visitor, `scripts/check-static.mjs` (run as `prebuild`) fails the
+   build on anything not allowlisted: by name at the root, by extension at
+   any depth inside `fonts/`, `app-icons/` and `screenshots/`.
 3. **Every prerendered route document, listed explicitly**
    (`PRERENDERED_ROUTES`). This one is easy to get wrong: `build`/`files`
    above only cover the JS/CSS bundle and `static/`, never the route HTML

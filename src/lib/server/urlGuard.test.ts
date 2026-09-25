@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { assertPublicUrl, isPrivateAddress, UnsafeUrlError } from './urlGuard.js';
+import { assertPublicUrl, isPrivateAddress, publicLookup, UnsafeUrlError } from './urlGuard.js';
 
 describe('isPrivateAddress', () => {
 	it.each([
@@ -35,6 +35,14 @@ describe('isPrivateAddress', () => {
 		expect(isPrivateAddress('::ffff:127.0.0.1')).toBe(true);
 		expect(isPrivateAddress('::ffff:169.254.169.254')).toBe(true);
 		expect(isPrivateAddress('::ffff:8.8.8.8')).toBe(false);
+	});
+
+	it('sees through the hex form the URL parser turns every mapped address into', () => {
+		// new URL('https://[::ffff:127.0.0.1]/').hostname is '[::ffff:7f00:1]'.
+		expect(isPrivateAddress('::ffff:7f00:1')).toBe(true);
+		expect(isPrivateAddress('::ffff:a9fe:a9fe')).toBe(true);
+		expect(isPrivateAddress('::7f00:1')).toBe(true);
+		expect(isPrivateAddress('::ffff:808:808')).toBe(false);
 	});
 
 	it('allows an ordinary public IPv6 address', () => {
@@ -81,6 +89,8 @@ describe('assertPublicUrl', () => {
 		'https://localhost.localdomain.invalid./',
 		'https://169.254.169.254/latest/meta-data/',
 		'https://[::1]:8443/',
+		'https://[::ffff:127.0.0.1]/',
+		'https://[::ffff:169.254.169.254]/latest/meta-data/',
 		'https://10.0.0.5/admin',
 		'https://192.168.178.1/'
 	])('refuses %s without touching the network', async (input) => {
@@ -90,5 +100,21 @@ describe('assertPublicUrl', () => {
 	it('judges a bare IP literal directly, with no DNS round trip', async () => {
 		const { addresses } = await assertPublicUrl('https://8.8.8.8/stellenanzeige');
 		expect(addresses).toEqual(['8.8.8.8']);
+	});
+});
+
+describe('publicLookup', () => {
+	// The connect-time twin of assertPublicUrl: what a DNS-rebinding answer
+	// runs into after the up-front check has already passed.
+	function resolveVia(hostname: string, all: boolean): Promise<string> {
+		return new Promise((resolve) => {
+			publicLookup(hostname, { all }, (err) => {
+				resolve(err instanceof UnsafeUrlError ? err.reason : err ? 'other-error' : 'connected');
+			});
+		});
+	}
+
+	it.each([true, false])('refuses a host resolving to loopback (all: %s)', async (all) => {
+		expect(await resolveVia('localhost', all)).toBe('private-address');
 	});
 });

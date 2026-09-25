@@ -1,5 +1,7 @@
+import { request as httpsRequest } from 'node:https';
+import type { IncomingMessage } from 'node:http';
 import { json, type RequestHandler } from '@sveltejs/kit';
-import { assertPublicUrl, UnsafeUrlError } from '$lib/server/urlGuard.js';
+import { assertPublicUrl, publicLookup, UnsafeUrlError } from '$lib/server/urlGuard.js';
 import { extractJobPage } from '$lib/utils/htmlToJobText.js';
 
 /**
@@ -77,41 +79,78 @@ function rateLimited(key: string, now = Date.now()): boolean {
 	return entry.count > MAX_PER_WINDOW;
 }
 
-/** Reads at most MAX_BYTES, so a multi-gigabyte response cannot exhaust us. */
-async function readCapped(response: Response): Promise<string | null> {
-	const declared = Number(response.headers.get('content-length') ?? '0');
-	if (declared > MAX_BYTES) return null;
+/**
+ * One GET, over node:https rather than fetch(). fetch() cannot take a
+ * `lookup`, so it resolves the host again on its own after assertPublicUrl
+ * judged it - which is exactly the gap a DNS-rebinding answer slips through.
+ * publicLookup applies the check to the address the socket really uses.
+ */
+function get(url: URL): Promise<IncomingMessage> {
+	return new Promise((resolve, reject) => {
+		const req = httpsRequest(
+			url,
+			{
+				method: 'GET',
+				lookup: publicLookup,
+				signal: AbortSignal.timeout(TIMEOUT_MS),
+				headers: {
+					'user-agent': USER_AGENT,
+					accept: 'text/html,application/xhtml+xml',
+					'accept-language': 'de-DE,de;q=0.9,en;q=0.8',
+					// node:https does not decompress; ask for the body as it is.
+					'accept-encoding': 'identity'
+				}
+			},
+			resolve
+		);
+		req.on('error', reject);
+		req.end();
+	});
+}
 
-	const reader = response.body?.getReader();
-	if (!reader) return null;
-
-	const chunks: Uint8Array[] = [];
-	let total = 0;
-	try {
-		for (;;) {
-			const { done, value } = await reader.read();
-			if (done) break;
-			total += value.length;
-			if (total > MAX_BYTES) return null;
-			chunks.push(value);
-		}
-	} finally {
-		await reader.cancel().catch(() => {});
+/**
+ * Reads at most MAX_BYTES, so a multi-gigabyte response cannot exhaust us.
+ * Every early return destroys the response: an unread body otherwise keeps
+ * its socket open on a host the caller chose.
+ */
+async function readCapped(response: IncomingMessage): Promise<string | null> {
+	const declared = Number(response.headers['content-length'] ?? '0');
+	if (declared > MAX_BYTES) {
+		response.destroy();
+		return null;
 	}
 
-	const merged = new Uint8Array(total);
-	let offset = 0;
-	for (const chunk of chunks) {
-		merged.set(chunk, offset);
-		offset += chunk.length;
+	const chunks: Buffer[] = [];
+	let total = 0;
+	for await (const chunk of response) {
+		const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(String(chunk));
+		total += buffer.length;
+		if (total > MAX_BYTES) {
+			response.destroy();
+			return null;
+		}
+		chunks.push(buffer);
 	}
 	// Job boards are UTF-8 in practice; a mislabelled page degrades to a few
 	// wrong characters, which the review panel lets the user correct.
-	return new TextDecoder('utf-8').decode(merged);
+	return new TextDecoder('utf-8').decode(Buffer.concat(chunks));
+}
+
+/**
+ * Who is asking, for the rate limit. Behind Passenger the socket peer is
+ * Passenger itself, so getClientAddress() alone would put every visitor into
+ * one shared bucket. Passenger passes the real address in a header with the
+ * `!~` prefix, which it refuses to accept from clients - unlike
+ * X-Forwarded-For, which anyone can send. Without Passenger (locally, in
+ * tests) the header is absent and the socket peer is the client after all.
+ * https://www.phusionpassenger.com/library/indepth/nodejs/secure_http_headers.html
+ */
+function clientAddress(request: Request, fallback: () => string): string {
+	return request.headers.get('!~passenger-client-address') ?? fallback();
 }
 
 export const POST: RequestHandler = async ({ request, getClientAddress }) => {
-	if (rateLimited(getClientAddress())) return failure('rate-limited', 429);
+	if (rateLimited(clientAddress(request, getClientAddress))) return failure('rate-limited', 429);
 
 	let target: string;
 	try {
@@ -140,40 +179,36 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 			return failure('invalid-url', 400);
 		}
 
-		let response: Response;
+		let response: IncomingMessage;
 		try {
-			response = await fetch(url, {
-				method: 'GET',
-				redirect: 'manual',
-				signal: AbortSignal.timeout(TIMEOUT_MS),
-				headers: {
-					'user-agent': USER_AGENT,
-					accept: 'text/html,application/xhtml+xml',
-					'accept-language': 'de-DE,de;q=0.9,en;q=0.8'
-				}
-			});
-		} catch {
+			response = await get(url);
+		} catch (err) {
+			// A rebinding answer is refused by publicLookup at connect time.
+			if (err instanceof UnsafeUrlError && err.reason === 'private-address') {
+				return failure('blocked', 400);
+			}
 			return failure('unreachable', 502);
 		}
 
-		if (response.status >= 300 && response.status < 400) {
-			const location = response.headers.get('location');
-			await response.body?.cancel().catch(() => {});
+		const status = response.statusCode ?? 0;
+		if (status >= 300 && status < 400) {
+			const location = response.headers.location;
+			response.destroy();
 			if (!location) return failure('unreachable', 502);
 			current = new URL(location, url).toString();
 			continue;
 		}
 
-		if (!response.ok) {
-			await response.body?.cancel().catch(() => {});
+		if (status < 200 || status >= 300) {
+			response.destroy();
 			// One status for every failure: whether a host answered 401, 403 or
 			// 404 is exactly the probe an SSRF attempt wants back.
 			return failure('http-error', 502);
 		}
 
-		const contentType = response.headers.get('content-type') ?? '';
+		const contentType = response.headers['content-type'] ?? '';
 		if (!/text\/html|application\/xhtml|text\/plain/i.test(contentType)) {
-			await response.body?.cancel().catch(() => {});
+			response.destroy();
 			return failure('not-html', 415);
 		}
 

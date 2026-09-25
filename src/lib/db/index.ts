@@ -87,8 +87,8 @@ export class BewerbyDatabase extends Dexie {
 							const ref = await Dexie.waitFor(writePdfToOpfs(row.pdfBlob));
 							newRefById.set(row.id, ref);
 						} catch (err) {
-							// Leave pdfBlob in place on this row rather than lose the file -
-							// it will simply be retried the next time the DB is opened.
+							// Leave pdfBlob in place on this row rather than lose the file;
+							// the 'ready' handler below retries it on every open.
 							console.error(
 								`OPFS migration failed for application ${row.id}, keeping pdfBlob for now:`,
 								err
@@ -105,6 +105,28 @@ export class BewerbyDatabase extends Dexie {
 					}
 				});
 			});
+
+		// Dexie runs an upgrade exactly once, so a row whose OPFS write failed
+		// in it (OPFS unavailable, quota) would keep its PDF in a field nothing
+		// else reads: invisible in the UI and dropped from every backup. Every
+		// open therefore retries what is left. Dexie holds other queries until
+		// this resolves, so the boot-time orphan sweep sees the new pdfRef.
+		this.on('ready', async () => {
+			// A row mid-migration can carry both fields.
+			const table = this.table('applications') as Table<
+				ApplicationV1 & Pick<Application, 'pdfRef'>
+			>;
+			const pending = await table.filter((row) => row.pdfBlob instanceof Blob).toArray();
+			for (const row of pending) {
+				if (row.id === undefined || !(row.pdfBlob instanceof Blob)) continue;
+				try {
+					const pdfRef = await writePdfToOpfs(row.pdfBlob);
+					await table.update(row.id, { pdfRef, pdfBlob: undefined });
+				} catch (err) {
+					console.error(`OPFS migration retry failed for application ${row.id}:`, err);
+				}
+			}
+		});
 	}
 }
 

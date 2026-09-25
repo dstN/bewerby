@@ -87,6 +87,36 @@ describe('Dexie v1 -> v2 migration (pdfBlob -> pdfRef via OPFS)', () => {
 		await Dexie.delete(name);
 	});
 
+	it('retries a PDF whose OPFS write failed during the upgrade on the next open', async () => {
+		const { writePdfToOpfs } = await import('$lib/utils/opfs.js');
+		const name = uniqueDbName();
+		const blob = new Blob(['%PDF-1.4 stranded'], { type: 'application/pdf' });
+
+		const legacyDb = new LegacyV1Database(name);
+		const id = (await legacyDb.table('applications').add(baseV1Row({ pdfBlob: blob }))) as number;
+		legacyDb.close();
+
+		// Fails in the one-time upgrade and in the retry of that same open.
+		vi.mocked(writePdfToOpfs)
+			.mockRejectedValueOnce(new Error('QuotaExceededError'))
+			.mockRejectedValueOnce(new Error('QuotaExceededError'));
+		const firstOpen = new BewerbyDatabase(name);
+		await firstOpen.open();
+		const stranded = await firstOpen.table('applications').get(id);
+		expect(stranded.pdfBlob).toBeInstanceOf(Blob);
+		expect(stranded.pdfRef).toBeUndefined();
+		firstOpen.close();
+
+		const secondOpen = new BewerbyDatabase(name);
+		await secondOpen.open();
+		const row = await secondOpen.table('applications').get(id);
+		expect(row.pdfRef).toBe('fake-ref-1.pdf');
+		expect(row.pdfBlob).toBeUndefined();
+
+		secondOpen.close();
+		await Dexie.delete(name);
+	});
+
 	it('leaves rows without a pdfBlob untouched (no pdfRef invented)', async () => {
 		const name = uniqueDbName();
 		const legacyDb = new LegacyV1Database(name);

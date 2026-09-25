@@ -122,9 +122,13 @@
 		}
 	}
 
-	function resetCv() {
+	async function resetCv() {
+		// A CV uploaded in this session and then reset has no owner left. The
+		// stored one (originalCvRef) stays persist()'s to delete, as above.
+		const dropped = cvRef;
 		cvRef = undefined;
 		cvName = undefined;
+		if (dropped && dropped !== originalCvRef) await deletePdfFromOpfs(dropped);
 	}
 
 	async function persist() {
