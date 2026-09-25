@@ -64,10 +64,10 @@ const MAX_PER_WINDOW = 40;
 const hits = new Map<string, { count: number; resetAt: number }>();
 
 function rateLimited(key: string, now = Date.now()): boolean {
-	// Opportunistic sweep: without it the map grows one entry per IP forever.
-	if (hits.size > 5_000) {
-		for (const [ip, entry] of hits) if (entry.resetAt <= now) hits.delete(ip);
-	}
+	// Sweep on every call, not only once the map is large: the Datenschutz-
+	// erklärung promises an IP is held for at most WINDOW_MS, and a lazy sweep
+	// would keep it until the next restart. The map is small, so O(n) is fine.
+	for (const [ip, entry] of hits) if (entry.resetAt <= now) hits.delete(ip);
 	const entry = hits.get(key);
 	if (!entry || entry.resetAt <= now) {
 		hits.set(key, { count: 1, resetAt: now + WINDOW_MS });

@@ -26,8 +26,8 @@ carry application data:
 2. The contact form at `/kontakt` (`src/routes/kontakt/+page.svelte`), which
    posts only what the visitor types into that form - name, email, message -
    to `https://contact.yinside.de/phpmailer.php`. That's a mail relay on
-   separate infrastructure operated by the same person as bewerby.de, not a
-   third-party processor, but it is a genuine cross-origin request; the
+   the same netcup server as bewerby.de (both hosts resolve to the same IP),
+   not a third-party processor, but it is a genuine cross-origin request; the
    CSP's `connect-src` (`vite.config.ts`) explicitly allowlists that one
    origin.
 3. The job-ad link import, which posts one public URL to this app's own
@@ -68,7 +68,12 @@ it first looks:
   access log - which does record the path and the client IP, and rotates on
   the schedule stated in the Datenschutzerklärung - records that the import
   was used, not what for.
-- Nothing is stored, cached or logged by the endpoint itself.
+- Nothing is stored, cached or logged by the endpoint itself. The one thing
+  it holds is the client IP with a counter, in memory, for the one-hour
+  rate-limit window (40 fetches per IP), so the route cannot serve as a free
+  open proxy. Expired entries are swept on every request, which is what lets
+  the Datenschutzerklärung promise "up to one hour" rather than "until the
+  next restart".
 - The job board sees **our** IP, not the applicant's. For someone applying
   out of a current position this discloses strictly less to third parties
   than opening the link themselves would.

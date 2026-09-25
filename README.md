@@ -6,12 +6,13 @@ all running in your browser, with your application data never leaving it.
 
 ## Why
 
-- **Local-only by construction.** Every application, PDF, and setting lives
-  in this browser's IndexedDB and OPFS. There is no account, no backend
-  database, and no analytics/telemetry. The single server endpoint that
-  exists, the optional job-ad link import, receives one public URL and
-  stores nothing - see [ARCHITECTURE.md](ARCHITECTURE.md) for exactly where
-  data lives, what that endpoint does, and why.
+- **Local-only by construction.** Every application, PDF, setting and the
+  sender profile lives in this browser's IndexedDB, OPFS and localStorage.
+  There is no account, no backend database, and no analytics/telemetry.
+  The single server endpoint that exists, the optional job-ad link import,
+  receives one public URL and stores nothing beyond an in-memory, one-hour
+  rate-limit counter per IP - see [ARCHITECTURE.md](ARCHITECTURE.md) for
+  exactly where data lives, what that endpoint does, and why.
 - **Offline-first PWA.** Installable, and every route keeps working without a
   network connection once it's been loaded once.
 - **German/English UI**, switchable at any time.
