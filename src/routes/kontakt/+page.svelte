@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { t } from '$lib/i18n/index.svelte.js';
 	import { announcer } from '$lib/stores/announcer.svelte.js';
 	import ObfuscatedEmail from '$lib/components/common/ObfuscatedEmail.svelte';
@@ -14,6 +15,11 @@
 	// Real users never see or fill this field; a bot that fills every input
 	// trips it, and the response pretends success so it doesn't retry.
 	let honeypot = $state('');
+	// "Read", not "accepted": the form runs on legitimate interest (Art. 6(1)(f)
+	// GDPR, see /datenschutz), so this is an acknowledgement, not a consent
+	// that could be withdrawn. Not sent anywhere - `required` gates the submit.
+	let privacyRead = $state(false);
+	const [privacyBefore, privacyAfter] = $derived(t('legal.kontakt.privacyRead').split('{link}'));
 	let status = $state<'idle' | 'sending' | 'success' | 'error'>('idle');
 	let errorMessage = $state('');
 
@@ -45,6 +51,7 @@
 			name = '';
 			email = '';
 			message = '';
+			privacyRead = false;
 		} catch (err) {
 			console.error('Contact form submission failed:', err);
 			status = 'error';
@@ -101,6 +108,20 @@
 					required
 					rows="6"
 					placeholder={t('legal.kontakt.messagePlaceholder')}></textarea>
+			</div>
+
+			<div class="form-check">
+				<input id="contact-privacy" type="checkbox" bind:checked={privacyRead} required />
+				<label for="contact-privacy">
+					{privacyBefore}<a
+						href="{resolve('/datenschutz')}#kontaktformular"
+						target="_blank"
+						rel="noopener"
+						>{t('legal.kontakt.privacyLink')}<span class="sr-only">
+							{t('legal.kontakt.newTab')}</span
+						></a
+					>{privacyAfter} *
+				</label>
 			</div>
 
 			{#if status === 'error'}
@@ -193,6 +214,34 @@
 	.form-group input:focus,
 	.form-group textarea:focus {
 		border-color: var(--color-accent-500);
+	}
+
+	.form-check {
+		display: flex;
+		align-items: flex-start;
+		gap: 8px;
+		font-size: 13px;
+		color: var(--text-secondary);
+		line-height: 1.5;
+	}
+
+	/* 18px box plus the label as a second hit area; the label is the larger
+	   target, so the pair clears WCAG 2.5.8's 24px minimum. */
+	.form-check input {
+		flex-shrink: 0;
+		width: 18px;
+		height: 18px;
+		margin: 1px 0 0 0;
+		accent-color: var(--color-accent-600);
+		cursor: pointer;
+	}
+
+	.form-check label {
+		cursor: pointer;
+	}
+
+	.form-check a {
+		color: var(--color-accent-text);
 	}
 
 	.form-banner {

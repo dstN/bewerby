@@ -112,7 +112,7 @@
 		<p>{t('legal.datenschutz.adFetchThirdParty')}</p>
 	</section>
 
-	<section class="legal-card">
+	<section class="legal-card" id="kontaktformular">
 		<h2>{t('legal.datenschutz.contactFormTitle')}</h2>
 		<p>{t('legal.datenschutz.contactFormBody')}</p>
 	</section>

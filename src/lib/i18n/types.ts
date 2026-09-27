@@ -433,6 +433,10 @@ export type TranslationKeys = {
 			error: string;
 			validationError: string;
 			formHint: string;
+			/** Contains `{link}`, replaced by a link reading `privacyLink`. */
+			privacyRead: string;
+			privacyLink: string;
+			newTab: string;
 		};
 	};
 	empty: {

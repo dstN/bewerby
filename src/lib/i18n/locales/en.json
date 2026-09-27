@@ -356,7 +356,10 @@
 			"success": "Your message was sent successfully.",
 			"error": "Message could not be sent. Please try again, or email the address above directly.",
 			"validationError": "Please fill in all fields correctly.",
-			"formHint": "Alternatively, reach us directly at the email address above."
+			"formHint": "Alternatively, reach us directly at the email address above.",
+			"privacyRead": "I have read the {link}.",
+			"privacyLink": "privacy policy",
+			"newTab": "(opens in a new tab)"
 		}
 	},
 	"empty": {
