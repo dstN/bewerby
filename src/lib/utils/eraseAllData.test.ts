@@ -13,6 +13,9 @@ vi.mock('$app/environment', () => ({ browser: true }));
 const dbDelete = vi.fn(async () => {});
 vi.mock('$lib/db/index.js', () => ({ db: { delete: () => dbDelete() } }));
 
+const keystoreDelete = vi.fn(async () => {});
+vi.mock('$lib/vault/keystore.js', () => ({ deleteKeystore: () => keystoreDelete() }));
+
 const isOpfsSupported = vi.fn(() => true);
 vi.mock('$lib/utils/opfs.js', () => ({ isOpfsSupported: () => isOpfsSupported() }));
 
@@ -72,6 +75,7 @@ async function loadEraser() {
 
 beforeEach(() => {
 	dbDelete.mockClear();
+	keystoreDelete.mockClear();
 	isOpfsSupported.mockReturnValue(true);
 	installBrowserApis();
 	localStorage.setItem('bewerby-theme', 'dark');
@@ -95,6 +99,12 @@ describe('eraseAllData', () => {
 		const { eraseAllData } = await loadEraser();
 		await eraseAllData();
 		expect(dbDelete).toHaveBeenCalledOnce();
+	});
+
+	it('deletes the backup key database as well, remembered key included', async () => {
+		const { eraseAllData } = await loadEraser();
+		await eraseAllData();
+		expect(keystoreDelete).toHaveBeenCalledOnce();
 	});
 
 	it('removes the whole OPFS PDF directory recursively, not file by file', async () => {

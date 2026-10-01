@@ -43,6 +43,10 @@
 			<p>{t('legal.datenschutz.storageOpfsDesc')}</p>
 		</div>
 		<div class="storage-item">
+			<h3>{t('legal.datenschutz.storageKeysTitle')}</h3>
+			<p>{t('legal.datenschutz.storageKeysDesc')}</p>
+		</div>
+		<div class="storage-item">
 			<h3>{t('legal.datenschutz.storageLocalTitle')}</h3>
 			<p>{t('legal.datenschutz.storageLocalDesc')}</p>
 			<table class="storage-table">

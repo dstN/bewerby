@@ -147,6 +147,20 @@ for (const theme of ['light', 'dark'] as const) {
 			await expectNoViolations(page);
 		});
 
+		test('the encryption setup has no violations, on both of its steps', async ({ page }) => {
+			await gotoWithTheme(page, '/backup', theme);
+			await page.getByRole('button', { name: 'Verschlüsselung einrichten' }).click();
+			const dialog = page.getByRole('dialog', { name: 'Verschlüsselung einrichten' });
+			await expect(dialog).toBeVisible();
+			await expectNoViolations(page);
+
+			await dialog.getByLabel('Passwort', { exact: true }).fill('korrekt pferd batterie');
+			await dialog.getByLabel('Passwort wiederholen').fill('korrekt pferd batterie');
+			await dialog.getByRole('button', { name: 'Weiter' }).click();
+			await expect(dialog.getByTestId('recovery-key')).toBeVisible();
+			await expectNoViolations(page);
+		});
+
 		test('the date picker popover has no violations', async ({ page }) => {
 			await gotoWithTheme(page, '/board', theme);
 			await page.getByRole('button', { name: 'Bewerbung hinzufügen' }).click();

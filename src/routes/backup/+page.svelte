@@ -1,9 +1,21 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { t } from '$lib/i18n/index.svelte.js';
 	import { db } from '$lib/db/index.js';
 	import { readPdfFromOpfs, writePdfToOpfs } from '$lib/utils/opfs.js';
-	import { buildBackupPayload, parseBackupPayload, prepareImportRows } from '$lib/utils/backup.js';
+	import {
+		buildBackupPayload,
+		parseBackupPayload,
+		prepareImportRows,
+		type BackupPayload
+	} from '$lib/utils/backup.js';
 	import { profileStore } from '$lib/stores/profile.svelte.js';
+	import { announcer } from '$lib/stores/announcer.svelte.js';
+	import { VaultError, type KeyHeader } from '$lib/vault/format.js';
+	import { forgetRoot, loadStoredVault, storeVault } from '$lib/vault/keystore.js';
+	import { openBackup, readFileHeader, sealBackup, type UnlockedVault } from '$lib/vault/vault.js';
+	import VaultSetupDialog from '$lib/components/vault/VaultSetupDialog.svelte';
+	import VaultUnlockDialog from '$lib/components/vault/VaultUnlockDialog.svelte';
 
 	// File System Access API isn't part of lib.dom.d.ts yet; declare just enough
 	// of it for the feature-detected local dump below.
@@ -26,26 +38,211 @@
 	let localDumpStatus = $state('');
 	let importMode = $state<'merge' | 'replace'>('merge');
 
+	// ENCRYPTED BACKUP (#50): this device's vault, and its root key when it
+	// is remembered or was unlocked during this visit.
+	let vaultHeader = $state.raw<KeyHeader | null>(null);
+	let vaultRoot = $state.raw<CryptoKey | null>(null);
+	let rememberedKey = $state(false);
+	let vaultStatus = $state('');
+	let vaultError = $state('');
+	let setupOpen = $state(false);
+	let canShareFiles = $state(false);
+	type UnlockRequest =
+		{ kind: 'export'; share: boolean } | { kind: 'import'; bytes: Uint8Array; header: KeyHeader };
+	let unlockRequest = $state.raw<UnlockRequest | null>(null);
+
+	onMount(() => {
+		loadStoredVault()
+			.then((stored) => {
+				vaultHeader = stored?.header ?? null;
+				vaultRoot = stored?.root ?? null;
+				rememberedKey = Boolean(stored?.root);
+			})
+			.catch((err) => console.error('Loading the vault failed:', err));
+		// Probed with the exact name and type the export shares: browsers only
+		// promise to share a list of common file types (see MDN on
+		// navigator.share), and .bwv is not one of them. Where canShare says
+		// no, the download is the way; on iOS that lands in the Files app too.
+		canShareFiles =
+			typeof navigator.canShare === 'function' &&
+			navigator.canShare({
+				files: [new File([''], 'probe.bwv', { type: 'application/octet-stream' })]
+			});
+	});
+
+	async function onVaultCreated(vault: UnlockedVault, remember: boolean) {
+		await storeVault(vault.header, remember ? vault.root : undefined);
+		vaultHeader = vault.header;
+		vaultRoot = vault.root;
+		rememberedKey = remember;
+	}
+
+	function exportEncrypted(share: boolean) {
+		vaultStatus = '';
+		vaultError = '';
+		if (!vaultRoot) {
+			unlockRequest = { kind: 'export', share };
+			return;
+		}
+		void writeEncryptedBackup(vaultRoot, share);
+	}
+
+	async function writeEncryptedBackup(root: CryptoKey, share: boolean) {
+		if (!vaultHeader) return;
+		try {
+			const bytes = await sealBackup({ header: vaultHeader, root }, await currentBackup());
+			const name = `bewerby-backup-${today()}.bwv`;
+			const blob = new Blob([bytes], { type: 'application/octet-stream' });
+			if (share) {
+				try {
+					await navigator.share({ files: [new File([blob], name, { type: blob.type })] });
+				} catch (err) {
+					if (err instanceof DOMException && err.name === 'AbortError') return;
+					// Sharing needs a fresh tap; deriving the key in the unlock
+					// dialog can outlast it. The key stays unlocked for this visit.
+					if (err instanceof DOMException && err.name === 'NotAllowedError') {
+						vaultStatus = 'backup.vault.shareAgain';
+						return;
+					}
+					throw err;
+				}
+			} else {
+				downloadBlob(blob, name);
+			}
+			vaultStatus = 'backup.vault.exported';
+			announcer.announce(t('backup.vault.exported'));
+		} catch (err) {
+			console.error('Encrypted export failed:', err);
+			vaultError = 'backup.vault.errorExport';
+		}
+	}
+
+	async function unlockedForExport(root: CryptoKey, remember: boolean, share: boolean) {
+		if (remember && vaultHeader) {
+			await storeVault(vaultHeader, root);
+			rememberedKey = true;
+		}
+		vaultRoot = root;
+		await writeEncryptedBackup(root, share);
+	}
+
+	async function chooseEncryptedFile(event: Event) {
+		const input = event.target as HTMLInputElement;
+		const file = input.files?.[0];
+		input.value = '';
+		if (!file) return;
+		vaultStatus = '';
+		vaultError = '';
+		try {
+			const bytes = new Uint8Array(await file.arrayBuffer());
+			unlockRequest = { kind: 'import', bytes, header: readFileHeader(bytes) };
+		} catch (err) {
+			vaultError =
+				err instanceof VaultError && err.code === 'unsupported'
+					? 'backup.vault.errorUnsupported'
+					: 'backup.vault.errorNotVault';
+		}
+	}
+
+	/** True when importing this file should make its vault this device's own. */
+	function adoptsVault(header: KeyHeader): boolean {
+		return !vaultHeader || (vaultHeader.vaultId === header.vaultId && !rememberedKey);
+	}
+
+	async function unlockedForImport(
+		request: Extract<UnlockRequest, { kind: 'import' }>,
+		root: CryptoKey,
+		remember: boolean
+	): Promise<string | false | void> {
+		const parsed = parseBackupPayload(await openBackup(request.bytes, root));
+		if (!parsed.ok) {
+			return t(parsed.error === 'format' ? 'backup.errorFormat' : 'backup.errorValidation');
+		}
+		if (!(await applyBackup(parsed.data))) return false;
+
+		// A device without a vault of its own takes over the file's, so its own
+		// encrypted backups open with the same passphrase and recovery key.
+		if (adoptsVault(request.header)) {
+			await storeVault(request.header, remember ? root : undefined);
+			vaultHeader = request.header;
+			vaultRoot = root;
+			rememberedKey = remember;
+		}
+		vaultStatus = 'backup.vault.imported';
+		announcer.announce(t('backup.vault.imported'));
+	}
+
+	async function forgetKey() {
+		if (!confirm(t('backup.vault.forgetConfirm'))) return;
+		await forgetRoot();
+		rememberedKey = false;
+		vaultRoot = null;
+		vaultStatus = 'backup.vault.forgotten';
+		vaultError = '';
+	}
+
+	function today(): string {
+		return new Date().toISOString().slice(0, 10);
+	}
+
+	function downloadBlob(blob: Blob, fileName: string) {
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement('a');
+		a.href = url;
+		a.download = fileName;
+		document.body.appendChild(a);
+		a.click();
+		document.body.removeChild(a);
+		URL.revokeObjectURL(url);
+	}
+
+	async function currentBackup(): Promise<BackupPayload> {
+		const applications = await db.applications.toArray();
+		return buildBackupPayload(applications, readPdfFromOpfs, profileStore.value);
+	}
+
+	/**
+	 * Writes a validated backup into this browser. Shared by the JSON and the
+	 * encrypted import, so both merge and replace identically. Returns false
+	 * when the user declined the replace confirmation.
+	 */
+	async function applyBackup(data: BackupPayload): Promise<boolean> {
+		if (importMode === 'replace' && !confirm(t('backup.confirmReplace'))) {
+			return false;
+		}
+
+		const { rows: rowsToInsert, profile: importedProfile } = await prepareImportRows(
+			data,
+			writePdfToOpfs
+		);
+
+		// The whole write happens in one transaction, so a failure partway
+		// through (e.g. a bulkAdd constraint error) rolls back completely
+		// instead of leaving the database half-cleared and half-imported.
+		await db.transaction('rw', db.applications, async () => {
+			if (importMode === 'replace') {
+				await db.applications.clear();
+			}
+			await db.applications.bulkAdd(rowsToInsert);
+		});
+
+		// Only after the rows are committed, and only on a replace - merging
+		// into an existing setup must not silently overwrite the sender
+		// details this browser already holds. Version-2 files carry none.
+		if (importedProfile && importMode === 'replace') {
+			profileStore.replaceAll(importedProfile);
+		}
+		return true;
+	}
+
 	// TIER 1: JSON Export
 	async function exportDatabase() {
 		try {
-			const applications = await db.applications.toArray();
-			const backupData = await buildBackupPayload(
-				applications,
-				readPdfFromOpfs,
-				profileStore.value
+			const json = JSON.stringify(await currentBackup(), null, 2);
+			downloadBlob(
+				new Blob([json], { type: 'application/json' }),
+				`bewerby-backup-${today()}.json`
 			);
-			const json = JSON.stringify(backupData, null, 2);
-			const blob = new Blob([json], { type: 'application/json' });
-			const url = URL.createObjectURL(blob);
-
-			const a = document.createElement('a');
-			a.href = url;
-			a.download = `bewerby-backup-${new Date().toISOString().slice(0, 10)}.json`;
-			document.body.appendChild(a);
-			a.click();
-			document.body.removeChild(a);
-			URL.revokeObjectURL(url);
 		} catch (err) {
 			console.error('Database export failed:', err);
 			alert(t('backup.errorSaveFail'));
@@ -69,32 +266,7 @@
 				return;
 			}
 
-			if (importMode === 'replace' && !confirm(t('backup.confirmReplace'))) {
-				return;
-			}
-
-			const { rows: rowsToInsert, profile: importedProfile } = await prepareImportRows(
-				parsed.data,
-				writePdfToOpfs
-			);
-
-			// The whole write happens in one transaction, so a failure partway
-			// through (e.g. a bulkAdd constraint error) rolls back completely
-			// instead of leaving the database half-cleared and half-imported.
-			await db.transaction('rw', db.applications, async () => {
-				if (importMode === 'replace') {
-					await db.applications.clear();
-				}
-				await db.applications.bulkAdd(rowsToInsert);
-			});
-
-			// Only after the rows are committed, and only on a replace - merging
-			// into an existing setup must not silently overwrite the sender
-			// details this browser already holds. Version-2 files carry none.
-			if (importedProfile && importMode === 'replace') {
-				profileStore.replaceAll(importedProfile);
-			}
-
+			if (!(await applyBackup(parsed.data))) return;
 			importStatus = 'backup.successImport';
 		} catch (err) {
 			console.error('Database import failed:', err);
@@ -151,6 +323,58 @@
 	</header>
 
 	<div class="backup-grid">
+		<!-- Encrypted backup (#50): the recommended way to keep a copy anywhere. -->
+		<section class="card wide-card" aria-labelledby="vault-title">
+			<div class="card-meta">
+				<span class="recommended-tag">{t('backup.vault.recommended')}</span>
+				<h2 class="card-title" id="vault-title">{t('backup.vault.title')}</h2>
+			</div>
+			<p class="card-desc">{t('backup.vault.desc')}</p>
+			{#if vaultHeader}
+				<p class="vault-state">
+					{rememberedKey ? t('backup.vault.statusRemembered') : t('backup.vault.statusLocked')}
+				</p>
+			{/if}
+
+			<div class="action-row">
+				{#if vaultHeader}
+					<button class="btn-primary" onclick={() => exportEncrypted(false)}>
+						{t('backup.vault.exportButton')}
+					</button>
+					{#if canShareFiles}
+						<button class="btn-secondary" onclick={() => exportEncrypted(true)}>
+							{t('backup.vault.shareButton')}
+						</button>
+					{/if}
+				{:else}
+					<button class="btn-primary" onclick={() => (setupOpen = true)}>
+						{t('backup.vault.setupButton')}
+					</button>
+				{/if}
+				<label class="btn-secondary file-uploader">
+					<!-- application/octet-stream as well: iOS greys out files whose
+					     extension it does not know when only ".bwv" is listed. -->
+					<input
+						type="file"
+						accept=".bwv,application/octet-stream"
+						onchange={chooseEncryptedFile}
+						class="sr-only"
+					/>
+					{t('backup.vault.importButton')}
+				</label>
+				{#if rememberedKey}
+					<button class="btn-text" onclick={forgetKey}>{t('backup.vault.forgetButton')}</button>
+				{/if}
+			</div>
+
+			{#if vaultStatus}
+				<div class="status-msg success-msg">{t(vaultStatus)}</div>
+			{/if}
+			{#if vaultError}
+				<div class="status-msg error-msg" role="alert">{t(vaultError)}</div>
+			{/if}
+		</section>
+
 		<!-- Tier 1 Card -->
 		<section class="card">
 			<div class="card-meta">
@@ -235,6 +459,10 @@
 					<span class="provider-name">Dropbox</span>
 					<span class="provider-status">{t('backup.plannedFeature')}</span>
 				</div>
+				<div class="provider-box">
+					<span class="provider-name">OneDrive</span>
+					<span class="provider-status">{t('backup.plannedFeature')}</span>
+				</div>
 			</div>
 
 			<div class="disabled-notice">
@@ -269,6 +497,47 @@
 		</section>
 	</div>
 </div>
+
+{#if setupOpen}
+	<VaultSetupDialog onclose={() => (setupOpen = false)} oncreated={onVaultCreated} />
+{/if}
+
+{#if unlockRequest?.kind === 'export' && vaultHeader}
+	{@const share = unlockRequest.share}
+	<VaultUnlockDialog
+		title={t('backup.vault.unlockExportTitle')}
+		header={vaultHeader}
+		submitLabel={t('backup.vault.unlockSubmit')}
+		showRemember={!rememberedKey}
+		onunlock={(root, remember) => unlockedForExport(root, remember, share)}
+		onclose={() => (unlockRequest = null)}
+	/>
+{:else if unlockRequest?.kind === 'import'}
+	{@const request = unlockRequest}
+	<VaultUnlockDialog
+		title={t('backup.vault.unlockImportTitle')}
+		header={request.header}
+		submitLabel={t('backup.vault.importSubmit')}
+		showRemember={adoptsVault(request.header)}
+		note={vaultHeader ? undefined : t('backup.vault.adoptNote')}
+		onunlock={(root, remember) => unlockedForImport(request, root, remember)}
+		onclose={() => (unlockRequest = null)}
+	>
+		{#snippet extra()}
+			<fieldset>
+				<legend>{t('backup.importModeLabel')}</legend>
+				<label class="choice">
+					<input type="radio" name="vault-import-mode" value="merge" bind:group={importMode} />
+					{t('backup.importModeMerge')}
+				</label>
+				<label class="choice">
+					<input type="radio" name="vault-import-mode" value="replace" bind:group={importMode} />
+					{t('backup.importModeReplace')}
+				</label>
+			</fieldset>
+		{/snippet}
+	</VaultUnlockDialog>
+{/if}
 
 <style>
 	.backup-page {
@@ -332,6 +601,48 @@
 	   badge's text meets the same contrast floor as the rest of the app - see
 	   issue #28, which specifically flagged opacity-based "disabled" styling
 	   for failing contrast. */
+	/* Accent text on the neutral tag surface: --color-accent-text is the
+	   shade tuned for AAA contrast in both themes (see app.css). */
+	.recommended-tag {
+		font-size: 10px;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		background-color: var(--surface-2);
+		color: var(--color-accent-text);
+		padding: 2px 6px;
+		border-radius: var(--radius-sm);
+		border: 1px solid var(--border-subtle);
+	}
+
+	.wide-card {
+		grid-column: span 2;
+	}
+
+	.vault-state {
+		font-size: 13px;
+		font-weight: 600;
+		color: var(--text-primary);
+		margin: 0;
+	}
+
+	.btn-text {
+		align-self: center;
+		padding: 8px 4px;
+		border: none;
+		background: transparent;
+		color: var(--text-secondary);
+		font-family: inherit;
+		font-size: 13px;
+		text-decoration: underline;
+		text-underline-offset: 3px;
+		cursor: pointer;
+	}
+
+	.btn-text:hover {
+		color: var(--text-primary);
+	}
+
 	.planned-tag {
 		font-size: 10px;
 		font-weight: 700;
@@ -386,6 +697,7 @@
 
 	.action-row {
 		display: flex;
+		flex-wrap: wrap;
 		gap: 12px;
 		margin-top: auto;
 		padding-top: 8px;
@@ -528,7 +840,8 @@
 			grid-template-columns: 1fr;
 		}
 
-		.disabled-card {
+		.disabled-card,
+		.wide-card {
 			grid-column: span 1;
 		}
 

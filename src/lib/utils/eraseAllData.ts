@@ -1,9 +1,11 @@
 import { browser } from '$app/environment';
 import { db } from '$lib/db/index.js';
 import { isOpfsSupported } from '$lib/utils/opfs.js';
+import { deleteKeystore } from '$lib/vault/keystore.js';
 
 /**
- * Exercises the right to erasure completely: IndexedDB, every attached PDF in
+ * Exercises the right to erasure completely: both IndexedDB databases
+ * (applications and backup keys), every attached PDF in
  * OPFS, all localStorage, every Cache Storage entry, and any notifications
  * still shown. Afterwards the origin is in the same state as a fresh
  * install - there is no partial/soft-delete state to reason about.
@@ -13,6 +15,8 @@ export async function eraseAllData(): Promise<void> {
 
 	// db.delete() closes the connection and removes the IndexedDB database.
 	await db.delete();
+	// The encrypted-backup keys live in a database of their own (keystore.ts).
+	await deleteKeystore();
 
 	if (isOpfsSupported()) {
 		try {

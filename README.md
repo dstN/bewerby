@@ -38,6 +38,9 @@ all running in your browser, with your application data never leaving it.
 - Application and rejection dates follow the card's moves into "Versendet"
   and "Absage" unless you enter the real date in the edit dialog - then the
   entered date counts everywhere: card, export, statistics, reminders.
+- Encrypted backup: one `.bwv` file, encrypted in the browser (AES-256-GCM,
+  passphrase via Argon2id, plus a recovery key shown once), safe to keep in
+  iCloud Drive or any other cloud folder and restorable on another device.
 - Backup & restore: JSON export/import (attached PDFs included), plus an
   optional local-directory dump via the File System Access API.
 - Follow-up reminders via the Notifications API - a fixed interval, or a

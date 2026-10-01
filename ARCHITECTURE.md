@@ -4,18 +4,19 @@ How bewerby actually stores data, why it never leaves the device, and how
 offline support and reminders work in practice - including where they fall
 short. Written for whoever next touches this code, including future me.
 
-## Data lives in exactly two browser storages
+## Where data lives in the browser
 
-| What                                                           | Where                                                              | Why there                                                                                                                                                                                                                                                                                                                                                        |
-| -------------------------------------------------------------- | ------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Application rows (title, company, status, history, notes, ...) | IndexedDB, via [Dexie](https://dexie.org/) (`src/lib/db/index.ts`) | Structured, queryable, and reactive - the board, analytics, and reminder engine all subscribe to the same `liveQuery` and update automatically when a row changes.                                                                                                                                                                                               |
-| Attached PDFs                                                  | OPFS (Origin Private File System), via `src/lib/utils/opfs.ts`     | An application row stores only a `pdfRef` (a random filename), not the PDF bytes. Keeping large blobs out of IndexedDB rows means every board/analytics/reminder read - which touches _every_ row - stays cheap regardless of how many or how large the attached PDFs are. Each application row's `pdfRef` points at exactly one file under `application-pdfs/`. |
+| What                                                                    | Where                                                              | Why there                                                                                                                                                                                                                                                                                                                                                        |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Application rows (title, company, status, history, notes, ...)          | IndexedDB, via [Dexie](https://dexie.org/) (`src/lib/db/index.ts`) | Structured, queryable, and reactive - the board, analytics, and reminder engine all subscribe to the same `liveQuery` and update automatically when a row changes.                                                                                                                                                                                               |
+| Attached PDFs                                                           | OPFS (Origin Private File System), via `src/lib/utils/opfs.ts`     | An application row stores only a `pdfRef` (a random filename), not the PDF bytes. Keeping large blobs out of IndexedDB rows means every board/analytics/reminder read - which touches _every_ row - stays cheap regardless of how many or how large the attached PDFs are. Each application row's `pdfRef` points at exactly one file under `application-pdfs/`. |
+| Encrypted-backup keys (wrapped root key, optionally the remembered key) | IndexedDB `bewerby-keys`, via `src/lib/vault/keystore.ts`          | Only exists once encryption is set up. A database of its own rather than a table in `bewerby-db`: key material stays out of every query the board, analytics and reminders run, and erasing it is one `deleteDatabase`. See "Encrypted backups" below.                                                                                                           |
 
 Nothing else exists: no server database, no account, no first-party or
 third-party analytics. Application data (rows, PDFs, settings) never leaves
 the device: no `sendBeacon`, no remote `<script>`, no `@import url()`, and
-`dependencies` in `package.json` covers exactly three packages (Dexie,
-pdf.js, and one currently-unused icon library), none of which do network
+`dependencies` in `package.json` covers exactly four packages (Dexie,
+pdf.js, pdf-lib, and hash-wasm for Argon2id), none of which do network
 I/O. This is a deliberate, verified property, not an accident - see the
 codebase audit referenced in [ROADMAP.md](ROADMAP.md).
 
@@ -350,6 +351,48 @@ instead of on the Dexie row - which also keeps them out of backups and the
 `updatedAt` of the application. Deleting a card drops its id; the
 right-to-erasure button clears the key with the rest of `localStorage`.
 
+## Encrypted backups
+
+The `.bwv` file on `/backup` is the first piece of Milestone 5
+(end-to-end encrypted sync, [docs/e2e-sync-plan.md](docs/e2e-sync-plan.md)).
+It is encrypted entirely in the browser, and the provider of whatever folder
+it lands in - iCloud Drive via the Files app, Proton Drive, Nextcloud - gets
+ciphertext of a rounded-up size and nothing else. The decisions behind the
+format and the key handling are in
+[docs/adr/0001-e2e-sync-crypto.md](docs/adr/0001-e2e-sync-crypto.md).
+
+- **Keys.** A random 32-byte root secret, AES-GCM-wrapped twice: once under
+  a key derived from the passphrase with Argon2id (64 MiB, t = 3), once under
+  a key derived with HKDF from a 160-bit recovery key that is shown exactly
+  once. Content is encrypted with a key HKDF derives from the root for that
+  one purpose. After setup or unlock the root only exists as a
+  non-extractable `CryptoKey`.
+- **Format** (`src/lib/vault/format.ts`): `BWV`, a version byte, the header
+  length, the header JSON and the ciphertext. Everything before the
+  ciphertext is AES-GCM additional data, so a flipped byte anywhere fails.
+  The header carries the wrapped keys, so a file opens on a device that has
+  never seen this vault. It is parsed before anything is authenticated,
+  which is why the KDF parameters are capped there: without a ceiling a
+  crafted file could ask for gigabytes of Argon2 memory.
+- **Payload:** the same `BackupPayload` the JSON export writes, gzipped with
+  the native `CompressionStream` and padded to a Padmé size class. Importing
+  goes through `parseBackupPayload` and the same merge/replace code as the
+  JSON import (`applyBackup` on the page), so the two cannot drift.
+- **Argon2id runs in a Web Worker** (`kdf.worker.ts`). A second of hashing
+  on the main thread would freeze the page, including the "working" message
+  a screen reader is waiting for. WebCrypto has no Argon2 yet, so hash-wasm
+  does it; `vault.test.ts` checks it against Node's native implementation.
+- **Remembering the key** is a per-device choice. Without it, the key stays
+  unlocked for the current visit only. A device without a vault of its own
+  takes over the vault of the first file it imports, so its own exports open
+  with the same passphrase and recovery key - the groundwork for syncing
+  devices later.
+- **Erasure:** `eraseAllData` deletes `bewerby-keys` along with everything
+  else. Neither the passphrase nor the recovery key is stored anywhere.
+- The import accepts `application/octet-stream` as well as `.bwv`: iOS greys
+  out files whose extension it does not know when only the extension is
+  listed.
+
 ## Security headers
 
 Every route is prerendered, and `adapter-node` serves prerendered pages
@@ -374,8 +417,11 @@ to remember to add them.
   import validation, the theme/i18n/color stores (jsdom, with `localStorage`
   and `matchMedia` stood in via `tests/setup/browser-globals.ts` - Node 26
   shadows jsdom's own `localStorage`, and jsdom has no `matchMedia` at all),
-  translation-file parity between `de.json`/`en.json`, and the Dexie v1→v2
-  migration (via `fake-indexeddb`).
+  translation-file parity between `de.json`/`en.json`, the Dexie v1→v2
+  migration (via `fake-indexeddb`), and the encrypted-backup core: round
+  trips by passphrase and recovery key, a flipped byte anywhere failing, a
+  fuzzed header parser, Padmé bounds, and hash-wasm's Argon2id against
+  Node's native one.
 - **Playwright** (`tests/e2e/`) for everything that only a real browser can
   verify:
   - the offline/service-worker behavior above, focus management in the
