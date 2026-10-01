@@ -587,6 +587,37 @@ Fixtures werden als **pseudonymisiertes Zeilenmodell** eingecheckt (JSON mit Sei
 **Bewusst nicht:** ein Web Worker mit Fortschritt und Abbruch für die Extraktion. Das ist unter #27 bereits als Abgrenzung dokumentiert und ändert sich hier nicht.
 ---
 
+## Milestone 5 — E2E-verschlüsselte Mehrgeräte-Synchronisation (ab v1.6.0)
+
+Setzt die beiden Backlog-Epics #36 (verschlüsselte Cloud-Ablage) und #41 (Live-Sync von Gerät zu Gerät) gemeinsam um. Es gibt ein Datenmodell (Yjs-CRDT) und drei Transportwege: Cloud-Anbieter, WebRTC direkt zwischen den Geräten und eine verschlüsselte Datei. Ver- und entschlüsselt wird ausschließlich im Browser. Anbieter, bewerby.de, das Signaling und STUN sehen nie Klartext oder Schlüssel. Bedrohungsmodell, Krypto-Design, Anbieterwahl und was Dustin vorab liefern muss: [Plan](docs/e2e-sync-plan.md).
+
+| #   | Aufgabe                                                                         | Labels                                          | Issue                                            |
+| :-- | :------------------------------------------------------------------------------ | :---------------------------------------------- | :----------------------------------------------- |
+| 49  | Sync-Vorarbeiten: Anbieter-Prototypen, Passenger-Signaling, Argon2-Kalibrierung | `dx` `architecture`                             | [#49](https://github.com/dstN/bewerby/issues/49) |
+| 50  | Krypto-Kern und verschlüsselte Sicherungsdatei (.bwv)                           | `enhancement` `security` `dsgvo` `a11y`         | [#50](https://github.com/dstN/bewerby/issues/50) |
+| 51  | Repository-Schicht: alle Schreibzugriffe über `src/lib/data`                    | `refactoring` `architecture`                    | [#51](https://github.com/dstN/bewerby/issues/51) |
+| 52  | CRDT-Schicht mit Yjs: verlustfreies Zusammenführen                              | `enhancement` `architecture`                    | [#52](https://github.com/dstN/bewerby/issues/52) |
+| 53  | Cloud-Transport, Ordner-Adapter und Dropbox                                     | `enhancement` `security` `dsgvo`                | [#53](https://github.com/dstN/bewerby/issues/53) |
+| 54  | OneDrive und Google Drive (Token-Broker)                                        | `enhancement` `security` `dsgvo`                | [#54](https://github.com/dstN/bewerby/issues/54) |
+| 55  | Live-Sync von Gerät zu Gerät per WebRTC und QR-Pairing                          | `enhancement` `security` `dsgvo` `architecture` | [#55](https://github.com/dstN/bewerby/issues/55) |
+| 56  | Geräteverwaltung, Schlüsselrotation und Löschrecht für Sync                     | `enhancement` `security` `dsgvo`                | [#56](https://github.com/dstN/bewerby/issues/56) |
+| 57  | Weitere Sync-Anbieter (S3-kompatibel, pCloud) und Härtung                       | `enhancement` `security` `dx`                   | [#57](https://github.com/dstN/bewerby/issues/57) |
+
+Reihenfolge der Umsetzung:
+
+- **#50 und #51 zuerst**, weil sie nichts von außen brauchen: keine Registrierung, keine Server-Änderung. Ab #50 lässt sich über die Dateien-App in iCloud sichern.
+- **#49 parallel, sobald die Registrierungen da sind**, und muss vor #53 abgeschlossen sein.
+- **Danach der Reihe nach:** #52 → #53 → #54 → #55 → #56. #57 folgt nach Bedarf.
+
+Getroffene Entscheidungen (2026-10-01):
+
+- Umfang: echte Synchronisation statt nur Sicherung
+- Anbieter: Dropbox, OneDrive und Google Drive, Google über einen Token-Broker auf bewerby.de
+- iCloud über die Dateien-App, kein CloudKit
+- Zusammenführen mit Yjs
+- Passwort-Ableitung mit Argon2id über `hash-wasm`
+- Infrastruktur nur bewerby.de, kein TURN
+
 ## Nach v1 (Backlog, ohne Milestone)
 
 | #   | Aufgabe                                                      | Labels                               | Issue                                            |
@@ -598,6 +629,8 @@ Fixtures werden als **pseudonymisiertes Zeilenmodell** eingecheckt (JSON mit Sei
 | 41  | Epic: Live-P2P-Sync per QR-Pairing (WebRTC + CRDT)           | `enhancement` `architecture` `dsgvo` | [#41](https://github.com/dstN/bewerby/issues/41) |
 
 ### 36 — Epic: Ende-zu-Ende-verschlüsselter Cloud-Sync
+
+**Status:** Wird gemeinsam mit #36/#41 in Milestone 5 umgesetzt (#49–#57).
 
 **Ist:** Die Tier-3-Karte auf der Backup-Seite kündigt Google-Drive- und Dropbox-Synchronisation an, ohne dass eine Implementierung existiert.
 
@@ -630,6 +663,8 @@ Ein Vorschlag aus dieser Phase, das Ganze stattdessen per QR-Code zwischen zwei 
 **Soll:** Optional zuschaltbare, echte Zustellung über die Web-Push-API, ohne bewerbys Kernversprechen ("100 % lokal, kein Server, kein Konto") für alle anzutasten, die das Feature nicht aktivieren. Erfordert zwingend eine neue, externe Server-Komponente (Push kann sich selbst nicht terminieren) — datensparsam entworfen, sodass dieser Server nur Push-Subscription + Fälligkeits-Zeitstempel kennt, nie Firmenname/Titel/Notizen. Details, Double-Opt-in-Vorschlag und offene Fragen siehe [#40](https://github.com/dstN/bewerby/issues/40). Wie #36 bewusst als Backlog-Epic nach v1 eingeordnet, kein aktueller Implementierungsauftrag.
 
 ### 41 — Epic: Live-P2P-Sync per QR-Pairing (WebRTC + CRDT)
+
+**Status:** Wird gemeinsam mit #36/#41 in Milestone 5 umgesetzt (#49–#57).
 
 **Ist:** Mehrgeräte-Nutzung ist nur über den manuellen Export/Import-Umweg (`backup.ts`) möglich — kein automatischer Abgleich, kein "einfach auf zwei Geräten weiterarbeiten".
 
