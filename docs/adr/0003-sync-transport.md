@@ -1,7 +1,7 @@
 # ADR 0003: Moving sync data through folders and cloud storage
 
-- **Status:** accepted, 2026-10-01. The Dropbox adapter is implemented but
-  not yet verified against a real Dropbox app (#49).
+- **Status:** accepted, 2026-10-01. The Dropbox, OneDrive and Google Drive
+  adapters are implemented but not yet verified against real apps (#49).
 - **Context:** Milestone 5, #53. Plan: [docs/e2e-sync-plan.md](../e2e-sync-plan.md)
 
 ## Context
@@ -67,6 +67,24 @@ separate key file (`vault.bwk` in the plan) is needed.
 - **Dropbox**: OAuth 2.0 with PKCE and no client secret, an offline refresh
   token, and the "App folder" access type, so the token reaches
   `/Apps/<app>` and nothing else. The browser calls Dropbox directly.
+- **OneDrive** (#54): a single-page-app registration, so PKCE without a
+  secret again, and the `Files.ReadWrite.AppFolder` scope. Microsoft limits
+  SPA refresh tokens to 24 hours; after that the user signs in again, which
+  is usually a redirect without a prompt. Downloads go through
+  `@microsoft.graph.downloadUrl`: `/content` answers with a redirect, which
+  a preflighted CORS request may not follow. That URL lives on OneDrive's
+  file hosts or on SharePoint, which is why those wildcard hosts are in the
+  CSP when OneDrive is configured. The exact hosts still have to be
+  confirmed against real accounts (#49).
+- **Google Drive** (#54): the `drive.appdata` scope, a folder hidden even
+  from the user. Google refuses to redeem or refresh a code from a web
+  client without its client secret, so those two calls - and revocation -
+  go through a broker, `/api/oauth/google` on bewerby.de. It adds the
+  secret from the server's environment and returns the token fields. It
+  stores nothing and logs nothing, checks the Origin, accepts only this
+  app's callback as redirect URI, caps the body and throttles per IP. All
+  file traffic still goes from the browser to Google directly. Multipart
+  uploads up to Google's 5 MB limit, a resumable session above it.
 
 **OAuth return.** `/cloud/callback` is prerendered and precached. The
 service worker answers navigations to it from the cache alone, so the code
@@ -88,9 +106,10 @@ reminders, nothing happens while no tab is open.
   activity patterns, not content.
 - PDFs removed from every application stay at the remote as orphaned
   encrypted files. Deleting the remote copy as a whole is part of #56.
-- A Dropbox refresh token sits in this browser's IndexedDB. Script on the
-  origin could use it, but it only reaches the app folder, which holds only
-  ciphertext.
+- Refresh tokens sit in this browser's IndexedDB. Script on the origin
+  could use them, but they only reach an app folder, which holds only
+  ciphertext. Google's pass through our server on every refresh, which is
+  stated in the privacy policy.
 - Folder sync works only in Chromium-based desktop browsers; elsewhere the
   encrypted file from #50 remains the manual way.
 

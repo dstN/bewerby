@@ -22,8 +22,15 @@
 	import { JUST_CONNECTED, SyncState } from '$lib/sync/state.js';
 	import { isFolderSyncSupported, pickSyncFolder } from '$lib/sync/adapters/folder.js';
 	import { dropboxAuthorizeUrl } from '$lib/sync/adapters/dropbox.js';
-	import { pkcePair, redirectUri, rememberAuthorization } from '$lib/sync/oauth.js';
-	import { DROPBOX_CLIENT_ID, openStore } from '$lib/sync/targets.js';
+	import { googleAuthorizeUrl } from '$lib/sync/adapters/gdrive.js';
+	import { oneDriveAuthorizeUrl } from '$lib/sync/adapters/onedrive.js';
+	import { pkcePair, redirectUri, rememberAuthorization, type Provider } from '$lib/sync/oauth.js';
+	import {
+		DROPBOX_CLIENT_ID,
+		GOOGLE_CLIENT_ID,
+		ONEDRIVE_CLIENT_ID,
+		openStore
+	} from '$lib/sync/targets.js';
 	import VaultSetupDialog from '$lib/components/vault/VaultSetupDialog.svelte';
 	import VaultUnlockDialog from '$lib/components/vault/VaultUnlockDialog.svelte';
 
@@ -241,12 +248,46 @@
 		await afterConnect();
 	}
 
-	async function connectDropbox() {
+	const PROVIDER_NAMES: Record<Provider, string> = {
+		dropbox: 'Dropbox',
+		onedrive: 'OneDrive',
+		google: 'Google Drive'
+	};
+
+	/** Only the providers this build has a client id for (vite.config.ts). */
+	const cloudProviders = [
+		{
+			provider: 'dropbox' as const,
+			clientId: DROPBOX_CLIENT_ID,
+			authorizeUrl: dropboxAuthorizeUrl,
+			label: 'sync.connectDropbox',
+			hint: 'sync.connectDropboxHint'
+		},
+		{
+			provider: 'onedrive' as const,
+			clientId: ONEDRIVE_CLIENT_ID,
+			authorizeUrl: oneDriveAuthorizeUrl,
+			label: 'sync.connectOneDrive',
+			hint: 'sync.connectOneDriveHint'
+		},
+		{
+			provider: 'google' as const,
+			clientId: GOOGLE_CLIENT_ID,
+			authorizeUrl: googleAuthorizeUrl,
+			label: 'sync.connectGoogle',
+			hint: 'sync.connectGoogleHint'
+		}
+	].filter((entry) => entry.clientId);
+
+	/** Off to the provider's sign-in; it comes back through /cloud/callback. */
+	async function connectCloud(provider: Provider) {
+		const entry = cloudProviders.find((candidate) => candidate.provider === provider);
+		if (!entry) return;
 		const { verifier, challenge } = await pkcePair();
 		const uri = redirectUri();
-		const state = rememberAuthorization('dropbox', verifier, uri);
+		const state = rememberAuthorization(provider, verifier, uri);
 		location.assign(
-			dropboxAuthorizeUrl({ clientId: DROPBOX_CLIENT_ID, redirectUri: uri, challenge, state })
+			entry.authorizeUrl({ clientId: entry.clientId, redirectUri: uri, challenge, state })
 		);
 	}
 
@@ -309,7 +350,8 @@
 	}
 
 	async function reconnectSync() {
-		if (syncRunner.target === 'dropbox') await connectDropbox();
+		const target = syncRunner.target;
+		if (target && target !== 'folder') await connectCloud(target);
 		else await syncRunner.syncNow(true);
 	}
 
@@ -338,8 +380,8 @@
 			case 'locked':
 				return t('sync.statusLocked');
 			case 'reconnect':
-				return syncRunner.target === 'dropbox'
-					? t('sync.statusReconnectDropbox')
+				return syncRunner.target && syncRunner.target !== 'folder'
+					? t('sync.statusReconnectCloud').replace('{name}', PROVIDER_NAMES[syncRunner.target])
 					: t('sync.statusReconnectFolder');
 			default:
 				return vaultHeader ? '' : t('sync.statusOff');
@@ -614,7 +656,7 @@
 				<p class="vault-state">
 					{syncRunner.target === 'folder'
 						? t('sync.connectedFolder').replace('{name}', syncRunner.targetName ?? '')
-						: t('sync.connectedDropbox')}
+						: t('sync.connectedCloud').replace('{name}', PROVIDER_NAMES[syncRunner.target])}
 				</p>
 				{#if syncStatusText}
 					<p class="card-desc">{syncStatusText}</p>
@@ -644,7 +686,7 @@
 				{#if !vaultHeader}
 					<p class="card-desc">{t('sync.needsVault')}</p>
 				{/if}
-				{#if folderSyncSupported || DROPBOX_CLIENT_ID}
+				{#if folderSyncSupported || cloudProviders.length > 0}
 					<div class="sync-options">
 						{#if folderSyncSupported}
 							<div class="sync-option">
@@ -654,14 +696,14 @@
 								<p class="card-desc">{t('sync.connectFolderHint')}</p>
 							</div>
 						{/if}
-						{#if DROPBOX_CLIENT_ID}
+						{#each cloudProviders as entry (entry.provider)}
 							<div class="sync-option">
-								<button class="btn-secondary" onclick={connectDropbox}>
-									{t('sync.connectDropbox')}
+								<button class="btn-secondary" onclick={() => connectCloud(entry.provider)}>
+									{t(entry.label)}
 								</button>
-								<p class="card-desc">{t('sync.connectDropboxHint')}</p>
+								<p class="card-desc">{t(entry.hint)}</p>
 							</div>
-						{/if}
+						{/each}
 					</div>
 				{:else}
 					<p class="card-desc">{t('sync.unavailable')}</p>
@@ -671,7 +713,6 @@
 			{#if syncNotice}
 				<div class="status-msg success-msg">{t(syncNotice)}</div>
 			{/if}
-			<p class="card-desc">{t('sync.plannedProviders')}</p>
 		</section>
 	</div>
 </div>

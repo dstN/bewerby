@@ -121,6 +121,8 @@
 		<p>{t('legal.datenschutz.syncBody')}</p>
 		<p>{t('legal.datenschutz.syncFolderBody')}</p>
 		<p>{t('legal.datenschutz.syncDropboxBody')}</p>
+		<p>{t('legal.datenschutz.syncOneDriveBody')}</p>
+		<p>{t('legal.datenschutz.syncGoogleBody')}</p>
 		<p>{t('legal.datenschutz.syncReturnBody')}</p>
 	</section>
 

@@ -132,6 +132,27 @@ test.describe('Sync between devices', () => {
 		await phoneContext.close();
 	});
 
+	test('the Google token broker runs on the server and refuses cleanly without a secret', async ({
+		request
+	}, testInfo) => {
+		const origin = testInfo.project.use.baseURL!;
+		// Not configured here: no GOOGLE_CLIENT_SECRET in this server's environment.
+		const unconfigured = await request.post('/api/oauth/google', {
+			headers: { origin },
+			data: { grant_type: 'refresh_token', refresh_token: 'x' }
+		});
+		expect(unconfigured.status()).toBe(503);
+		expect(unconfigured.headers()['cache-control']).toBe('no-store');
+		// hooks.server.ts sets the security headers on dynamic routes.
+		expect(unconfigured.headers()['x-content-type-options']).toBe('nosniff');
+
+		const crossSite = await request.post('/api/oauth/google', {
+			headers: { origin: 'https://evil.example' },
+			data: { grant_type: 'refresh_token', refresh_token: 'x' }
+		});
+		expect(crossSite.status()).toBe(403);
+	});
+
 	test('the sign-in return page is answered without the server once bewerby is installed', async ({
 		page
 	}) => {
@@ -146,7 +167,7 @@ test.describe('Sync between devices', () => {
 		expect(response?.fromServiceWorker()).toBe(true);
 		// No sign-in of this tab's own to finish: refused, nothing stored.
 		await expect(page.getByRole('alert')).toHaveText(
-			'Die Verbindung mit Dropbox ist nicht zustande gekommen. Es wurde nichts gespeichert.'
+			'Die Verbindung ist nicht zustande gekommen. Es wurde nichts gespeichert.'
 		);
 		// The code is gone from the address bar.
 		await expect(page).toHaveURL(/\/cloud\/callback$/);

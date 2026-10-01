@@ -9,11 +9,28 @@ const pkg = JSON.parse(readFileSync('./package.json', 'utf-8'));
 // PKCE needs no secret - and set as GitHub environment variables for the
 // build. A provider without one is not offered, and its origins stay out of
 // the CSP below: no key, no new place the page may talk to.
-const syncClients = { dropbox: process.env.PUBLIC_DROPBOX_APP_KEY ?? '' };
+const syncClients = {
+	dropbox: process.env.PUBLIC_DROPBOX_APP_KEY ?? '',
+	onedrive: process.env.PUBLIC_MS_CLIENT_ID ?? '',
+	google: process.env.PUBLIC_GOOGLE_CLIENT_ID ?? ''
+};
 const syncOrigins: `https://${string}.${string}`[] = [
 	...(syncClients.dropbox
 		? (['https://api.dropboxapi.com', 'https://content.dropboxapi.com'] as const)
-		: [])
+		: []),
+	// Graph hands out downloads as pre-authenticated URLs on OneDrive's file
+	// hosts (personal) and SharePoint (work or school); see onedrive.ts. The
+	// exact hosts are to be confirmed against a real account (#49).
+	...(syncClients.onedrive
+		? ([
+				'https://login.microsoftonline.com',
+				'https://graph.microsoft.com',
+				'https://*.files.1drv.com',
+				'https://*.sharepoint.com'
+			] as const)
+		: []),
+	// API and uploads; the token exchange goes through our own /api/oauth/google.
+	...(syncClients.google ? (['https://www.googleapis.com'] as const) : [])
 ];
 
 export default defineConfig({

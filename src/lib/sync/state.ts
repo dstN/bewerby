@@ -9,15 +9,20 @@ import { db, type BewerbyDatabase } from '$lib/db/index.js';
 /** sessionStorage marker: the OAuth callback just saved a target. */
 export const JUST_CONNECTED = 'bewerby-sync-connected';
 
+/** A cloud target signed in with OAuth; the tokens stay in this browser. */
+export interface OAuthTarget<K extends 'dropbox' | 'onedrive' | 'google'> {
+	kind: K;
+	refreshToken: string;
+	accessToken?: string;
+	/** Epoch ms after which the access token is stale. */
+	expiresAt?: number;
+}
+
 export type TargetConfig =
 	| { kind: 'folder'; handle: FileSystemDirectoryHandle; name: string }
-	| {
-			kind: 'dropbox';
-			refreshToken: string;
-			accessToken?: string;
-			/** Epoch ms after which the access token is stale. */
-			expiresAt?: number;
-	  };
+	| OAuthTarget<'dropbox'>
+	| OAuthTarget<'onedrive'>
+	| OAuthTarget<'google'>;
 
 export interface Progress {
 	/** Remote files applied or written here; a compaction may delete these. */

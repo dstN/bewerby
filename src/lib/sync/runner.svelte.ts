@@ -2,9 +2,10 @@ import { browser } from '$app/environment';
 import { activeSync } from '$lib/crdt/session.js';
 import { onVaultChange, unlockedVault } from '$lib/vault/session.js';
 import { DropboxStore } from './adapters/dropbox.js';
+import { GoogleDriveStore } from './adapters/gdrive.js';
 import { SyncEngine, type SyncReport } from './engine.js';
 import { ReconnectRequiredError } from './port.js';
-import { SyncState } from './state.js';
+import { SyncState, type TargetConfig } from './state.js';
 import { openStore } from './targets.js';
 
 /**
@@ -22,7 +23,7 @@ const POLL_EVERY = 60_000;
 
 class SyncRunner {
 	status = $state<SyncStatus>('off');
-	target = $state<'folder' | 'dropbox' | null>(null);
+	target = $state<TargetConfig['kind'] | null>(null);
 	targetName = $state<string | null>(null);
 	lastSync = $state<number | null>(null);
 	lastReport = $state.raw<SyncReport | null>(null);
@@ -54,7 +55,7 @@ class SyncRunner {
 		}
 		const target = await this.state.target();
 		this.target = target?.kind ?? null;
-		this.targetName = target ? (target.kind === 'folder' ? target.name : 'Dropbox') : null;
+		this.targetName = target?.kind === 'folder' ? target.name : null;
 		const runtime = target ? await activeSync() : null;
 		if (!target || !runtime) {
 			this.status = 'off';
@@ -101,16 +102,20 @@ class SyncRunner {
 		}
 	}
 
-	/** Forgets the target here; the files stay where they are. Revokes a Dropbox token. */
+	/** Forgets the target here; the files stay where they are. Revokes tokens where possible. */
 	async disconnect(): Promise<void> {
 		this.stopTimers();
 		const target = await this.state.target();
-		if (target?.kind === 'dropbox') {
+		// OneDrive has no revocation endpoint for a single-page app; its refresh
+		// token expires within 24 hours anyway.
+		if (target?.kind === 'dropbox' || target?.kind === 'google') {
 			try {
 				const store = await openStore(target, this.state, false);
-				if (store instanceof DropboxStore) await store.revoke();
+				if (store instanceof DropboxStore || store instanceof GoogleDriveStore) {
+					await store.revoke();
+				}
 			} catch (err) {
-				console.warn('Revoking the Dropbox token failed:', err);
+				console.warn('Revoking the access token failed:', err);
 			}
 		}
 		await this.state.clearTarget();

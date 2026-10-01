@@ -381,7 +381,9 @@
 			"syncBody": "Du kannst deine Bewerbungen zwischen eigenen Geräten abgleichen. Dazu verschlüsselt bewerby sie in deinem Browser mit AES-256-GCM. Der Schlüssel wird aus deinem Passwort abgeleitet oder liegt nur auf deinen Geräten; er wird nie übertragen. Am Speicherort liegen ausschließlich verschlüsselte Dateien mit zufälligen Namen, deren Größe auf Größenklassen aufgerundet ist. Der Server von bewerby.de ist an der Synchronisation nicht beteiligt.",
 			"syncFolderBody": "Über einen Ordner: bewerby schreibt die verschlüsselten Dateien in einen Ordner auf deinem Gerät, den du auswählst. Ob und wohin sie von dort übertragen werden, bestimmt das Sync-Programm, das du für diesen Ordner nutzt (zum Beispiel Nextcloud, iCloud oder Proton Drive); für diese Übertragung gelten dessen Bedingungen. bewerby selbst überträgt dabei nichts.",
 			"syncDropboxBody": "Über Dropbox: Wenn du dein Dropbox-Konto verbindest, sendet dein Browser die verschlüsselten Dateien direkt an Dropbox, in einen eigenen App-Ordner. bewerby erhält dabei nur Zugriff auf diesen App-Ordner, nicht auf deine übrigen Dateien. Dropbox verarbeitet die Dateien als dein Vertragspartner nach den Bedingungen deines Dropbox-Kontos; dabei fallen bei Dropbox auch deine IP-Adresse sowie Zeitpunkt, Name und Größe der Dateien an. Dropbox kann Daten in die USA übermitteln. Da die Dateien Ende-zu-Ende-verschlüsselt sind, kann Dropbox ihren Inhalt nicht lesen. Die Anmeldung findet auf der Website von Dropbox statt. Das Zugriffsrecht, das bewerby dabei erhält, wird nur im Speicher deines Browsers abgelegt (IndexedDB, Datenbank „bewerby-db“) und beim Trennen bei Dropbox widerrufen. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO, da die Synchronisation ausschließlich auf deine Anforderung hin erfolgt.",
-			"syncReturnBody": "Nach der Anmeldung leitet Dropbox dich auf die Seite „/cloud/callback“ von bewerby.de zurück. Ist bewerby auf deinem Gerät bereits geladen, beantwortet die Anwendung diese Seite selbst, ohne den Server zu kontaktieren. Andernfalls erscheint der Aufruf wie jeder andere in den Zugriffsprotokollen des Webservers, einschließlich eines einmal verwendbaren Anmeldecodes, der ohne einen nur in deinem Browser vorhandenen Prüfwert wertlos ist. Diesen Prüfwert legt bewerby für die Dauer der Anmeldung im sessionStorage deines Browsers ab (Schlüssel „bewerby-oauth“) und löscht ihn danach."
+			"syncOneDriveBody": "Über OneDrive: Wenn du dein Microsoft-Konto verbindest, sendet dein Browser die verschlüsselten Dateien direkt an Microsoft, in einen eigenen App-Ordner. bewerby erhält dabei nur Zugriff auf diesen App-Ordner, nicht auf deine übrigen Dateien. Microsoft verarbeitet die Dateien als dein Vertragspartner nach den Bedingungen deines Microsoft-Kontos; dabei fallen bei Microsoft auch deine IP-Adresse sowie Zeitpunkt, Name und Größe der Dateien an. Microsoft kann Daten in die USA übermitteln. Den Inhalt der Dateien kann Microsoft nicht lesen. Die Zugriffsberechtigung, die bewerby erhält, liegt nur im Speicher deines Browsers und gilt höchstens 24 Stunden; danach meldest du dich erneut an. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO.",
+			"syncGoogleBody": "Über Google Drive: Wenn du dein Google-Konto verbindest, sendet dein Browser die verschlüsselten Dateien direkt an Google, in einen versteckten App-Ordner, auf den nur bewerby zugreifen kann. Google verarbeitet die Dateien als dein Vertragspartner nach den Bedingungen deines Google-Kontos; dabei fallen bei Google auch deine IP-Adresse sowie Zeitpunkt, Name und Größe der Dateien an. Google kann Daten in die USA übermitteln. Den Inhalt der Dateien kann Google nicht lesen. Anders als die anderen Anbieter verlangt Google, dass der Anmeldecode und später die Erneuerung der Zugriffsberechtigung über einen Server mit einem geheimen Schlüssel laufen. Diese Anfragen gehen deshalb über den Server von bewerby.de (Pfad „/api/oauth/google“): Er ergänzt den Schlüssel, leitet die Anfrage an Google weiter und gibt die Antwort an deinen Browser zurück. Der einmalige Anmeldecode und die Zugriffsberechtigung laufen dabei durch den Server, werden aber weder gespeichert noch protokolliert. Sie stehen im Anfragetext, nicht in der Adresse, so dass in den Zugriffsprotokollen des Webservers nur der Aufruf mit IP-Adresse und Zeitpunkt erscheint. Zum Schutz vor Missbrauch zählt der Server die Anfragen je IP-Adresse höchstens eine Stunde lang im Arbeitsspeicher. Die Zugriffsberechtigung reicht nur bis zu dem App-Ordner, der ausschließlich verschlüsselte Dateien enthält. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO.",
+			"syncReturnBody": "Nach der Anmeldung leitet dich der Anbieter auf die Seite „/cloud/callback“ von bewerby.de zurück. Ist bewerby auf deinem Gerät bereits geladen, beantwortet die Anwendung diese Seite selbst, ohne den Server zu kontaktieren; Microsoft übergibt den Anmeldecode zudem in einem Teil der Adresse, den Browser nie an einen Server senden. Andernfalls erscheint der Aufruf wie jeder andere in den Zugriffsprotokollen des Webservers, einschließlich eines einmal verwendbaren Anmeldecodes, der ohne einen nur in deinem Browser vorhandenen Prüfwert wertlos ist. Diesen Prüfwert legt bewerby für die Dauer der Anmeldung im sessionStorage deines Browsers ab (Schlüssel „bewerby-oauth“) und löscht ihn danach."
 		},
 		"nutzungsbedingungen": {
 			"title": "Nutzungsbedingungen",
@@ -527,13 +529,11 @@
 		"connectDropboxHint": "bewerby erhält nur Zugriff auf einen eigenen App-Ordner in deiner Dropbox, nicht auf deine übrigen Dateien.",
 		"unavailable": "Dieser Browser kann nicht in einen Ordner synchronisieren, und es ist kein Cloud-Anbieter eingerichtet. Nutze die verschlüsselte Sicherung oben.",
 		"connectedFolder": "Verbunden mit dem Ordner „{name}“.",
-		"connectedDropbox": "Verbunden mit Dropbox.",
 		"statusIdle": "Zuletzt synchronisiert um {time}.",
 		"statusSyncing": "Synchronisiere …",
 		"statusError": "Die letzte Synchronisation ist fehlgeschlagen. Beim nächsten Versuch geht es weiter.",
 		"statusLocked": "Gesperrt: Entsperre den Schlüssel, damit dieses Gerät synchronisieren kann.",
 		"statusReconnectFolder": "bewerby braucht den Zugriff auf den Ordner erneut.",
-		"statusReconnectDropbox": "Bitte melde dich erneut bei Dropbox an.",
 		"statusOff": "Dieses Gerät synchronisiert, sobald die verschlüsselte Sicherung eingerichtet ist.",
 		"foreign": "Der Speicherort enthält Dateien eines anderen Schlüssels. bewerby lässt sie unberührt.",
 		"syncNow": "Jetzt synchronisieren",
@@ -548,10 +548,15 @@
 		"joinNote": "Dieses Gerät übernimmt den Schlüssel der Synchronisation. Bewerbungen, die schon auf diesem Gerät sind, werden zusammengeführt, nicht überschrieben.",
 		"joinEmpty": "Der Speicherort ist noch leer. Richte die verschlüsselte Sicherung ein, dann synchronisiert dieses Gerät dorthin.",
 		"joined": "Verbunden. Dieses Gerät synchronisiert jetzt.",
-		"plannedProviders": "OneDrive und Google Drive folgen.",
-		"callbackTitle": "Verbindung mit Dropbox",
+		"callbackTitle": "Anmeldung abschließen",
 		"callbackWorking": "Die Verbindung wird hergestellt …",
-		"callbackFailed": "Die Verbindung mit Dropbox ist nicht zustande gekommen. Es wurde nichts gespeichert.",
-		"backToBackup": "Zurück zu Backup & Sync"
+		"callbackFailed": "Die Verbindung ist nicht zustande gekommen. Es wurde nichts gespeichert.",
+		"backToBackup": "Zurück zu Backup & Sync",
+		"connectedCloud": "Verbunden mit {name}.",
+		"statusReconnectCloud": "Bitte melde dich erneut bei {name} an.",
+		"connectOneDrive": "Mit OneDrive verbinden",
+		"connectOneDriveHint": "bewerby erhält nur Zugriff auf einen eigenen App-Ordner in deinem OneDrive. Microsoft verlangt etwa einmal am Tag eine kurze erneute Anmeldung, meist ohne Eingabe.",
+		"connectGoogle": "Mit Google Drive verbinden",
+		"connectGoogleHint": "bewerby erhält nur Zugriff auf einen versteckten App-Ordner in deinem Google Drive, nicht auf deine Dateien. Die Anmeldung läuft dabei über den Server von bewerby.de, weil Google es nicht anders zulässt; er speichert nichts."
 	}
 }

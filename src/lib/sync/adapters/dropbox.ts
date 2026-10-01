@@ -1,5 +1,6 @@
-import { ReconnectRequiredError, type RemoteStore } from '../port.js';
+import type { RemoteStore } from '../port.js';
 import type { TargetConfig } from '../state.js';
+import { TokenKeeper, tokenRequest, withTokens } from './tokens.js';
 
 /**
  * Dropbox, scoped to its "App folder" access type: the token can reach
@@ -35,38 +36,13 @@ export function dropboxAuthorizeUrl(params: {
 	return `${AUTHORIZE}?${query}`;
 }
 
-interface TokenResponse {
-	access_token: string;
-	expires_in?: number;
-	refresh_token?: string;
-}
-
-async function tokenRequest(body: Record<string, string>, fetchFn: Fetch): Promise<TokenResponse> {
-	const response = await fetchFn(TOKEN, {
-		method: 'POST',
-		headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-		body: new URLSearchParams(body)
-	});
-	if (response.status === 400 || response.status === 401) throw new ReconnectRequiredError();
-	if (!response.ok) throw new Error(`Dropbox token request failed: ${response.status}`);
-	return (await response.json()) as TokenResponse;
-}
-
-function toTarget(tokens: TokenResponse, refreshToken: string, now: number): DropboxTarget {
-	return {
-		kind: 'dropbox',
-		refreshToken,
-		accessToken: tokens.access_token,
-		expiresAt: now + (tokens.expires_in ?? 3600) * 1000
-	};
-}
-
 export async function exchangeDropboxCode(
 	params: { clientId: string; code: string; verifier: string; redirectUri: string },
 	fetchFn: Fetch = fetch,
 	now = Date.now()
 ): Promise<DropboxTarget> {
 	const tokens = await tokenRequest(
+		TOKEN,
 		{
 			grant_type: 'authorization_code',
 			code: params.code,
@@ -77,7 +53,11 @@ export async function exchangeDropboxCode(
 		fetchFn
 	);
 	if (!tokens.refresh_token) throw new Error('Dropbox returned no refresh token.');
-	return toTarget(tokens, tokens.refresh_token, now);
+	return withTokens<DropboxTarget>(
+		{ kind: 'dropbox', refreshToken: tokens.refresh_token },
+		tokens,
+		now
+	);
 }
 
 /**
@@ -92,42 +72,31 @@ function headerJson(value: unknown): string {
 }
 
 export class DropboxStore implements RemoteStore {
-	constructor(
-		private target: DropboxTarget,
-		private readonly clientId: string,
-		/** Persists refreshed tokens. */
-		private readonly onTarget: (target: DropboxTarget) => Promise<void>,
-		private readonly fetchFn: Fetch = fetch.bind(globalThis),
-		private readonly now: () => number = Date.now
-	) {}
+	private readonly tokens: TokenKeeper<DropboxTarget>;
 
-	private async accessToken(force = false): Promise<string> {
-		const fresh =
-			!force && this.target.accessToken && (this.target.expiresAt ?? 0) - 60_000 > this.now();
-		if (fresh) return this.target.accessToken!;
-		const tokens = await tokenRequest(
-			{
-				grant_type: 'refresh_token',
-				refresh_token: this.target.refreshToken,
-				client_id: this.clientId
-			},
-			this.fetchFn
+	constructor(
+		target: DropboxTarget,
+		clientId: string,
+		/** Persists refreshed tokens. */
+		onTarget: (target: DropboxTarget) => Promise<void>,
+		private readonly fetchFn: Fetch = fetch.bind(globalThis),
+		now: () => number = Date.now
+	) {
+		this.tokens = new TokenKeeper(
+			target,
+			(refreshToken) =>
+				tokenRequest(
+					TOKEN,
+					{ grant_type: 'refresh_token', refresh_token: refreshToken, client_id: clientId },
+					fetchFn
+				),
+			onTarget,
+			now
 		);
-		this.target = toTarget(tokens, this.target.refreshToken, this.now());
-		await this.onTarget(this.target);
-		return this.target.accessToken!;
 	}
 
-	/** One request, retried once with a refreshed token on a 401. */
-	private async call(url: string, init: RequestInit): Promise<Response> {
-		for (const force of [false, true]) {
-			const response = await this.fetchFn(url, {
-				...init,
-				headers: { ...init.headers, Authorization: `Bearer ${await this.accessToken(force)}` }
-			});
-			if (response.status !== 401) return response;
-		}
-		throw new ReconnectRequiredError();
+	private call(url: string, init: RequestInit): Promise<Response> {
+		return this.tokens.fetch(this.fetchFn, url, init);
 	}
 
 	private async rpc<T>(route: string, args: unknown): Promise<T> {

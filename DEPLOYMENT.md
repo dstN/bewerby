@@ -161,9 +161,18 @@ them to the build job-wide, and `vite.config.ts` bakes them in. A missing
 variable builds without that provider: no button, and none of its origins
 in the CSP.
 
-| Variable                 | Value                                                                                       |
-| ------------------------ | ------------------------------------------------------------------------------------------- |
-| `PUBLIC_DROPBOX_APP_KEY` | The app key of the Dropbox app (App Console, access type "App folder", redirect URIs below) |
+| Variable                  | Value                                                                                                                                                                                  |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `PUBLIC_DROPBOX_APP_KEY`  | The app key of the Dropbox app (App Console, access type "App folder", redirect URIs below)                                                                                            |
+| `PUBLIC_MS_CLIENT_ID`     | The application (client) id of the Microsoft Entra app registration (platform SPA, accounts "personal + work or school", permissions `Files.ReadWrite.AppFolder` and `offline_access`) |
+| `PUBLIC_GOOGLE_CLIENT_ID` | The OAuth client id of the Google Cloud web client (scope `drive.appdata`)                                                                                                             |
+
+**Google's token broker** (`/api/oauth/google`, #54) also needs the client id
+and the **client secret on the server**, as environment variables of the
+Node app in the Plesk panel (Node.js → custom environment variables), never
+in the repository or in GitHub: `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`.
+Without them the broker answers 503 and Google Drive cannot be connected;
+nothing else is affected.
 
 Redirect URIs to register with each provider:
 `https://bewerby.de/cloud/callback` and, for local development,

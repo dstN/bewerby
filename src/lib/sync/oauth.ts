@@ -6,7 +6,7 @@
  * /cloud/callback.
  */
 
-export type Provider = 'dropbox';
+export type Provider = 'dropbox' | 'onedrive' | 'google';
 
 export interface PendingAuthorization {
 	provider: Provider;

@@ -5,11 +5,15 @@
 	import { t } from '$lib/i18n/index.svelte.js';
 	import { readCallback, takeAuthorization } from '$lib/sync/oauth.js';
 	import { exchangeDropboxCode } from '$lib/sync/adapters/dropbox.js';
-	import { DROPBOX_CLIENT_ID } from '$lib/sync/targets.js';
+	import { exchangeGoogleCode } from '$lib/sync/adapters/gdrive.js';
+	import { exchangeOneDriveCode } from '$lib/sync/adapters/onedrive.js';
+	import { DROPBOX_CLIENT_ID, ONEDRIVE_CLIENT_ID } from '$lib/sync/targets.js';
+	import type { TargetConfig } from '$lib/sync/state.js';
 	import { JUST_CONNECTED, SyncState } from '$lib/sync/state.js';
 
 	/**
-	 * Where Dropbox sends the user back after sign-in (#53). The service
+	 * Where Dropbox, Microsoft and Google send the user back after sign-in
+	 * (#53, #54). The service
 	 * worker answers this route from its cache, so the code in the URL does
 	 * not reach the server at all once bewerby is installed; it is removed
 	 * from the address bar and the history straight away regardless.
@@ -20,20 +24,27 @@
 		const result = readCallback(new URL(location.href));
 		queueMicrotask(() => replaceState(resolve('/cloud/callback'), {}));
 		const pending = takeAuthorization(result.state);
-		if (!pending || result.error || !result.code || !DROPBOX_CLIENT_ID) {
+		if (!pending || result.error || !result.code) {
 			failed = true;
 			return;
 		}
+		const grant = {
+			code: result.code,
+			verifier: pending.verifier,
+			redirectUri: pending.redirectUri
+		};
 		try {
-			const target = await exchangeDropboxCode({
-				clientId: DROPBOX_CLIENT_ID,
-				code: result.code,
-				verifier: pending.verifier,
-				redirectUri: pending.redirectUri
-			});
+			let target: TargetConfig;
+			if (pending.provider === 'dropbox') {
+				target = await exchangeDropboxCode({ clientId: DROPBOX_CLIENT_ID, ...grant });
+			} else if (pending.provider === 'onedrive') {
+				target = await exchangeOneDriveCode({ clientId: ONEDRIVE_CLIENT_ID, ...grant });
+			} else {
+				target = await exchangeGoogleCode(grant);
+			}
 			await new SyncState().setTarget(target);
 			// Tells the backup page to finish connecting (join or start syncing).
-			sessionStorage.setItem(JUST_CONNECTED, 'dropbox');
+			sessionStorage.setItem(JUST_CONNECTED, pending.provider);
 			await goto(resolve('/backup'), { replaceState: true });
 		} catch (err) {
 			console.error('Completing the Dropbox sign-in failed:', err);

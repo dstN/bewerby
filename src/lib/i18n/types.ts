@@ -342,13 +342,11 @@ export type TranslationKeys = {
 		connectDropboxHint: string;
 		unavailable: string;
 		connectedFolder: string;
-		connectedDropbox: string;
 		statusIdle: string;
 		statusSyncing: string;
 		statusError: string;
 		statusLocked: string;
 		statusReconnectFolder: string;
-		statusReconnectDropbox: string;
 		statusOff: string;
 		foreign: string;
 		syncNow: string;
@@ -363,7 +361,12 @@ export type TranslationKeys = {
 		joinNote: string;
 		joinEmpty: string;
 		joined: string;
-		plannedProviders: string;
+		connectedCloud: string;
+		statusReconnectCloud: string;
+		connectOneDrive: string;
+		connectOneDriveHint: string;
+		connectGoogle: string;
+		connectGoogleHint: string;
 		callbackTitle: string;
 		callbackWorking: string;
 		callbackFailed: string;
@@ -489,6 +492,8 @@ export type TranslationKeys = {
 			syncBody: string;
 			syncFolderBody: string;
 			syncDropboxBody: string;
+			syncOneDriveBody: string;
+			syncGoogleBody: string;
 			syncReturnBody: string;
 			contactFormTitle: string;
 			contactFormBody: string;

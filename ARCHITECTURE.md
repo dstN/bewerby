@@ -475,16 +475,29 @@ are never online at the same time. Decision and alternatives:
 - **When to push:** a persisted `dirty` flag, because deletions move no
   state vector, plus a remote state vector, for content that arrived by
   file import.
-- **Adapters:**
+- **Adapters**, all limited to an app folder of their own:
   - a folder a sync client keeps in step (File System Access, Chromium
     desktop)
-  - Dropbox: PKCE, offline refresh token, "App folder" scope
+  - Dropbox: PKCE, offline refresh token, "App folder"
+  - OneDrive: SPA with PKCE, `Files.ReadWrite.AppFolder`; refresh tokens
+    last 24 hours. Downloads use the pre-authenticated
+    `@microsoft.graph.downloadUrl`, since `/content` redirects and a
+    redirect is not allowed on a preflighted CORS request.
+  - Google Drive: `drive.appdata`, the hidden app folder. Google will not
+    redeem or refresh a code without the client secret, so only those two
+    calls go through `/api/oauth/google` on bewerby.de, which adds the
+    secret, passes the answer back, and stores and logs nothing. It checks
+    the Origin, accepts only this app's callback as redirect URI, caps the
+    body and throttles per IP with the same limiter as `/api/fetch-ad`.
+    Every file request goes from the browser to Google directly.
 - **OAuth return:** `/cloud/callback` is answered by the service worker from
   its cache, so the code never reaches the server's access log, and is
   stripped from the address bar at once.
-- **Configuration:** the Dropbox client id comes from the repository
-  variable `PUBLIC_DROPBOX_APP_KEY`. Without it, Dropbox is not offered and
-  its origins stay out of `connect-src`.
+- **Configuration:** client ids come from repository variables
+  (`PUBLIC_DROPBOX_APP_KEY`, `PUBLIC_MS_CLIENT_ID`, `PUBLIC_GOOGLE_CLIENT_ID`).
+  A provider without one is not offered, and its origins stay out of
+  `connect-src`. Google's client id and secret also have to be set on the
+  server (see DEPLOYMENT.md).
 - **The runner** syncs on start, 20 s after a local change, every minute,
   and when the tab becomes visible - only while bewerby is open, like the
   reminders.

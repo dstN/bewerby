@@ -3,6 +3,7 @@ import type { IncomingMessage } from 'node:http';
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { assertPublicUrl, publicLookup, UnsafeUrlError } from '$lib/server/urlGuard.js';
 import { extractJobPage } from '$lib/utils/htmlToJobText.js';
+import { clientAddress, createRateLimiter } from '$lib/server/requests.js';
 
 /**
  * Fetches a job ad server-side and hands back its text plus whatever the page
@@ -52,32 +53,9 @@ function failure(code: FailureCode, status: number) {
 	return json({ error: code }, { status });
 }
 
-/**
- * Per-IP throttle, in memory.
- *
- * ponytail: in-process counter, so it resets on restart and is per Passenger
- * worker rather than per host. That is the right size for a personal app
- * whose job is to stop this becoming a free open proxy, not to survive a
- * determined attacker; move it to a shared store if there is ever more than
- * one instance that matters.
- */
 const WINDOW_MS = 60 * 60 * 1000;
 const MAX_PER_WINDOW = 40;
-const hits = new Map<string, { count: number; resetAt: number }>();
-
-function rateLimited(key: string, now = Date.now()): boolean {
-	// Sweep on every call, not only once the map is large: the Datenschutz-
-	// erklärung promises an IP is held for at most WINDOW_MS, and a lazy sweep
-	// would keep it until the next restart. The map is small, so O(n) is fine.
-	for (const [ip, entry] of hits) if (entry.resetAt <= now) hits.delete(ip);
-	const entry = hits.get(key);
-	if (!entry || entry.resetAt <= now) {
-		hits.set(key, { count: 1, resetAt: now + WINDOW_MS });
-		return false;
-	}
-	entry.count += 1;
-	return entry.count > MAX_PER_WINDOW;
-}
+const rateLimited = createRateLimiter(WINDOW_MS, MAX_PER_WINDOW);
 
 /**
  * One GET, over node:https rather than fetch(). fetch() cannot take a
@@ -134,19 +112,6 @@ async function readCapped(response: IncomingMessage): Promise<string | null> {
 	// Job boards are UTF-8 in practice; a mislabelled page degrades to a few
 	// wrong characters, which the review panel lets the user correct.
 	return new TextDecoder('utf-8').decode(Buffer.concat(chunks));
-}
-
-/**
- * Who is asking, for the rate limit. Behind Passenger the socket peer is
- * Passenger itself, so getClientAddress() alone would put every visitor into
- * one shared bucket. Passenger passes the real address in a header with the
- * `!~` prefix, which it refuses to accept from clients - unlike
- * X-Forwarded-For, which anyone can send. Without Passenger (locally, in
- * tests) the header is absent and the socket peer is the client after all.
- * https://www.phusionpassenger.com/library/indepth/nodejs/secure_http_headers.html
- */
-function clientAddress(request: Request, fallback: () => string): string {
-	return request.headers.get('!~passenger-client-address') ?? fallback();
 }
 
 export const POST: RequestHandler = async ({ request, getClientAddress }) => {

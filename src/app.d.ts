@@ -18,7 +18,7 @@ declare global {
 
 	// OAuth client ids of the sync providers, from the build environment;
 	// empty when a provider is not configured (see vite.config.ts).
-	const __SYNC_CLIENTS__: { dropbox: string };
+	const __SYNC_CLIENTS__: { dropbox: string; onedrive: string; google: string };
 }
 
 // pdfjs-dist ships no .d.ts next to this minified subpath (only the plain

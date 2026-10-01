@@ -381,7 +381,9 @@
 			"syncBody": "You can keep your applications in step between your own devices. bewerby encrypts them in your browser with AES-256-GCM for that. The key is derived from your passphrase or lives only on your devices; it is never transmitted. Only encrypted files with random names end up at the storage location, their sizes rounded up to size classes. The bewerby.de server takes no part in syncing.",
 			"syncFolderBody": "Through a folder: bewerby writes the encrypted files into a folder on your device that you choose. Whether and where they go from there is up to the sync software you use for that folder (for example Nextcloud, iCloud or Proton Drive), and its terms govern that transfer. bewerby itself transmits nothing.",
 			"syncDropboxBody": "Through Dropbox: if you connect your Dropbox account, your browser sends the encrypted files directly to Dropbox, into an app folder of their own. bewerby only gets access to that app folder, not to your other files. Dropbox processes the files as your contractual partner under the terms of your Dropbox account; in doing so, Dropbox also receives your IP address and the time, name and size of the files. Dropbox may transfer data to the USA. As the files are end-to-end encrypted, Dropbox cannot read their content. You sign in on Dropbox's website. The access right bewerby receives is stored only in your browser's storage (IndexedDB, database “bewerby-db”) and revoked at Dropbox when you disconnect. The legal basis is Art. 6(1)(b) GDPR, as syncing happens only at your request.",
-			"syncReturnBody": "After you sign in, Dropbox sends you back to the page “/cloud/callback” on bewerby.de. If bewerby is already loaded on your device, the application answers that page itself, without contacting the server. Otherwise the request appears in the web server's access logs like any other, including a single-use sign-in code that is worthless without a check value that exists only in your browser. bewerby keeps that check value in your browser's sessionStorage for the duration of the sign-in (key “bewerby-oauth”) and deletes it afterwards."
+			"syncOneDriveBody": "Through OneDrive: if you connect your Microsoft account, your browser sends the encrypted files directly to Microsoft, into an app folder of their own. bewerby only gets access to that app folder, not to your other files. Microsoft processes the files as your contractual partner under the terms of your Microsoft account; in doing so, Microsoft also receives your IP address and the time, name and size of the files. Microsoft may transfer data to the USA. Microsoft cannot read the files' content. The access right bewerby receives is stored only in your browser and lasts at most 24 hours; after that you sign in again. The legal basis is Art. 6(1)(b) GDPR.",
+			"syncGoogleBody": "Through Google Drive: if you connect your Google account, your browser sends the encrypted files directly to Google, into a hidden app folder only bewerby can access. Google processes the files as your contractual partner under the terms of your Google account; in doing so, Google also receives your IP address and the time, name and size of the files. Google may transfer data to the USA. Google cannot read the files' content. Unlike the other providers, Google requires the sign-in code, and later the renewal of the access right, to go through a server holding a secret key. These requests therefore pass through the bewerby.de server (path “/api/oauth/google”): it adds the key, forwards the request to Google and returns the answer to your browser. The single-use sign-in code and the access right pass through the server but are neither stored nor logged. They are sent in the request body, not in the address, so the web server's access logs show only the request with IP address and time. To prevent abuse, the server counts requests per IP address in memory for at most one hour. The access right reaches only the app folder, which holds nothing but encrypted files. The legal basis is Art. 6(1)(b) GDPR.",
+			"syncReturnBody": "After you sign in, the provider sends you back to the page “/cloud/callback” on bewerby.de. If bewerby is already loaded on your device, the application answers that page itself, without contacting the server; Microsoft additionally passes the sign-in code in a part of the address browsers never send to a server. Otherwise the request appears in the web server's access logs like any other, including a single-use sign-in code that is worthless without a check value that exists only in your browser. bewerby keeps that check value in your browser's sessionStorage for the duration of the sign-in (key “bewerby-oauth”) and deletes it afterwards."
 		},
 		"nutzungsbedingungen": {
 			"title": "Terms of Use",
@@ -527,13 +529,11 @@
 		"connectDropboxHint": "bewerby only gets access to an app folder of its own in your Dropbox, not to your other files.",
 		"unavailable": "This browser cannot sync through a folder, and no cloud provider is set up. Use the encrypted backup above.",
 		"connectedFolder": "Connected to the folder “{name}”.",
-		"connectedDropbox": "Connected to Dropbox.",
 		"statusIdle": "Last synced at {time}.",
 		"statusSyncing": "Syncing …",
 		"statusError": "The last sync failed. The next attempt picks up from there.",
 		"statusLocked": "Locked: unlock the key so this device can sync.",
 		"statusReconnectFolder": "bewerby needs access to the folder again.",
-		"statusReconnectDropbox": "Please sign in to Dropbox again.",
 		"statusOff": "This device syncs once the encrypted backup is set up.",
 		"foreign": "The storage location holds files of a different key. bewerby leaves them alone.",
 		"syncNow": "Sync now",
@@ -548,10 +548,15 @@
 		"joinNote": "This device takes over the key of the sync. Applications already on this device are merged, not overwritten.",
 		"joinEmpty": "The storage location is still empty. Set up the encrypted backup, and this device will sync there.",
 		"joined": "Connected. This device now syncs.",
-		"plannedProviders": "OneDrive and Google Drive are coming.",
-		"callbackTitle": "Connecting Dropbox",
+		"callbackTitle": "Finishing sign-in",
 		"callbackWorking": "Establishing the connection …",
-		"callbackFailed": "The connection to Dropbox did not go through. Nothing was saved.",
-		"backToBackup": "Back to Backup & Sync"
+		"callbackFailed": "The connection did not go through. Nothing was saved.",
+		"backToBackup": "Back to Backup & Sync",
+		"connectedCloud": "Connected to {name}.",
+		"statusReconnectCloud": "Please sign in to {name} again.",
+		"connectOneDrive": "Connect OneDrive",
+		"connectOneDriveHint": "bewerby only gets access to an app folder of its own in your OneDrive. Microsoft asks for a short new sign-in about once a day, usually without typing anything.",
+		"connectGoogle": "Connect Google Drive",
+		"connectGoogleHint": "bewerby only gets access to a hidden app folder in your Google Drive, not to your files. Signing in goes through bewerby.de's server, because Google allows no other way; it stores nothing."
 	}
 }
