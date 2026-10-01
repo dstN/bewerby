@@ -1,5 +1,5 @@
 import Dexie, { type Table } from 'dexie';
-import { writePdfToOpfs } from '$lib/utils/opfs.js';
+import { writePdfToOpfs } from '#lib/utils/opfs.js';
 
 export interface StatusHistory {
 	status: 'draft' | 'sent' | 'interview' | 'accepted' | 'rejected';
@@ -33,7 +33,7 @@ export interface Application {
 	 * an interval or a date themselves, so changing the setting restarts the
 	 * countdown from that moment instead of from the application date. Unset on
 	 * rows written before this existed - those still fall back to the
-	 * interval-from-`sent` math in $lib/utils/reminders.ts.
+	 * interval-from-`sent` math in #lib/utils/reminders.ts.
 	 */
 	reminderAt?: number;
 	lastReminderSent?: number;
@@ -41,14 +41,14 @@ export interface Application {
 	/**
 	 * The application date the user entered, if they changed it. Unset, the
 	 * first move into "sent" stands in - see getAppliedAt in
-	 * $lib/utils/reminders.ts. Not appliedAt: the edit dialog has written that
+	 * #lib/utils/reminders.ts. Not appliedAt: the edit dialog has written that
 	 * on every save, entered or not, so it cannot tell the two apart.
 	 */
 	sentAt?: number;
 	/**
 	 * When the rejection arrived, if the user entered it. Unset, the date the
 	 * card moved into "Absage" stands in - see getRejectedAt in
-	 * $lib/utils/reminders.ts. Cleared on every status change, so a card
+	 * #lib/utils/reminders.ts. Cleared on every status change, so a card
 	 * rejected a second time never carries the first rejection's date.
 	 */
 	rejectedAt?: number;
@@ -56,7 +56,7 @@ export interface Application {
 	updatedAt: number;
 	history: StatusHistory[];
 	pdfName?: string;
-	/** OPFS file name holding the attached PDF (see $lib/utils/opfs.ts). */
+	/** OPFS file name holding the attached PDF (see #lib/utils/opfs.ts). */
 	pdfRef?: string;
 	/** Work location as advertised. Optional and unindexed, so no schema bump. */
 	location?: string;
@@ -72,7 +72,7 @@ export interface Application {
 	cvName?: string;
 }
 
-/** One persisted Yjs update (see $lib/crdt/runtime.ts); merged on load, compacted now and then. */
+/** One persisted Yjs update (see #lib/crdt/runtime.ts); merged on load, compacted now and then. */
 export interface CrdtUpdate {
 	seq?: number;
 	update: Uint8Array;

@@ -1,13 +1,13 @@
 import 'fake-indexeddb/auto';
 import { describe, it, expect, vi } from 'vitest';
-import type { Application } from '$lib/db/index.js';
-import type { Profile } from '$lib/utils/profile.js';
+import type { Application } from '#lib/db/index.js';
+import type { Profile } from '#lib/utils/profile.js';
 
 // One in-memory OPFS for the whole file; every device gets fresh names in
 // it, as real devices get fresh names on their own disks.
 const files = new Map<string, Uint8Array>();
 let written = 0;
-vi.mock('$lib/utils/opfs.js', () => ({
+vi.mock('#lib/utils/opfs.js', () => ({
 	writePdfToOpfs: vi.fn(async (blob: Blob) => {
 		const ref = `file-${++written}.pdf`;
 		files.set(ref, new Uint8Array(await blob.arrayBuffer()));
@@ -19,7 +19,7 @@ vi.mock('$lib/utils/opfs.js', () => ({
 	})
 }));
 
-const { BewerbyDatabase } = await import('$lib/db/index.js');
+const { BewerbyDatabase } = await import('#lib/db/index.js');
 const { SyncRuntime, SnapshotError } = await import('./runtime.js');
 
 function device() {

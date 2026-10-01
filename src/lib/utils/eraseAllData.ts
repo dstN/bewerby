@@ -1,7 +1,7 @@
-import { browser } from '$app/environment';
-import { db } from '$lib/db/index.js';
-import { isOpfsSupported } from '$lib/utils/opfs.js';
-import { deleteKeystore } from '$lib/vault/keystore.js';
+import { browser } from '$app/env';
+import { db } from '#lib/db/index.js';
+import { isOpfsSupported } from '#lib/utils/opfs.js';
+import { deleteKeystore } from '#lib/vault/keystore.js';
 
 /**
  * Exercises the right to erasure completely: both IndexedDB databases

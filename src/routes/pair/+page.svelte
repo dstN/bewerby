@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { replaceState } from '$app/navigation';
+	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { t } from '$lib/i18n/index.svelte.js';
-	import { announcer } from '$lib/stores/announcer.svelte.js';
-	import { joinAsGuest, parsePairingCode, type GuestState } from '$lib/sync/live/pairing.js';
+	import { t } from '#lib/i18n/index.svelte.js';
+	import { announcer } from '#lib/stores/announcer.svelte.js';
+	import { joinAsGuest, parsePairingCode, type GuestState } from '#lib/sync/live/pairing.js';
 
 	/**
 	 * The new device's side of adding a device (#55). The pairing secret
@@ -33,7 +33,8 @@
 
 	onMount(() => {
 		const secret = parsePairingCode(new URLSearchParams(location.hash.slice(1)).get('p') ?? '');
-		if (location.hash) queueMicrotask(() => replaceState(resolve('/pair'), {}));
+		if (location.hash)
+			queueMicrotask(() => goto(resolve('/pair'), { shallow: true, replace: true }));
 		if (secret) start(secret);
 		return () => abort.abort();
 	});

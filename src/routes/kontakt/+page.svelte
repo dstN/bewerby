@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { t } from '$lib/i18n/index.svelte.js';
-	import { announcer } from '$lib/stores/announcer.svelte.js';
-	import ObfuscatedEmail from '$lib/components/common/ObfuscatedEmail.svelte';
+	import { t } from '#lib/i18n/index.svelte.js';
+	import { announcer } from '#lib/stores/announcer.svelte.js';
+	import ObfuscatedEmail from '#lib/components/common/ObfuscatedEmail.svelte';
 
 	// Shared mail relay (see ARCHITECTURE.md) - operated by the same person as
 	// bewerby itself, on the same netcup server, not a third-party service.

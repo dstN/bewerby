@@ -120,7 +120,7 @@ that hook was written before there was anything for it to do.
 An endpoint that fetches a URL handed to it is an open proxy into whatever
 the server can reach and the caller cannot: Plesk on localhost, the hoster's
 private network, cloud metadata at 169.254.169.254, and the wider internet
-under our IP. `src/lib/server/urlGuard.ts` (under `$lib/server`, so SvelteKit
+under our IP. `src/lib/server/urlGuard.ts` (under `#lib/server`, so SvelteKit
 cannot bundle it into client code) is what makes that not work:
 
 - `https:` only, no embedded credentials.
@@ -188,18 +188,18 @@ a page that renders zero data server-side (everything comes from IndexedDB,
 which only exists in the browser), and it gives the service worker an actual
 document per route to precache.
 
-`src/service-worker.ts`'s install step precaches three things:
+`src/service-worker/index.ts`'s install step precaches three things:
 
-1. The built client JS/CSS bundle (`build` from `$service-worker`).
-2. Everything under `static/` (`files` from `$service-worker`), with dotfiles
-   filtered out - `adapter-node` serves static assets via `sirv`, which
-   refuses dotfiles by default and would otherwise fail the whole
-   installation on a single `static/.gitignore`. Because all of it ships to
+1. The built client JS/CSS bundle (`immutable` from `$app/manifest`).
+2. Everything under `static/` (`assets` from `$app/manifest`), with dotfiles
+   filtered out - `adapter-node` leaves dotfiles out of the static file table
+   it records at build time, so a single `static/.gitignore` would 404 and
+   otherwise fail the whole installation. Because all of it ships to
    every visitor, `scripts/check-static.mjs` (run as `prebuild`) fails the
    build on anything not allowlisted: by name at the root, by extension at
    any depth inside `fonts/`, `app-icons/` and `screenshots/`.
 3. **Every prerendered route document, listed explicitly**
-   (`PRERENDERED_ROUTES`). This one is easy to get wrong: `build`/`files`
+   (`PRERENDERED_ROUTES`). This one is easy to get wrong: `immutable`/`assets`
    above only cover the JS/CSS bundle and `static/`, never the route HTML
    itself. Without this explicit list, a route's document would only enter
    the cache the first time a _hard_ (non-SPA) navigation to it happened

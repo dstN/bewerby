@@ -1,40 +1,40 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { t } from '$lib/i18n/index.svelte.js';
-	import { db } from '$lib/db/index.js';
-	import { importApplications } from '$lib/data/applications.js';
-	import { readPdfFromOpfs, writePdfToOpfs } from '$lib/utils/opfs.js';
+	import { t } from '#lib/i18n/index.svelte.js';
+	import { db } from '#lib/db/index.js';
+	import { importApplications } from '#lib/data/applications.js';
+	import { readPdfFromOpfs, writePdfToOpfs } from '#lib/utils/opfs.js';
 	import {
 		buildBackupPayload,
 		parseBackupPayload,
 		prepareImportRows,
 		type BackupPayload
-	} from '$lib/utils/backup.js';
-	import { profileStore } from '$lib/stores/profile.svelte.js';
-	import { announcer } from '$lib/stores/announcer.svelte.js';
-	import { VaultError, type KeyHeader } from '$lib/vault/format.js';
-	import { forgetRoot, loadStoredVault, storeVault } from '$lib/vault/keystore.js';
-	import { openFile, readFileHeader, sealFile, type UnlockedVault } from '$lib/vault/vault.js';
-	import { activeSync, enableSync, useRuntime } from '$lib/crdt/session.js';
-	import { decodeSnapshot, encodeSnapshot } from '$lib/crdt/snapshot.js';
-	import { adoptVault as adoptVaultForDevice, setUnlockedVault } from '$lib/vault/session.js';
-	import { syncRunner } from '$lib/sync/runner.svelte.js';
-	import { JUST_CONNECTED, SyncState } from '$lib/sync/state.js';
-	import { isFolderSyncSupported, pickSyncFolder } from '$lib/sync/adapters/folder.js';
-	import { dropboxAuthorizeUrl } from '$lib/sync/adapters/dropbox.js';
-	import { googleAuthorizeUrl } from '$lib/sync/adapters/gdrive.js';
-	import { oneDriveAuthorizeUrl } from '$lib/sync/adapters/onedrive.js';
-	import { pkcePair, redirectUri, rememberAuthorization, type Provider } from '$lib/sync/oauth.js';
+	} from '#lib/utils/backup.js';
+	import { profileStore } from '#lib/stores/profile.svelte.js';
+	import { announcer } from '#lib/stores/announcer.svelte.js';
+	import { VaultError, type KeyHeader } from '#lib/vault/format.js';
+	import { forgetRoot, loadStoredVault, storeVault } from '#lib/vault/keystore.js';
+	import { openFile, readFileHeader, sealFile, type UnlockedVault } from '#lib/vault/vault.js';
+	import { activeSync, enableSync, useRuntime } from '#lib/crdt/session.js';
+	import { decodeSnapshot, encodeSnapshot } from '#lib/crdt/snapshot.js';
+	import { adoptVault as adoptVaultForDevice, setUnlockedVault } from '#lib/vault/session.js';
+	import { syncRunner } from '#lib/sync/runner.svelte.js';
+	import { JUST_CONNECTED, SyncState } from '#lib/sync/state.js';
+	import { isFolderSyncSupported, pickSyncFolder } from '#lib/sync/adapters/folder.js';
+	import { dropboxAuthorizeUrl } from '#lib/sync/adapters/dropbox.js';
+	import { googleAuthorizeUrl } from '#lib/sync/adapters/gdrive.js';
+	import { oneDriveAuthorizeUrl } from '#lib/sync/adapters/onedrive.js';
+	import { pkcePair, redirectUri, rememberAuthorization, type Provider } from '#lib/sync/oauth.js';
 	import {
 		DROPBOX_CLIENT_ID,
 		GOOGLE_CLIENT_ID,
 		ONEDRIVE_CLIENT_ID,
 		openStore
-	} from '$lib/sync/targets.js';
-	import { liveSync } from '$lib/sync/live/live.svelte.js';
-	import PairDialog from '$lib/components/vault/PairDialog.svelte';
-	import VaultSetupDialog from '$lib/components/vault/VaultSetupDialog.svelte';
-	import VaultUnlockDialog from '$lib/components/vault/VaultUnlockDialog.svelte';
+	} from '#lib/sync/targets.js';
+	import { liveSync } from '#lib/sync/live/live.svelte.js';
+	import PairDialog from '#lib/components/vault/PairDialog.svelte';
+	import VaultSetupDialog from '#lib/components/vault/VaultSetupDialog.svelte';
+	import VaultUnlockDialog from '#lib/components/vault/VaultUnlockDialog.svelte';
 
 	// File System Access API isn't part of lib.dom.d.ts yet; declare just enough
 	// of it for the feature-detected local dump below.

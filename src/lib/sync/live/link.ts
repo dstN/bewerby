@@ -1,5 +1,5 @@
-import type { SyncRuntime } from '$lib/crdt/runtime.js';
-import { fromBase64, toBase64 } from '$lib/vault/format.js';
+import type { SyncRuntime } from '#lib/crdt/runtime.js';
+import { fromBase64, toBase64 } from '#lib/vault/format.js';
 
 /**
  * Keeps two devices' documents in step over an open data channel (#55).

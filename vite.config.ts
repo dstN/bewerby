@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import adapter from '@sveltejs/adapter-node';
+import type { Adapter } from '@sveltejs/kit';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vitest/config';
 
@@ -37,6 +38,25 @@ const syncOrigins: `https://${string}.${string}`[] = [
 	...(syncClients.google ? (['https://www.googleapis.com'] as const) : [])
 ];
 
+// SvelteKit 3.0.0 collects the MIME types adapter-node may serve from the
+// prerendered *URL paths* (/board) rather than their files (board.html), so
+// `.html` never makes it into the table and every prerendered page goes out
+// without a Content-Type header. Behind Apache's `nosniff` (static/.htaccess)
+// browsers then render the page as text/plain - raw source instead of the
+// app. Adding the one missing entry fixes it; SvelteKit's own table still
+// wins, so this becomes a no-op once that is fixed upstream and can go.
+// Covered by tests/e2e/prerendered.spec.ts.
+function withHtmlMimeType(inner: Adapter): Adapter {
+	return {
+		...inner,
+		adapt(builder) {
+			const mimeTypes = { '.html': 'text/html', ...builder.mimeTypes };
+			Object.defineProperty(builder, 'mimeTypes', { value: mimeTypes });
+			return inner.adapt(builder);
+		}
+	};
+}
+
 export default defineConfig({
 	// Single source of truth for the version shown in the sidebar (see
 	// Sidebar.svelte) - reading package.json directly there isn't possible in
@@ -52,10 +72,12 @@ export default defineConfig({
 				runes: ({ filename }) =>
 					filename.split(/[/\\]/).includes('node_modules') ? undefined : true
 			},
-			adapter: adapter({
-				out: 'build',
-				precompress: true
-			}),
+			adapter: withHtmlMimeType(
+				adapter({
+					out: 'build',
+					precompress: true
+				})
+			),
 			prerender: {
 				// The skip-link in app.html targets #main-content, which is part of
 				// +layout.svelte - with ssr disabled (see +layout.ts) that element only

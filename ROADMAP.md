@@ -684,7 +684,7 @@ Nicht Teil der ursprünglichen 36-Punkte-Analyse, sondern beiläufig während de
 
 **Behoben:** `npm audit fix` (ohne `--force`) hat fünf der sechs Advisories innerhalb der bestehenden `^`-Ranges in `package.json` gelöst: `pdfjs-dist` → `6.2.108`, `nanoid` → `3.3.18`, `brace-expansion` → `5.0.9`, `postcss` → `8.5.26`, `@sveltejs/kit` → `2.70.3`. Verifiziert mit `npx vitest run` (45 Tests grün), `npm run check` (0 Fehler) und `npm run build` (erfolgreich).
 
-**Bewusst nicht behoben:** 3 verbleibende **Low**-Advisories in `cookie` (`<0.7.0`) — transitiv über `@sveltejs/kit`. Selbst die aktuellste stabile `@sveltejs/kit`-Version (`2.70.3`, npms `latest`-Tag) deklariert weiterhin `cookie: ^0.6.0`; ein Fix existiert nur in `3.0.0-next.*`-Prereleases. `npm audit fix --force` würde daher keinen echten Fix liefern, sondern eine sinnlose Downgrade-Kaskade bis `@sveltejs/kit@0.0.30` erzwingen. Wird bei einem künftigen stabilen Kit-Release erneut geprüft.
+**Bewusst nicht behoben:** 3 verbleibende **Low**-Advisories in `cookie` (`<0.7.0`) — transitiv über `@sveltejs/kit`. Selbst die aktuellste stabile `@sveltejs/kit`-Version (`2.70.3`, npms `latest`-Tag) deklariert weiterhin `cookie: ^0.6.0`; ein Fix existiert nur in `3.0.0-next.*`-Prereleases. `npm audit fix --force` würde daher keinen echten Fix liefern, sondern eine sinnlose Downgrade-Kaskade bis `@sveltejs/kit@0.0.30` erzwingen. Wird bei einem künftigen stabilen Kit-Release erneut geprüft. **Nachtrag v1.6.0:** Mit SvelteKit 3 (`cookie` v2) erledigt.
 
 ---
 
@@ -860,6 +860,132 @@ fehlerfrei durch. Der SSRF-Guard wurde zusätzlich gegen den laufenden
 Produktionsbuild geprüft (`tests/e2e/fetch-ad.spec.ts`), der Listen-PDF-Renderer
 gegen einen echten Render über 90 Zeilen: 3 Seiten, Kopfzeile je Seite bei
 y=775, letzte Datenzeile bei y=87, Fußzeile bei y=44,7 — keine Kollision.
+
+## Nach v1.5.0 — SvelteKit 3 und Backup-Import älterer Exporte (v1.6.0)
+
+Ohne eigenes GitHub-Issue, auf Nutzerwunsch direkt umgesetzt — aus demselben
+Grund wie #37 hier dokumentiert: nichts soll stillschweigend passieren.
+
+**Auslöser:** Das Release von SvelteKit 3
+([Ankündigung](https://svelte.dev/blog/sveltekit-3-is-here),
+[Migrationsleitfaden](https://svelte.dev/docs/kit/migrating-to-sveltekit-3)):
+migrieren, alles aus `npm outdated` aktualisieren und reparieren, was danach
+nicht mehr funktioniert. Danach die Frage, ob ein Backup der laufenden
+1.5.0-Instanz weiterhin importierbar ist.
+
+### A — Migration auf SvelteKit 3
+
+Begonnen mit `npx sv migrate sveltekit-3`, danach von Hand nachgezogen:
+
+- `@sveltejs/kit` 2 → 3, `@sveltejs/adapter-node` 5 → 6.
+- `$lib` → `#lib` über das `imports`-Feld in `package.json`
+  (Node-Subpath-Imports), `$app/environment` → `$app/env`, der Typ `Handle`
+  aus `@sveltejs/kit/hooks`.
+- `tsconfig.json` erweitert `$app/tsconfig` statt `.svelte-kit/tsconfig.json`
+  und nennt `src`, `tests` und `vite.config.ts` selbst — genau das, was die
+  generierte Datei vorher einschloss.
+- Service Worker: `src/service-worker.ts` → `src/service-worker/index.ts`,
+  als eigenes TypeScript-Projekt (`WebWorker`- statt DOM-Typen,
+  `src/service-worker/tsconfig.json`). `$service-worker` gibt es nicht mehr:
+  `self` kommt aus `$app/service-worker`, `version` aus `$app/env`,
+  `immutable`/`assets` aus `$app/manifest`, absolute Pfade über `asset()`
+  aus `$app/paths`. Weil das Projekt jetzt aus dem Root-`tsconfig`
+  ausgeschlossen ist, prüft `npm run check` es mit einem zweiten
+  `tsc -p`-Lauf — sonst wäre es still aus der Typprüfung gefallen.
+  SvelteKit registriert den Worker jetzt als Modul (`type: 'module'`).
+- Board: `replaceState` → `goto(…, { shallow: true, replace: true })` beim
+  Entfernen von `?new=1`. Flache Navigationen lösen seit Kit 3
+  `afterNavigate` aus; das Layout überspringt sie (`shallow`), damit dabei
+  nichts passiert, was nur ein echter Routenwechsel auslösen soll.
+- `/api/fetch-ad`: das abgekündigte `json()` → `Response.json()`.
+
+**Bewusst nicht übernommen:** das Umschreiben der `.svelte`-Dateien durch den
+Codemod. Er druckt jede Komponente neu und veränderte dabei gerenderten
+Leerraum — aus `</a>.` wurde `</a>` + Zeilenumbruch + `.`, also ein
+sichtbares Leerzeichen vor dem Punkt im Impressum. Diese Dateien wurden
+verworfen und nur ihre Importe ersetzt.
+
+**Geprüft und unverändert gelassen:** `resolve('/board')` bleibt —
+Routen-IDs beginnen weiterhin mit `/`. `version.pollInterval` fragt jetzt
+standardmäßig stündlich `/_app/version.json` ab; harmlos, der Service Worker
+beantwortet das aus dem Cache. Quellkarten erzeugt Kit 3 nur für
+`build/server/`, nicht im öffentlichen `build/client/`. `/api/fetch-ad`
+bleibt gegen CSRF geschützt: Der Client sendet
+`content-type: application/json`, eine fremde Formular-Übermittlung wird mit
+403 abgelehnt.
+
+### B — Vorgerenderte Seiten ohne `Content-Type` (Fehler in SvelteKit 3.0.0)
+
+**Ist:** Nach dem Upgrade lieferte adapter-node jede vorgerenderte Seite
+**ohne** `Content-Type`-Header. Kit 3.0.0 baut die MIME-Tabelle des Adapters
+aus den URL-Pfaden der vorgerenderten Seiten (`/board`) statt aus ihren
+Dateien (`board.html`), `.html` landet also nie darin. In Produktion setzt
+Apache zusätzlich `X-Content-Type-Options: nosniff` (`static/.htaccess`) —
+in Chromium nachgestellt: ohne Typ und mit `nosniff` wird die Seite als
+`text/plain` angezeigt, also als HTML-Quelltext statt als App. Lokal ohne
+Apache fiel das nicht auf, weil der Browser dort raten darf.
+
+**Behoben:** `withHtmlMimeType()` in `vite.config.ts` ergänzt den einen
+fehlenden Eintrag. SvelteKits eigene Tabelle hat Vorrang; die Hülle wird
+also wirkungslos, sobald der Fehler upstream behoben ist, und kann dann
+entfallen (Upstream-`main` hatte zum Zeitpunkt des Upgrades denselben Code).
+Abgesichert durch `tests/e2e/prerendered.spec.ts`.
+
+### C — Abhängigkeiten
+
+Alles aus `npm outdated` auf dem neuesten Stand, u. a. Vite 8.3, Vitest 5,
+Svelte 5.57, Playwright 1.63, typescript-eslint 8.71 und pdfjs-dist 6.3.
+**Ausnahme TypeScript:** bleibt auf 6.x, weil Kit 3 (`^6.0.0`), svelte-check
+(`^5 || ^6`) und typescript-eslint (`<6.1.0`) TypeScript 7 noch nicht
+zulassen. `npm audit` meldet 0 Befunde (brace-expansion unter eslint per
+`npm audit fix` angehoben). Damit sind auch die drei Low-Advisories in
+`cookie` erledigt, die #37 offen lassen musste: Kit 3 nutzt `cookie` v2.
+
+### D — Deployment
+
+- `build/` sieht mit adapter-node 6 anders aus: `adapter-node.js` ist neu,
+  `env.js` und `shims.js` gibt es nicht mehr; `handler.js` bleibt der
+  Einstieg für `app.cjs`. Der Build läuft weiterhin ohne `node_modules` auf
+  dem Server (mit einer Kopie von `build/`, `app.cjs` und `package.json`
+  allein geprüft).
+- adapter-node 6 liefert statische Dateien aus einer beim Build erfassten
+  Liste aus, Dotfiles wie bisher ausgenommen; auf andere Methoden als
+  GET/HEAD antwortet es dort mit 405.
+- Kit 3 braucht mindestens Node 22.17. Produktion (Netcup) läuft auf Node 26,
+  wie lokale Entwicklung und CI; DEPLOYMENT.md, README.md und `ci.yml` nannten
+  für den Server noch „Node ≥20" und sind korrigiert.
+
+### E — Backup-Import älterer Exporte
+
+**Ist (mit einem echten Export der 1.5.0-Instanz geprüft):** Der Import
+scheiterte mit „Einige Einträge im Backup entsprechen nicht dem
+Datenmodell." — unabhängig vom Upgrade: Auch 1.5.0 selbst konnte diesen
+eigenen Export nicht wieder einlesen. 7 von 38 Zeilen tragen
+`appliedAt: null`, Überbleibsel eines frühen Imports aus der Zeit vor der
+Zeilenvalidierung (dazu passen ihre UUID-Strings als `id`). Die App liest
+solche Zeilen problemlos (`appliedAt ?? createdAt`), `isValidApplication()`
+ließ für optionale Felder aber nur „fehlt" oder den richtigen Typ zu.
+
+**Behoben:** `parseBackupPayload()` entfernt `null`-Felder vor der
+Validierung. JSON kennt kein `undefined`; `null` ist der andere Weg, „fehlt"
+auszudrücken — und das, was `JSON.stringify` aus `NaN` macht. Ein
+Pflichtfeld mit `null` fällt weiterhin durch, eben als fehlend. Zwei
+Unit-Tests decken beides ab.
+
+**Mit dem echten Export gegen den Produktionsbuild verifiziert,** in beiden
+Import-Modi: 38 Karten (20 versendet, 18 Absage); Profil (wie vorgesehen nur
+bei „Ersetzen") und der bewerbungsspezifische Lebenslauf wiederhergestellt,
+der Lebenslauf übersteht auch den Aufräumlauf verwaister PDFs beim nächsten
+Start; Analytics rendert fehlerfrei; ein erneuter Export ist mit dem
+Original identisch bis auf die 7 entfernten `null`-Werte, die PDF-Bytes
+eingeschlossen.
+
+**Verifikation:** `npm run lint`, `npm run check` (App und Service Worker),
+`npm run test` (425/425) und `npm run test:e2e` (140/140) laufen fehlerfrei
+durch. Zusätzlich der Build ohne `node_modules` per `node app.cjs` (Seiten
+mit 200 und `text/html`, 403 für eine fremde Formular-Übermittlung, 405 für
+POST auf statische Dateien) und `npm run dev` mit allen Routen im Browser
+ohne Konsolenfehler.
 
 ## Verifikation für v1
 

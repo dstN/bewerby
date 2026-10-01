@@ -1,5 +1,5 @@
-import { isValidApplication, type Application } from '$lib/db/index.js';
-import { parseProfile, type Profile } from '$lib/utils/profile.js';
+import { isValidApplication, type Application } from '#lib/db/index.js';
+import { parseProfile, type Profile } from '#lib/utils/profile.js';
 
 /** Written by every new export. */
 export const BACKUP_FORMAT_VERSION = 3;
@@ -72,6 +72,18 @@ export type BackupParseResult =
 	{ ok: true; data: BackupPayload } | { ok: false; error: 'format' | 'validation' };
 
 /**
+ * JSON has no `undefined`, so `null` is the other way a file can say a field
+ * is absent - and what JSON.stringify writes for a NaN timestamp. Real 1.5.0
+ * exports carry `appliedAt: null` on rows imported before rows were
+ * validated; the app reads those fine (`appliedAt ?? createdAt`), so they must
+ * import too. A required field that is null still fails validation, missing.
+ */
+function withoutNullFields(value: unknown): unknown {
+	if (!value || typeof value !== 'object' || Array.isArray(value)) return value;
+	return Object.fromEntries(Object.entries(value).filter(([, field]) => field !== null));
+}
+
+/**
  * Parses and fully structurally validates an untrusted backup JSON string -
  * every application field, not just title/company - so a malformed file is
  * rejected up front instead of writing rows that later crash the board's or
@@ -96,7 +108,7 @@ export function parseBackupPayload(json: string): BackupParseResult {
 		return { ok: false, error: 'format' };
 	}
 
-	const candidateApps = record.applications as unknown[];
+	const candidateApps = (record.applications as unknown[]).map(withoutNullFields);
 	if (!candidateApps.every(isValidApplication)) {
 		return { ok: false, error: 'validation' };
 	}

@@ -3,8 +3,8 @@ import { defineConfig, devices } from '@playwright/test';
 const PORT = 4173;
 
 export default defineConfig({
-	// tests/e2e (not e2e/) so SvelteKit's generated tsconfig - which
-	// auto-includes tests/** but not e2e/** - type-checks these files too.
+	// tests/e2e (not e2e/) so the root tsconfig - whose include lists
+	// tests/ but not e2e/ - type-checks these files too.
 	testDir: 'tests/e2e',
 	fullyParallel: true,
 	// Capped rather than left at Playwright's default of half the CPU count: on

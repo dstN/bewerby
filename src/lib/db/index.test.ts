@@ -6,7 +6,7 @@ import Dexie from 'dexie';
 // Node/vitest - mocked here so the v1->v2 migration can be exercised without
 // it, while still recording what it was asked to persist.
 const writtenBlobs: Blob[] = [];
-vi.mock('$lib/utils/opfs.js', () => ({
+vi.mock('#lib/utils/opfs.js', () => ({
 	writePdfToOpfs: vi.fn(async (blob: Blob) => {
 		writtenBlobs.push(blob);
 		return `fake-ref-${writtenBlobs.length}.pdf`;
@@ -88,7 +88,7 @@ describe('Dexie v1 -> v2 migration (pdfBlob -> pdfRef via OPFS)', () => {
 	});
 
 	it('retries a PDF whose OPFS write failed during the upgrade on the next open', async () => {
-		const { writePdfToOpfs } = await import('$lib/utils/opfs.js');
+		const { writePdfToOpfs } = await import('#lib/utils/opfs.js');
 		const name = uniqueDbName();
 		const blob = new Blob(['%PDF-1.4 stranded'], { type: 'application/pdf' });
 

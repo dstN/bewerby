@@ -1,6 +1,6 @@
 import { argon2Sync } from 'node:crypto';
 import { describe, it, expect } from 'vitest';
-import type { BackupPayload } from '$lib/utils/backup.js';
+import type { BackupPayload } from '#lib/utils/backup.js';
 import { runArgon2 } from './argon2.js';
 import { formatRecoveryKey, parseRecoveryKey, randomBytes } from './crypto.js';
 import { VaultError, decodeFile, pad, padme, unpad } from './format.js';

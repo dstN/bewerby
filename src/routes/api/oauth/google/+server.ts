@@ -1,6 +1,5 @@
-import { json } from '@sveltejs/kit';
-import { env } from '$env/dynamic/private';
-import { clientAddress, createRateLimiter } from '$lib/server/requests.js';
+import { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } from '$app/env/private';
+import { clientAddress, createRateLimiter } from '#lib/server/requests.js';
 import type { RequestHandler } from './$types';
 
 /**
@@ -29,7 +28,7 @@ const NO_STORE = { 'Cache-Control': 'no-store' };
 const rateLimited = createRateLimiter(60 * 60 * 1000, 60);
 
 function refuse(status: number) {
-	return json({ error: 'token' }, { status, headers: NO_STORE });
+	return Response.json({ error: 'token' }, { status, headers: NO_STORE });
 }
 
 const isText = (value: unknown, max: number): value is string =>
@@ -61,8 +60,8 @@ export const POST: RequestHandler = async ({ request, url, getClientAddress }) =
 	}
 	if (rateLimited(clientAddress(request, getClientAddress))) return refuse(429);
 
-	const clientId = env.GOOGLE_CLIENT_ID;
-	const clientSecret = env.GOOGLE_CLIENT_SECRET;
+	const clientId = GOOGLE_CLIENT_ID;
+	const clientSecret = GOOGLE_CLIENT_SECRET;
 	if (!clientId || !clientSecret) return refuse(503);
 
 	const raw = await request.text();
@@ -127,10 +126,10 @@ export const POST: RequestHandler = async ({ request, url, getClientAddress }) =
 	// A refused grant (expired, revoked) is the client's to handle by signing
 	// in again; anything else is Google's problem, reported as such.
 	if (!upstream.ok) return refuse(upstream.status === 400 || upstream.status === 401 ? 400 : 502);
-	if (target === REVOKE) return json({ revoked: true }, { headers: NO_STORE });
+	if (target === REVOKE) return Response.json({ revoked: true }, { headers: NO_STORE });
 
 	const data = (await upstream.json()) as Record<string, unknown>;
-	return json(
+	return Response.json(
 		{
 			access_token: data.access_token,
 			expires_in: data.expires_in,

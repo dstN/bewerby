@@ -1,4 +1,4 @@
-import { fromBase64, toBase64 } from '$lib/vault/format.js';
+import { fromBase64, toBase64 } from '#lib/vault/format.js';
 import type { Snapshot } from './runtime.js';
 
 /**

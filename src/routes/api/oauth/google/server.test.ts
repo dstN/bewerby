@@ -2,7 +2,15 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { RequestEvent } from '@sveltejs/kit';
 
 const env: Record<string, string | undefined> = {};
-vi.mock('$env/dynamic/private', () => ({ env }));
+// Getters, so each test's values are read when the handler runs.
+vi.mock('$app/env/private', () => ({
+	get GOOGLE_CLIENT_ID() {
+		return env.GOOGLE_CLIENT_ID;
+	},
+	get GOOGLE_CLIENT_SECRET() {
+		return env.GOOGLE_CLIENT_SECRET;
+	}
+}));
 
 const { POST } = await import('./+server.js');
 

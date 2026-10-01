@@ -1,22 +1,22 @@
 <script lang="ts">
-	import { t } from '$lib/i18n/index.svelte.js';
+	import { t } from '#lib/i18n/index.svelte.js';
 	import { resolve } from '$app/paths';
 	import {
 		getNotificationPermissionState,
 		requestNotificationPermission
-	} from '$lib/utils/reminders.js';
+	} from '#lib/utils/reminders.js';
 	import {
 		requestPersistentStorage,
 		isStoragePersisted,
 		getStorageEstimate,
 		type StorageEstimate
-	} from '$lib/utils/storage.js';
-	import { eraseAllData } from '$lib/utils/eraseAllData.js';
+	} from '#lib/utils/storage.js';
+	import { eraseAllData } from '#lib/utils/eraseAllData.js';
 	import { onMount } from 'svelte';
-	import { profileStore } from '$lib/stores/profile.svelte.js';
-	import { validatePdfFile, PdfProcessingError, type PdfErrorCode } from '$lib/utils/pdf.js';
-	import { writePdfToOpfs, readPdfFromOpfs, deletePdfFromOpfs } from '$lib/utils/opfs.js';
-	import { announcer } from '$lib/stores/announcer.svelte.js';
+	import { profileStore } from '#lib/stores/profile.svelte.js';
+	import { validatePdfFile, PdfProcessingError, type PdfErrorCode } from '#lib/utils/pdf.js';
+	import { writePdfToOpfs, readPdfFromOpfs, deletePdfFromOpfs } from '#lib/utils/opfs.js';
+	import { announcer } from '#lib/stores/announcer.svelte.js';
 
 	const CV_ERROR_KEYS: Record<PdfErrorCode, string> = {
 		'too-large': 'application.pdf.errorTooLarge',

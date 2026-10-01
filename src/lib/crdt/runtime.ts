@@ -1,9 +1,9 @@
 import * as Y from 'yjs';
-import { isValidApplication, type Application, type BewerbyDatabase } from '$lib/db/index.js';
-import type { ApplicationChanges, NewApplication } from '$lib/data/applications.js';
-import { MissingApplicationError } from '$lib/data/errors.js';
-import { readPdfFromOpfs, writePdfToOpfs } from '$lib/utils/opfs.js';
-import type { Profile } from '$lib/utils/profile.js';
+import { isValidApplication, type Application, type BewerbyDatabase } from '#lib/db/index.js';
+import type { ApplicationChanges, NewApplication } from '#lib/data/applications.js';
+import { MissingApplicationError } from '#lib/data/errors.js';
+import { readPdfFromOpfs, writePdfToOpfs } from '#lib/utils/opfs.js';
+import type { Profile } from '#lib/utils/profile.js';
 import {
 	applyChanges,
 	moveTo,

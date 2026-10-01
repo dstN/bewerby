@@ -1,6 +1,6 @@
-import { browser } from '$app/environment';
+import { browser } from '$app/env';
 import { liveQuery } from 'dexie';
-import { db, type Application } from '$lib/db/index.js';
+import { db, type Application } from '#lib/db/index.js';
 
 // The Background Sync API (navigator.serviceWorker.ready.sync) isn't part of
 // lib.dom.d.ts yet; declare just enough of it for the feature-detected call below.

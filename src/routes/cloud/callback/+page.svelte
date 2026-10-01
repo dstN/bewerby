@@ -1,15 +1,15 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { goto, replaceState } from '$app/navigation';
+	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { t } from '$lib/i18n/index.svelte.js';
-	import { readCallback, takeAuthorization } from '$lib/sync/oauth.js';
-	import { exchangeDropboxCode } from '$lib/sync/adapters/dropbox.js';
-	import { exchangeGoogleCode } from '$lib/sync/adapters/gdrive.js';
-	import { exchangeOneDriveCode } from '$lib/sync/adapters/onedrive.js';
-	import { DROPBOX_CLIENT_ID, ONEDRIVE_CLIENT_ID } from '$lib/sync/targets.js';
-	import type { TargetConfig } from '$lib/sync/state.js';
-	import { JUST_CONNECTED, SyncState } from '$lib/sync/state.js';
+	import { t } from '#lib/i18n/index.svelte.js';
+	import { readCallback, takeAuthorization } from '#lib/sync/oauth.js';
+	import { exchangeDropboxCode } from '#lib/sync/adapters/dropbox.js';
+	import { exchangeGoogleCode } from '#lib/sync/adapters/gdrive.js';
+	import { exchangeOneDriveCode } from '#lib/sync/adapters/onedrive.js';
+	import { DROPBOX_CLIENT_ID, ONEDRIVE_CLIENT_ID } from '#lib/sync/targets.js';
+	import type { TargetConfig } from '#lib/sync/state.js';
+	import { JUST_CONNECTED, SyncState } from '#lib/sync/state.js';
 
 	/**
 	 * Where Dropbox, Microsoft and Google send the user back after sign-in
@@ -22,7 +22,7 @@
 
 	onMount(async () => {
 		const result = readCallback(new URL(location.href));
-		queueMicrotask(() => replaceState(resolve('/cloud/callback'), {}));
+		queueMicrotask(() => goto(resolve('/cloud/callback'), { shallow: true, replace: true }));
 		const pending = takeAuthorization(result.state);
 		if (!pending || result.error || !result.code) {
 			failed = true;
@@ -45,7 +45,7 @@
 			await new SyncState().setTarget(target);
 			// Tells the backup page to finish connecting (join or start syncing).
 			sessionStorage.setItem(JUST_CONNECTED, pending.provider);
-			await goto(resolve('/backup'), { replaceState: true });
+			await goto(resolve('/backup'), { replace: true });
 		} catch (err) {
 			console.error('Completing the Dropbox sign-in failed:', err);
 			failed = true;

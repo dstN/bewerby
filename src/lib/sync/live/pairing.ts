@@ -1,7 +1,7 @@
-import { activeSync } from '$lib/crdt/session.js';
-import { fromCrockford, importRoot, randomBytes, toCrockford } from '$lib/vault/crypto.js';
-import { fromBase64, parseKeyHeader, toBase64, type KeyHeader } from '$lib/vault/format.js';
-import { adoptVault } from '$lib/vault/session.js';
+import { activeSync } from '#lib/crdt/session.js';
+import { fromCrockford, importRoot, randomBytes, toCrockford } from '#lib/vault/crypto.js';
+import { fromBase64, parseKeyHeader, toBase64, type KeyHeader } from '#lib/vault/format.js';
+import { adoptVault } from '#lib/vault/session.js';
 import { DocLink } from './link.js';
 import { comparisonCode, pairingKeys } from './keys.js';
 import {

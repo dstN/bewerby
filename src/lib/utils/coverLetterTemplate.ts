@@ -1,4 +1,4 @@
-import type { Application } from '$lib/db/index.js';
+import type { Application } from '#lib/db/index.js';
 import type { Profile } from './profile.js';
 
 /**

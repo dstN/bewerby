@@ -10,7 +10,7 @@ import { isIPv4, isIPv6, type LookupFunction } from 'node:net';
  * metadata endpoints, and the rest of the internet under our IP. Everything
  * here exists to make that specific attack not work.
  *
- * Lives under `$lib/server` on purpose: SvelteKit refuses to bundle anything
+ * Lives under `#lib/server` on purpose: SvelteKit refuses to bundle anything
  * from that directory into client code, so this can never be shipped to a
  * browser where the checks would be meaningless.
  */

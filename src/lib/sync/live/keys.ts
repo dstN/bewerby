@@ -1,4 +1,4 @@
-import { fromBase64, toBase64, utf8 } from '$lib/vault/format.js';
+import { fromBase64, toBase64, utf8 } from '#lib/vault/format.js';
 import { base64url } from '../oauth.js';
 
 /**

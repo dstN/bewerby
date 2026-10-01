@@ -1,4 +1,4 @@
-import { enableSync } from '$lib/crdt/session.js';
+import { enableSync } from '#lib/crdt/session.js';
 import type { KeyHeader } from './format.js';
 import { loadStoredVault, storeVault } from './keystore.js';
 import type { UnlockedVault } from './vault.js';

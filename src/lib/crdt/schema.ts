@@ -1,6 +1,6 @@
 import * as Y from 'yjs';
-import type { Application, StatusHistory } from '$lib/db/index.js';
-import type { Profile } from '$lib/utils/profile.js';
+import type { Application, StatusHistory } from '#lib/db/index.js';
+import type { Profile } from '#lib/utils/profile.js';
 
 /**
  * How an application lives in the synced Yjs document, and the way back.

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { getReminderDueAt } from './reminders.js';
-import type { Application, StatusHistory } from '$lib/db/index.js';
+import type { Application, StatusHistory } from '#lib/db/index.js';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 

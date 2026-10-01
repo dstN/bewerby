@@ -1,10 +1,10 @@
 import 'fake-indexeddb/auto';
 import { describe, it, expect, vi } from 'vitest';
-import type { Application } from '$lib/db/index.js';
+import type { Application } from '#lib/db/index.js';
 
 const files = new Map<string, Uint8Array>();
 let written = 0;
-vi.mock('$lib/utils/opfs.js', () => ({
+vi.mock('#lib/utils/opfs.js', () => ({
 	writePdfToOpfs: vi.fn(async (blob: Blob) => {
 		const ref = `file-${++written}.pdf`;
 		files.set(ref, new Uint8Array(await blob.arrayBuffer()));
@@ -16,9 +16,9 @@ vi.mock('$lib/utils/opfs.js', () => ({
 	})
 }));
 
-const { BewerbyDatabase } = await import('$lib/db/index.js');
-const { SyncRuntime } = await import('$lib/crdt/runtime.js');
-const { createVault } = await import('$lib/vault/vault.js');
+const { BewerbyDatabase } = await import('#lib/db/index.js');
+const { SyncRuntime } = await import('#lib/crdt/runtime.js');
+const { createVault } = await import('#lib/vault/vault.js');
 const { SyncEngine } = await import('./engine.js');
 const { SyncState } = await import('./state.js');
 import type { RemoteStore } from './port.js';

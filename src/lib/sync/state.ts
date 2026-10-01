@@ -1,4 +1,4 @@
-import { db, type BewerbyDatabase } from '$lib/db/index.js';
+import { db, type BewerbyDatabase } from '#lib/db/index.js';
 
 /**
  * Per-device sync bookkeeping in the syncState table: which target is

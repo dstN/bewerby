@@ -2,18 +2,18 @@
 	import { onMount } from 'svelte';
 	import { liveQuery } from 'dexie';
 	import { SvelteSet } from 'svelte/reactivity';
-	import { db, type Application } from '$lib/db/index.js';
-	import { removeApplication, updateApplication } from '$lib/data/applications.js';
-	import { t, i18n } from '$lib/i18n/index.svelte.js';
-	import ApplicationModal from '$lib/components/kanban/ApplicationModal.svelte';
-	import ApplicationDispatchDialog from '$lib/components/application/ApplicationDispatchDialog.svelte';
-	import { colorStore } from '$lib/stores/colors.svelte.js';
-	import { deletePdfFromOpfs } from '$lib/utils/opfs.js';
-	import { announcer } from '$lib/stores/announcer.svelte.js';
-	import { getAppliedAt, getReminderDueAt, wasSent } from '$lib/utils/reminders.js';
-	import { buildApplicationCsv, exportFileName } from '$lib/utils/applicationExport.js';
-	import { renderApplicationListPdf } from '$lib/utils/applicationListPdf.js';
-	import { replaceState } from '$app/navigation';
+	import { db, type Application } from '#lib/db/index.js';
+	import { removeApplication, updateApplication } from '#lib/data/applications.js';
+	import { t, i18n } from '#lib/i18n/index.svelte.js';
+	import ApplicationModal from '#lib/components/kanban/ApplicationModal.svelte';
+	import ApplicationDispatchDialog from '#lib/components/application/ApplicationDispatchDialog.svelte';
+	import { colorStore } from '#lib/stores/colors.svelte.js';
+	import { deletePdfFromOpfs } from '#lib/utils/opfs.js';
+	import { announcer } from '#lib/stores/announcer.svelte.js';
+	import { getAppliedAt, getReminderDueAt, wasSent } from '#lib/utils/reminders.js';
+	import { buildApplicationCsv, exportFileName } from '#lib/utils/applicationExport.js';
+	import { renderApplicationListPdf } from '#lib/utils/applicationListPdf.js';
+	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 
 	// Columns definition
@@ -184,12 +184,14 @@
 	onMount(() => {
 		if (new URLSearchParams(window.location.search).has('new')) {
 			openAddModal('draft');
-			// Deferred to a microtask: calling replaceState() synchronously
-			// inside this same onMount - before the initial mount/hydration
-			// cycle has fully settled - crashed the render ("Cannot read
-			// properties of undefined ($set)"). Queuing it for the next tick
-			// avoids the reentrant update.
-			queueMicrotask(() => replaceState(resolve('/board'), {}));
+			// A shallow, replacing goto() is SvelteKit 3's replaceState(): it
+			// rewrites the history entry without re-running the route.
+			// Deferred to a microtask: calling it synchronously inside this
+			// same onMount - before the initial mount/hydration cycle has fully
+			// settled - crashed the render ("Cannot read properties of
+			// undefined ($set)"). Queuing it for the next tick avoids the
+			// reentrant update.
+			queueMicrotask(() => goto(resolve('/board'), { shallow: true, replace: true }));
 		}
 	});
 

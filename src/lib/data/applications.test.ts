@@ -1,16 +1,16 @@
 import 'fake-indexeddb/auto';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type { Application } from '$lib/db/index.js';
+import type { Application } from '#lib/db/index.js';
 
 // The repository writes through the app's db singleton; each test file gets
 // its own, uniquely named database instead of the real 'bewerby-db'.
-vi.mock('$lib/utils/opfs.js', () => ({ writePdfToOpfs: vi.fn() }));
-vi.mock('$lib/db/index.js', async (importOriginal) => {
-	const actual = await importOriginal<typeof import('$lib/db/index.js')>();
+vi.mock('#lib/utils/opfs.js', () => ({ writePdfToOpfs: vi.fn() }));
+vi.mock('#lib/db/index.js', async (importOriginal) => {
+	const actual = await importOriginal<typeof import('#lib/db/index.js')>();
 	return { ...actual, db: new actual.BewerbyDatabase(`bewerby-repo-${Math.random()}`) };
 });
 
-const { db } = await import('$lib/db/index.js');
+const { db } = await import('#lib/db/index.js');
 const {
 	createApplication,
 	importApplications,

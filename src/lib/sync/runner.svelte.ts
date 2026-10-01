@@ -1,6 +1,6 @@
-import { browser } from '$app/environment';
-import { activeSync } from '$lib/crdt/session.js';
-import { onVaultChange, unlockedVault } from '$lib/vault/session.js';
+import { browser } from '$app/env';
+import { activeSync } from '#lib/crdt/session.js';
+import { onVaultChange, unlockedVault } from '#lib/vault/session.js';
 import { DropboxStore } from './adapters/dropbox.js';
 import { GoogleDriveStore } from './adapters/gdrive.js';
 import { SyncEngine, type SyncReport } from './engine.js';

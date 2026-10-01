@@ -1,6 +1,6 @@
 /**
  * Shared by the server routes that do work for a visitor: /api/fetch-ad and
- * the Google token broker (#54). Under $lib/server, so SvelteKit never
+ * the Google token broker (#54). Under #lib/server, so SvelteKit never
  * bundles it into client code.
  */
 

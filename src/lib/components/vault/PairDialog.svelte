@@ -1,14 +1,14 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { t } from '$lib/i18n/index.svelte.js';
-	import { announcer } from '$lib/stores/announcer.svelte.js';
-	import type { KeyHeader } from '$lib/vault/format.js';
+	import { t } from '#lib/i18n/index.svelte.js';
+	import { announcer } from '#lib/stores/announcer.svelte.js';
+	import type { KeyHeader } from '#lib/vault/format.js';
 	import {
 		PairingHost,
 		formatPairingCode,
 		pairingLink,
 		type HostState
-	} from '$lib/sync/live/pairing.js';
+	} from '#lib/sync/live/pairing.js';
 	import QrCode from './QrCode.svelte';
 	import VaultDialog from './VaultDialog.svelte';
 

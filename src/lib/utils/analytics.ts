@@ -1,5 +1,5 @@
-import type { Application } from '$lib/db/index.js';
-import { getRejectedAt, getSentAt, wasSent } from '$lib/utils/reminders.js';
+import type { Application } from '#lib/db/index.js';
+import { getRejectedAt, getSentAt, wasSent } from '#lib/utils/reminders.js';
 
 /** Analytics only ever needs status, history and the entered dates. */
 export type AnalyticsRow = Pick<Application, 'status' | 'history' | 'sentAt' | 'rejectedAt'>;

@@ -1,4 +1,4 @@
-import { browser } from '$app/environment';
+import { browser } from '$app/env';
 
 // Attached PDFs live in the Origin Private File System instead of inside the
 // IndexedDB row: an application row stores only a `pdfRef` (the OPFS file

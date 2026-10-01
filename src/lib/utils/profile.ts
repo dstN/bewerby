@@ -3,12 +3,12 @@
  * application, and the sender block a generated cover letter needs.
  *
  * The shape and its validation live here, apart from the reactive store in
- * $lib/stores/profile.svelte.ts, so plain modules (the backup serializer, and
+ * #lib/stores/profile.svelte.ts, so plain modules (the backup serializer, and
  * its tests in the DOM-free node environment) can use them without pulling a
  * runes file into scope.
  */
 export interface Profile {
-	/** OPFS file name of the stored CV (see $lib/utils/opfs.ts). */
+	/** OPFS file name of the stored CV (see #lib/utils/opfs.ts). */
 	cvRef?: string;
 	/** Original file name, shown in the UI. */
 	cvName?: string;

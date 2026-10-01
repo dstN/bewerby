@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { tick } from 'svelte';
-	import { t } from '$lib/i18n/index.svelte.js';
-	import { announcer } from '$lib/stores/announcer.svelte.js';
-	import { normalizeRecoveryInput } from '$lib/vault/crypto.js';
-	import { createVault, type UnlockedVault } from '$lib/vault/vault.js';
+	import { t } from '#lib/i18n/index.svelte.js';
+	import { announcer } from '#lib/stores/announcer.svelte.js';
+	import { normalizeRecoveryInput } from '#lib/vault/crypto.js';
+	import { createVault, type UnlockedVault } from '#lib/vault/vault.js';
 	import VaultDialog from './VaultDialog.svelte';
 
 	let {

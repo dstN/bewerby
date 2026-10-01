@@ -1,7 +1,7 @@
-import { browser } from '$app/environment';
-import { activeSync } from '$lib/crdt/session.js';
-import { onVaultChange, unlockedVault } from '$lib/vault/session.js';
-import { db } from '$lib/db/index.js';
+import { browser } from '$app/env';
+import { activeSync } from '#lib/crdt/session.js';
+import { onVaultChange, unlockedVault } from '#lib/vault/session.js';
+import { db } from '#lib/db/index.js';
 import { DocLink } from './link.js';
 import { liveKeys } from './keys.js';
 import { answerOffer, completeOffer, createOffer, opened, type Offer } from './peer.js';

@@ -1,6 +1,6 @@
-import type { Snapshot, SyncRuntime } from '$lib/crdt/runtime.js';
-import { decodeSnapshot, encodeSnapshot } from '$lib/crdt/snapshot.js';
-import { openFile, readFileHeader, sealFile, type UnlockedVault } from '$lib/vault/vault.js';
+import type { Snapshot, SyncRuntime } from '#lib/crdt/runtime.js';
+import { decodeSnapshot, encodeSnapshot } from '#lib/crdt/snapshot.js';
+import { openFile, readFileHeader, sealFile, type UnlockedVault } from '#lib/vault/vault.js';
 import type { RemoteStore } from './port.js';
 import type { SyncState } from './state.js';
 

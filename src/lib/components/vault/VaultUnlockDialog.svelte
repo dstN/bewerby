@@ -1,8 +1,8 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import { t } from '$lib/i18n/index.svelte.js';
-	import { VaultError, type KeyHeader } from '$lib/vault/format.js';
-	import { unlockWithBytes } from '$lib/vault/vault.js';
+	import { t } from '#lib/i18n/index.svelte.js';
+	import { VaultError, type KeyHeader } from '#lib/vault/format.js';
+	import { unlockWithBytes } from '#lib/vault/vault.js';
 	import VaultDialog from './VaultDialog.svelte';
 
 	let {

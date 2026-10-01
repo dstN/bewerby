@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { t } from '$lib/i18n/index.svelte.js';
-	import { renderMarkdown } from '$lib/utils/markdown.js';
+	import { t } from '#lib/i18n/index.svelte.js';
+	import { renderMarkdown } from '#lib/utils/markdown.js';
 
 	let {
 		value = $bindable(''),

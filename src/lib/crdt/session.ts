@@ -1,5 +1,5 @@
-import { db } from '$lib/db/index.js';
-import { loadStoredVault } from '$lib/vault/keystore.js';
+import { db } from '#lib/db/index.js';
+import { loadStoredVault } from '#lib/vault/keystore.js';
 import type { ProfilePort, SyncRuntime } from './runtime.js';
 
 /**

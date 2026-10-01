@@ -1,4 +1,4 @@
-import { browser } from '$app/environment';
+import { browser } from '$app/env';
 import type { Locale, TranslationKeys } from './types.js';
 
 import de from './locales/de.json';

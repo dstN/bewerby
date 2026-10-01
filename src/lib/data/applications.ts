@@ -1,5 +1,5 @@
-import { db, type Application, type StatusHistory } from '$lib/db/index.js';
-import { activeSync } from '$lib/crdt/session.js';
+import { db, type Application, type StatusHistory } from '#lib/db/index.js';
+import { activeSync } from '#lib/crdt/session.js';
 import { MissingApplicationError } from './errors.js';
 
 export { MissingApplicationError };
