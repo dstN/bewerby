@@ -21,6 +21,13 @@ async function fakeFolderPicker(context: BrowserContext) {
 	});
 }
 
+// The Chromium 153 build bundled with Playwright 1.63 crashes the whole
+// browser when an OPFS handle comes back out of IndexedDB, which the sync
+// runner does with the stored folder. Chrome 154 does not, so this file runs
+// in the installed Chrome (preinstalled on GitHub's Ubuntu runners).
+// ponytail: drop this once Playwright bundles a Chromium past 153.
+test.use({ channel: 'chrome' });
+
 type FolderContents = Record<string, number[]>;
 
 function readFolder(page: Page): Promise<FolderContents> {
