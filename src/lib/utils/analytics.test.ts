@@ -157,6 +157,21 @@ describe('computeApplicationStats', () => {
 		expect(stats.response.avg).toBe(5);
 	});
 
+	it('measures the response between the entered dates, over the logged moves', () => {
+		const day = 24 * 60 * 60 * 1000;
+		const history: AnalyticsRow['history'] = [
+			{ status: 'sent', timestamp: 2 * day },
+			{ status: 'rejected', timestamp: 20 * day }
+		];
+		const stats = computeApplicationStats([
+			{ status: 'rejected', history, sentAt: 1 * day, rejectedAt: 9 * day },
+			// Only the rejection entered: the move into "sent" still anchors it.
+			{ status: 'rejected', history, rejectedAt: 6 * day }
+		]);
+		expect(stats.response.best).toBe(4);
+		expect(stats.response.worst).toBe(8);
+	});
+
 	it('measures the response from the send, not from an earlier rejection', () => {
 		// Archived as a draft, later sent and turned down: the first "rejected"
 		// entry predates the send and must not hide the real response.

@@ -81,6 +81,8 @@
 		"removeCustomColor": "Eigene Farbe entfernen",
 		"removeTag": "Tag {tag} löschen",
 		"appliedAt": "Bewerbungsdatum",
+		"rejectedAt": "Absage erhalten am",
+		"rejectedAtHint": "Erscheint im Nachweis für die Arbeitsagentur. Vorbelegt mit dem Tag, an dem die Karte nach „Absage“ kam.",
 		"confirmDiscard": "Es gibt ungespeicherte Änderungen. Wirklich verwerfen?",
 		"reminder": "Erinnerung",
 		"placeholderTitle": "z.B. Frontend Entwickler",

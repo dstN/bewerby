@@ -9,7 +9,7 @@
 	import { colorStore } from '$lib/stores/colors.svelte.js';
 	import { deletePdfFromOpfs } from '$lib/utils/opfs.js';
 	import { announcer } from '$lib/stores/announcer.svelte.js';
-	import { getReminderDueAt, wasSent } from '$lib/utils/reminders.js';
+	import { getAppliedAt, getReminderDueAt, wasSent } from '$lib/utils/reminders.js';
 	import { buildApplicationCsv, exportFileName } from '$lib/utils/applicationExport.js';
 	import { renderApplicationListPdf } from '$lib/utils/applicationListPdf.js';
 	import { replaceState } from '$app/navigation';
@@ -70,7 +70,7 @@
 				const weight: Record<string, number> = { high: 3, medium: 2, low: 1 };
 				return (weight[b.priority] || 0) - (weight[a.priority] || 0);
 			} else if (selectedSortBy === 'date') {
-				return (b.appliedAt || b.updatedAt || 0) - (a.appliedAt || a.updatedAt || 0);
+				return getAppliedAt(b) - getAppliedAt(a);
 			}
 			return 0;
 		});
@@ -325,7 +325,10 @@
 			await db.applications.update(id, {
 				status: targetStatus,
 				updatedAt: now,
-				history: updatedHistory
+				history: updatedHistory,
+				// An entered rejection date belongs to the rejection it was entered
+				// for; undefined makes Dexie drop the field.
+				rejectedAt: undefined
 			});
 			announcer.announce(
 				t('kanban.statusChangedAnnouncement')
@@ -633,10 +636,10 @@
 
 							<footer class="card-footer">
 								<span class="card-date">
-									{new Date(app.appliedAt || app.createdAt || app.updatedAt).toLocaleDateString(
-										i18n.locale,
-										{ day: 'numeric', month: 'short' }
-									)}
+									{new Date(getAppliedAt(app)).toLocaleDateString(i18n.locale, {
+										day: 'numeric',
+										month: 'short'
+									})}
 								</span>
 								{#if !collapsed}
 									<select

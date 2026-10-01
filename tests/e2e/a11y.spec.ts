@@ -123,6 +123,8 @@ for (const theme of ['light', 'dark'] as const) {
 			await gotoWithTheme(page, '/board', theme);
 			await page.getByRole('button', { name: 'Bewerbung hinzufügen' }).click();
 			await expect(page.locator('dialog.modal-content')).toBeVisible();
+			// "Absage" adds the rejection date field; scan with it shown.
+			await page.locator('#status').selectOption('rejected');
 			await expectNoViolations(page);
 		});
 

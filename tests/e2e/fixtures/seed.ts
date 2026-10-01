@@ -29,6 +29,9 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 export function makeSeedApplication(overrides: Partial<SeedApplication> = {}): SeedApplication {
 	const now = Date.now();
 	const status = overrides.status ?? 'draft';
+	// The move into the status happened on the application date, as it would
+	// on a real board - everything dates a row by that move, not by appliedAt.
+	const appliedAt = overrides.appliedAt ?? now - DAY_MS;
 	return {
 		title: 'Frontend Entwickler',
 		company: 'Contoso GmbH',
@@ -42,10 +45,10 @@ export function makeSeedApplication(overrides: Partial<SeedApplication> = {}): S
 		status,
 		tags: [],
 		reminderInterval: 'none',
-		appliedAt: now - DAY_MS,
+		appliedAt,
 		createdAt: now - DAY_MS,
 		updatedAt: now,
-		history: [{ status, timestamp: now - DAY_MS }],
+		history: [{ status, timestamp: appliedAt }],
 		...overrides
 	};
 }

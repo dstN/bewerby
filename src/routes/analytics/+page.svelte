@@ -4,11 +4,16 @@
 	import { t } from '$lib/i18n/index.svelte.js';
 	import { computeApplicationStats, type AnalyticsRow } from '$lib/utils/analytics.js';
 
-	// Analytics only ever reads status/history - project down to that instead
+	// Analytics only ever reads status, history and the entered dates - project down to that instead
 	// of holding every field (title, notes, contact info, pdfRef, ...) of
 	// every application in the reactive store.
 	const applicationsStore = liveQuery(async (): Promise<AnalyticsRow[]> =>
-		(await db.applications.toArray()).map(({ status, history }) => ({ status, history }))
+		(await db.applications.toArray()).map(({ status, history, sentAt, rejectedAt }) => ({
+			status,
+			history,
+			sentAt,
+			rejectedAt
+		}))
 	);
 
 	// Funnel and Response Time metrics; the actual computation is a plain,

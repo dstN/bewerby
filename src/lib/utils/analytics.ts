@@ -1,8 +1,8 @@
 import type { Application } from '$lib/db/index.js';
-import { wasSent } from '$lib/utils/reminders.js';
+import { getRejectedAt, getSentAt, wasSent } from '$lib/utils/reminders.js';
 
-/** Analytics only ever needs status/history, not every field of a row. */
-export type AnalyticsRow = Pick<Application, 'status' | 'history'>;
+/** Analytics only ever needs status, history and the entered dates. */
+export type AnalyticsRow = Pick<Application, 'status' | 'history' | 'sentAt' | 'rejectedAt'>;
 
 export interface ApplicationStats {
 	counts: {
@@ -55,30 +55,35 @@ export function computeApplicationStats(list: AnalyticsRow[]): ApplicationStats 
 		else if (app.status === 'accepted') accepted++;
 		else if (app.status === 'rejected') rejected++;
 
-		// Calculate response time from history log
-		// Time from 'sent' -> first 'interview' or 'rejected'
 		// `history` is required on the type, but a row written past TypeScript
 		// (a hand-edited record, a put() with a partial object) can arrive
 		// without it — and one such row used to throw here and take the whole
 		// statistics page down rather than just counting as having no events.
 		const history = app.history ?? [];
-		if (wasSent({ status: app.status, history })) totalSent++;
+		if (wasSent(app)) totalSent++;
 		if (app.status === 'rejected' && history.some((h) => h.status === 'interview')) {
 			rejectedAfterInterview++;
 		}
-		const sentEvent = history.find((h) => h.status === 'sent');
-		// The first response *after* the send: a card archived as a draft and
-		// sent later carries an earlier "rejected" entry that is no response.
-		const responseEvent =
-			sentEvent &&
-			history.find(
-				(h) =>
-					(h.status === 'interview' || h.status === 'rejected') && h.timestamp > sentEvent.timestamp
-			);
-
-		if (sentEvent && responseEvent) {
-			const durationDays = (responseEvent.timestamp - sentEvent.timestamp) / (1000 * 60 * 60 * 24);
-			responseTimes.push(durationDays);
+		// Response time: from the send to the first interview or rejection,
+		// each by its entered date where there is one. The current rejection's
+		// logged move is left out when getRejectedAt stands in for it.
+		const sentAt = getSentAt(app);
+		if (sentAt !== undefined) {
+			const rejectedAt = getRejectedAt(app);
+			const responses = history
+				.filter(
+					(h, i) =>
+						h.status === 'interview' ||
+						(h.status === 'rejected' && (rejectedAt === undefined || i < history.length - 1))
+				)
+				.map((h) => h.timestamp);
+			if (rejectedAt !== undefined) responses.push(rejectedAt);
+			// Only responses *after* the send: a card archived as a draft and
+			// sent later carries an earlier "rejected" entry that is no response.
+			const after = responses.filter((timestamp) => timestamp > sentAt);
+			if (after.length > 0) {
+				responseTimes.push((Math.min(...after) - sentAt) / (1000 * 60 * 60 * 24));
+			}
 		}
 	});
 

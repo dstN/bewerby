@@ -56,6 +56,27 @@ describe('buildApplicationCsv', () => {
 		expect(bodyLines(csv)[0]).toContain('05.03.2026');
 	});
 
+	it('dates a row by the application date entered, over the move into "sent"', () => {
+		const csv = buildApplicationCsv([row({ sentAt: AT(2026, 3, 1) })], labels, 'de-DE');
+		expect(bodyLines(csv)[0]).toBe('01.03.2026;Acme GmbH;Versendet');
+	});
+
+	it('lists a draft archived into "Absage" once an application date was entered for it', () => {
+		const history: ExportRow['history'] = [
+			{ status: 'draft', timestamp: AT(2026, 3, 1) },
+			{ status: 'rejected', timestamp: AT(2026, 3, 20) }
+		];
+		const csv = buildApplicationCsv(
+			[
+				row({ status: 'rejected', history }),
+				row({ status: 'rejected', history, sentAt: AT(2026, 3, 2) })
+			],
+			labels,
+			'de-DE'
+		);
+		expect(bodyLines(csv)).toEqual(['02.03.2026;Acme GmbH;Absage (20.03.2026)']);
+	});
+
 	it('falls back to appliedAt, then createdAt, for a row with no "sent" entry', () => {
 		// A rejection logged after the fact: sent in reality, never "sent" on the board.
 		const noHistory = buildApplicationCsv(
@@ -67,6 +88,22 @@ describe('buildApplicationCsv', () => {
 
 		const bare = buildApplicationCsv([row({ status: 'rejected', history: [] })], labels, 'de-DE');
 		expect(bodyLines(bare)[0]).toBe('01.01.2026;Acme GmbH;Absage');
+	});
+
+	it('dates a rejection by the move into "Absage", unless one was entered', () => {
+		const history: ExportRow['history'] = [
+			{ status: 'sent', timestamp: AT(2026, 3, 5) },
+			{ status: 'rejected', timestamp: AT(2026, 3, 20) }
+		];
+		const moved = buildApplicationCsv([row({ status: 'rejected', history })], labels, 'de-DE');
+		expect(bodyLines(moved)[0]).toBe('05.03.2026;Acme GmbH;Absage (20.03.2026)');
+
+		const entered = buildApplicationCsv(
+			[row({ status: 'rejected', history, rejectedAt: AT(2026, 3, 12) })],
+			labels,
+			'de-DE'
+		);
+		expect(bodyLines(entered)[0]).toBe('05.03.2026;Acme GmbH;Absage (12.03.2026)');
 	});
 
 	it('lists only applications that were actually sent, never drafts', () => {

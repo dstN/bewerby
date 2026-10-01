@@ -1,10 +1,10 @@
 import type { Application } from '$lib/db/index.js';
-import { getAppliedAt, wasSent } from '$lib/utils/reminders.js';
+import { getAppliedAt, getRejectedAt, wasSent } from '$lib/utils/reminders.js';
 
 /** Only the three columns a Vermittlungsnachweis actually asks for. */
 export type ExportRow = Pick<
 	Application,
-	'company' | 'status' | 'history' | 'appliedAt' | 'createdAt'
+	'company' | 'status' | 'history' | 'appliedAt' | 'createdAt' | 'sentAt' | 'rejectedAt'
 >;
 
 export interface ExportLabels {
@@ -40,11 +40,16 @@ export function toExportRows(
 			.map((app) => ({ app, appliedAt: getAppliedAt(app) }))
 			// Oldest first: a Nachweis is read as a chronological log, not as a board.
 			.sort((a, b) => a.appliedAt - b.appliedAt)
-			.map(({ app, appliedAt }) => [
-				formatDate.format(appliedAt),
-				app.company,
-				labels.status[app.status] ?? app.status
-			])
+			.map(({ app, appliedAt }) => {
+				const status = labels.status[app.status] ?? app.status;
+				// The outcome column is where a Nachweis wants the rejection's date.
+				const rejectedAt = getRejectedAt(app);
+				return [
+					formatDate.format(appliedAt),
+					app.company,
+					rejectedAt === undefined ? status : `${status} (${formatDate.format(rejectedAt)})`
+				];
+			})
 	);
 }
 

@@ -60,6 +60,51 @@ test.describe('Kanban board CRUD', () => {
 		await expect(page.locator('.card', { hasText: 'Contoso GmbH' })).toHaveCount(0);
 	});
 
+	test('the Nachweis dates by the moves, or by the dates entered in the dialog', async ({
+		page
+	}) => {
+		const day = (daysAgo: number) =>
+			new Intl.DateTimeFormat('de-DE', {
+				day: '2-digit',
+				month: '2-digit',
+				year: 'numeric'
+			}).format(Date.now() - daysAgo * 86_400_000);
+		async function exportedLine() {
+			const [download] = await Promise.all([
+				page.waitForEvent('download'),
+				page.getByRole('button', { name: 'Nachweis (CSV)' }).click()
+			]);
+			return readFileSync((await download.path())!, 'utf-8')
+				.split('\r\n')
+				.find((line) => line.includes('Fabrikam AG'));
+		}
+
+		await page.goto('/board');
+		await page.getByRole('button', { name: 'Bewerbung hinzufügen' }).click();
+		const dialog = page.locator('dialog.modal-content');
+		await dialog.locator('#title').fill('Entwickler');
+		await dialog.locator('#company').fill('Fabrikam AG');
+		await dialog.locator('#status').selectOption('sent');
+		await dialog.getByRole('button', { name: 'Speichern' }).click();
+		await expect(dialog).toBeHidden();
+
+		const card = page.locator('.card', { hasText: 'Fabrikam AG' });
+		await card.locator('.card-status-select').selectOption('rejected');
+		expect(await exportedLine()).toBe(`${day(0)};Fabrikam AG;Absage (${day(0)})`);
+
+		await card.locator('.card-open-btn').click();
+		async function pick(fieldId: string, shortcut: string) {
+			const field = dialog.locator('.form-group', { has: page.locator(`label[for="${fieldId}"]`) });
+			await field.locator('.datepicker-trigger').click();
+			await field.getByRole('button', { name: shortcut }).click();
+		}
+		await pick('appliedAt', 'Vor 2 Wochen');
+		await pick('rejectedAt', 'Vor 1 Woche');
+		await dialog.getByRole('button', { name: 'Speichern' }).click();
+		await expect(dialog).toBeHidden();
+		expect(await exportedLine()).toBe(`${day(14)};Fabrikam AG;Absage (${day(7)})`);
+	});
+
 	test('cancels application creation without saving anything', async ({ page }) => {
 		await page.goto('/board');
 		await page.getByRole('button', { name: 'Bewerbung hinzufügen' }).click();

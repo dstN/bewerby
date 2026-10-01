@@ -31,6 +31,20 @@ export interface Application {
 	reminderAt?: number;
 	lastReminderSent?: number;
 	appliedAt?: number;
+	/**
+	 * The application date the user entered, if they changed it. Unset, the
+	 * first move into "sent" stands in - see getAppliedAt in
+	 * $lib/utils/reminders.ts. Not appliedAt: the edit dialog has written that
+	 * on every save, entered or not, so it cannot tell the two apart.
+	 */
+	sentAt?: number;
+	/**
+	 * When the rejection arrived, if the user entered it. Unset, the date the
+	 * card moved into "Absage" stands in - see getRejectedAt in
+	 * $lib/utils/reminders.ts. Cleared on every status change, so a card
+	 * rejected a second time never carries the first rejection's date.
+	 */
+	rejectedAt?: number;
 	createdAt: number;
 	updatedAt: number;
 	history: StatusHistory[];
@@ -175,6 +189,8 @@ export function isValidApplication(value: unknown): value is Application {
 		(app.reminderAt === undefined || typeof app.reminderAt === 'number') &&
 		(app.lastReminderSent === undefined || typeof app.lastReminderSent === 'number') &&
 		(app.appliedAt === undefined || typeof app.appliedAt === 'number') &&
+		(app.sentAt === undefined || typeof app.sentAt === 'number') &&
+		(app.rejectedAt === undefined || typeof app.rejectedAt === 'number') &&
 		typeof app.createdAt === 'number' &&
 		typeof app.updatedAt === 'number' &&
 		Array.isArray(app.history) &&

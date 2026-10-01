@@ -197,7 +197,7 @@ describe('isValidApplication - rejecting bad data', () => {
 		).toBe(false);
 	});
 
-	it.each(['lastReminderSent', 'appliedAt'])(
+	it.each(['lastReminderSent', 'appliedAt', 'sentAt', 'rejectedAt'])(
 		'rejects a present-but-non-numeric optional %s',
 		(field) => {
 			expect(isValidApplication(withField(field, '2024-01-01'))).toBe(false);

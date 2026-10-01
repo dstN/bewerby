@@ -33,7 +33,11 @@ all running in your browser, with your application data never leaving it.
 - Analytics: funnel/conversion rates and response-time stats.
 - Proof of applications for the Agentur für Arbeit: date, company and status
   of every application on the board that was actually sent - no drafts - as
-  a print-ready **PDF** or a **CSV** a German Excel opens correctly.
+  a print-ready **PDF** or a **CSV** a German Excel opens correctly. A
+  rejection is listed with its date.
+- Application and rejection dates follow the card's moves into "Versendet"
+  and "Absage" unless you enter the real date in the edit dialog - then the
+  entered date counts everywhere: card, export, statistics, reminders.
 - Backup & restore: JSON export/import (attached PDFs included), plus an
   optional local-directory dump via the File System Access API.
 - Follow-up reminders via the Notifications API - a fixed interval, or a

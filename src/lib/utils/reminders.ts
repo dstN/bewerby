@@ -42,21 +42,45 @@ export const INTERVAL_MS: Partial<Record<Application['reminderInterval'], number
 };
 
 /**
- * When this application was actually sent: the first `sent` history entry,
- * falling back to appliedAt and then createdAt. The reminder anchor and the
- * "Zeitpunkt der Bewerbung" column of the Arbeitsamt export are the same
- * date by definition, so they read it from here rather than each rebuilding
- * the fallback chain.
+ * When this application was sent, as far as anything records it: the date
+ * the user entered, otherwise the first move into "sent". Undefined when
+ * neither exists - the statistics time a response only from a real send.
  *
  * `history` is required on the type, but a row written past TypeScript (an
  * old import, a hand-edited IndexedDB entry) can be missing it - see
  * analytics.ts for the same guard.
  */
+export function getSentAt(app: Pick<Application, 'history' | 'sentAt'>): number | undefined {
+	return app.sentAt ?? (app.history ?? []).find((h) => h.status === 'sent')?.timestamp;
+}
+
+/**
+ * The application date everything shows: getSentAt, falling back to
+ * appliedAt and then createdAt. The reminder anchor, the card's date and the
+ * "Zeitpunkt der Bewerbung" column of the Arbeitsamt export are the same
+ * date by definition, so they read it from here rather than each rebuilding
+ * the fallback chain.
+ */
 export function getAppliedAt(
-	app: Pick<Application, 'history' | 'appliedAt' | 'createdAt'>
+	app: Pick<Application, 'history' | 'sentAt' | 'appliedAt' | 'createdAt'>
 ): number {
-	const sentEvent = (app.history ?? []).find((h) => h.status === 'sent');
-	return sentEvent?.timestamp ?? app.appliedAt ?? app.createdAt;
+	return getSentAt(app) ?? app.appliedAt ?? app.createdAt;
+}
+
+/**
+ * When this application was rejected: the date the user entered, otherwise
+ * the move into "Absage". Undefined for anything not rejected, and for a
+ * rejection whose history does not end in one - before 2026-08-18 the edit
+ * dialog set a status without logging it, and an older "rejected" entry
+ * further back would date the wrong rejection. The edit dialog and the
+ * export both read it from here, so they show the same date.
+ */
+export function getRejectedAt(
+	app: Pick<Application, 'status' | 'history' | 'rejectedAt'>
+): number | undefined {
+	if (app.status !== 'rejected') return undefined;
+	const last = (app.history ?? []).at(-1);
+	return app.rejectedAt ?? (last?.status === 'rejected' ? last.timestamp : undefined);
 }
 
 /**
@@ -66,9 +90,10 @@ export function getAppliedAt(
  * "Absage" (the posting was gone, say) was never sent, and only its history
  * shows that. A rejection with no draft entry at all - logged after the fact
  * directly in the rejected column, or a legacy row without history - records
- * a real rejection and counts.
+ * a real rejection and counts. So does one with an entered application date:
+ * that is the user saying it went out, whatever the board saw.
  */
-export function wasSent(app: Pick<Application, 'status' | 'history'>): boolean {
+export function wasSent(app: Pick<Application, 'status' | 'history' | 'sentAt'>): boolean {
 	if (app.status === 'draft') return false;
 	if (app.status !== 'rejected') return true;
 	const history = app.history ?? [];
@@ -77,9 +102,11 @@ export function wasSent(app: Pick<Application, 'status' | 'history'>): boolean {
 	// history proves nothing about sending; count it, like a row without one.
 	if (history.at(-1)?.status !== 'rejected') return true;
 	return (
+		app.sentAt !== undefined ||
 		history.some(
 			(h) => h.status === 'sent' || h.status === 'interview' || h.status === 'accepted'
-		) || !history.some((h) => h.status === 'draft')
+		) ||
+		!history.some((h) => h.status === 'draft')
 	);
 }
 

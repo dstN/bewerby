@@ -209,9 +209,9 @@ banner and the notification-firing engine so the two can never disagree.
   7 days on something sent a month ago would otherwise be due instantly.
   Saving an edit that leaves the interval alone never touches it.
 - **Anchor point, legacy rows:** `reminderAt` is optional, so anything
-  written before it existed still counts the interval from the timestamp of
-  the application's first `sent` history entry (falling back to `appliedAt`,
-  then `createdAt`) - never `updatedAt`. Editing an unrelated field,
+  written before it existed still counts the interval from the application
+  date, `getAppliedAt` (see "Dates: what was entered beats what was logged"
+  below) - never `updatedAt`. Editing an unrelated field,
   changing the card color, or dragging the card without changing its status
   must never push the follow-up date back, under either anchor.
 - **One-shot:** a reminder fires once per due date, deduplicated by
@@ -257,13 +257,53 @@ date, the ordering or the status wording:
   `coverLetterPdf.ts`, and the page geometry is shared with it rather than
   copied.
 
-The date is `getAppliedAt()` from `reminders.ts` - the same anchor the
-follow-up reminder counts from, because "when did I apply" has to be one
-date, not two. The export takes what the board's filter bar currently shows,
-minus everything that was never sent: drafts, and drafts archived straight
-into "Absage". Which rows those are is `wasSent` (also in `reminders.ts`),
-the same rule the statistics funnel counts by - a Nachweis and the "sent"
-stage have to agree on what an application is.
+The date is `getAppliedAt()` from `reminders.ts` - the same date the card
+shows and the follow-up reminder counts from, because "when did I apply" has
+to be one date, not two. A rejection's status cell carries its date as well -
+"Absage (12.03.2026)" - from `getRejectedAt()`: the outcome column is where a
+Nachweis asks for it, and it keeps CSV and PDF at three columns. Both dates
+follow the rule in the next section.
+
+The export takes what the board's filter bar currently shows, minus
+everything that was never sent: drafts, and drafts archived straight into
+"Absage". Which rows those are is `wasSent` (also in `reminders.ts`), the
+same rule the statistics funnel counts by - a Nachweis and the "sent" stage
+have to agree on what an application is.
+
+## Dates: what was entered beats what was logged
+
+The application date and the rejection date each come from one function in
+`reminders.ts`, and every reader goes through it: the card, the date sort,
+the edit dialog, the reminder anchor, the export and the statistics.
+
+- **`getAppliedAt`:** the date entered in the edit dialog (`sentAt`), else
+  the first move into "Versendet" in the history, else `appliedAt`, else
+  `createdAt`. `getSentAt` is the same chain without the last two fallbacks,
+  for the statistics, which time a response only from a real send.
+- **`getRejectedAt`:** the date entered in the edit dialog (`rejectedAt`),
+  else the move into "Absage" - but only while the card is rejected and its
+  history ends in that move. An older "rejected" entry further back would
+  date the wrong rejection, so a legacy row without one has no date rather
+  than a made-up one.
+
+People drag a card days after the letter went out or the rejection arrived,
+so the move alone would misdate a Nachweis. The dialog pre-fills both pickers
+with what the functions return, and stores an entered date only when the
+user actually changed the picker: left alone, a date keeps following the
+move instead of freezing a copy of it.
+
+`sentAt` is a field of its own because `appliedAt` cannot say whether the
+user entered it - the dialog has written `appliedAt` on every save,
+pre-filled with the creation day for a draft. Preferring it over the history
+would date every card that was created as a draft and sent later by the day
+it was created. It stays, as the fallback for rows without a "sent" entry.
+
+`rejectedAt` is cleared by every status change (board and dialog), so a card
+rejected, reopened and rejected again never carries the first rejection's
+date. `sentAt` is not: the application date is the _first_ send, so moving
+on to an interview or a rejection does not change it. An entered application
+date also makes `wasSent` count a draft archived straight into "Absage" -
+the user saying it went out outweighs what the board saw.
 
 ## Statistics funnel: counted from the history, not the column
 
@@ -276,7 +316,8 @@ and an abandoned draft end up:
   status past draft, except a rejection whose history shows it came straight
   from draft without ever being sent. A rejection with no
   draft entry at all (logged after the fact directly in that column, or a
-  legacy row without history) records a real rejection and counts.
+  legacy row without history) records a real rejection and counts, and so
+  does one with an entered application date.
 - **Selection:** interviews, offers, and only those rejections whose history
   contains an interview. Offers count unconditionally - leaving one out
   would push the success rate past 100 %.
@@ -288,8 +329,10 @@ edit dialog changed a status without logging it, so an old row's history
 can stop short of its current status (created as a draft, set to "Absage"
 in the dialog: `[draft]`). A rejection whose history does not end in
 "rejected" is therefore counted as sent: that history proves nothing either
-way. Response times measure from the first "sent" to the first interview or
-rejection _after_ it, so a rejection logged before the send is ignored.
+way. Response times measure from the send (`getSentAt`) to the first
+interview or rejection _after_ it, so a rejection logged before the send is
+ignored. Entered dates win here as everywhere: the current rejection counts
+by `getRejectedAt` instead of its logged move.
 
 ## Collapsible cards
 

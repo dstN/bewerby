@@ -81,6 +81,8 @@
 		"removeCustomColor": "Remove custom color",
 		"removeTag": "Remove tag {tag}",
 		"appliedAt": "Application date",
+		"rejectedAt": "Rejection received on",
+		"rejectedAtHint": "Printed on the proof of applications. Defaults to the day the card moved to “Rejected”.",
 		"confirmDiscard": "You have unsaved changes. Discard them?",
 		"reminder": "Reminder",
 		"placeholderTitle": "e.g. Frontend Developer",

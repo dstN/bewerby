@@ -178,6 +178,8 @@ export type TranslationKeys = {
 		removeCustomColor: string;
 		removeTag: string;
 		appliedAt: string;
+		rejectedAt: string;
+		rejectedAtHint: string;
 		confirmDiscard: string;
 		reminder: string;
 		placeholderTitle: string;

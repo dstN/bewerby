@@ -13,7 +13,7 @@
 	} from '$lib/utils/pdf.js';
 	import { writePdfToOpfs, readPdfFromOpfs, deletePdfFromOpfs } from '$lib/utils/opfs.js';
 	import DatePicker from '$lib/components/common/DatePicker.svelte';
-	import { INTERVAL_MS } from '$lib/utils/reminders.js';
+	import { INTERVAL_MS, getAppliedAt, getRejectedAt } from '$lib/utils/reminders.js';
 	import { colorStore } from '$lib/stores/colors.svelte.js';
 	import { announcer } from '$lib/stores/announcer.svelte.js';
 
@@ -116,9 +116,21 @@
 		selected: boolean;
 	};
 	let review = $state<ReviewEntry[] | null>(null);
-	let appliedDateStr = $state(
-		formatDateForInput(initialApp ? initialApp.appliedAt || initialApp.createdAt : undefined)
+	// Pre-filled with what the card and the export show (getAppliedAt), so an
+	// untouched field never differs from them.
+	const initialAppliedDateStr = formatDateForInput(
+		initialApp ? getAppliedAt(initialApp) : undefined
 	);
+	let appliedDateStr = $state(initialAppliedDateStr);
+	// Only shown while the status is "Absage", pre-filled with what the export
+	// prints: the entered date, else the move into "Absage" - which for a row
+	// not rejected yet is this save, i.e. today. Empty for an old row that
+	// records neither, rather than claiming a date nobody entered.
+	const shownRejectedAt =
+		initialApp?.status === 'rejected' ? getRejectedAt(initialApp) : Date.now();
+	const initialRejectedDateStr =
+		shownRejectedAt === undefined ? '' : formatDateForInput(shownRejectedAt);
+	let rejectedDateStr = $state(initialRejectedDateStr);
 	let dialogEl: HTMLDialogElement;
 
 	function snapshotFields(): string {
@@ -140,6 +152,7 @@
 			notes,
 			tags,
 			appliedDateStr,
+			rejectedDateStr,
 			pdfRef
 		});
 	}
@@ -543,6 +556,17 @@
 		return Date.now() + (INTERVAL_MS[reminderInterval] ?? 0);
 	}
 
+	/**
+	 * Stored only when the user changed the date: left alone, it keeps
+	 * following the move into "Absage" instead of freezing a copy of it.
+	 * Leaving "Absage" drops it, exactly as a move on the board does.
+	 */
+	function computeRejectedAt(): number | undefined {
+		if (status !== 'rejected' || !rejectedDateStr) return undefined;
+		if (rejectedDateStr !== initialRejectedDateStr) return parseDateInput(rejectedDateStr);
+		return application?.status === 'rejected' ? application.rejectedAt : undefined;
+	}
+
 	async function handleSubmit(event: SubmitEvent) {
 		event.preventDefault();
 		await save();
@@ -590,6 +614,13 @@
 			pdfName,
 			pdfRef,
 			appliedAt: parsedAppliedAt,
+			// Stored only when the user changed the date, like computeRejectedAt:
+			// left alone, it keeps following the move into "Versendet".
+			sentAt:
+				appliedDateStr && appliedDateStr !== initialAppliedDateStr
+					? parsedAppliedAt
+					: application?.sentAt,
+			rejectedAt: computeRejectedAt(),
 			createdAt: application ? application.createdAt : now,
 			updatedAt: now,
 			history: $state.snapshot(history)
@@ -867,6 +898,14 @@
 						<option value="rejected">{t('kanban.columns.rejected')}</option>
 					</select>
 				</div>
+
+				{#if status === 'rejected'}
+					<div class="form-group col-span-2">
+						<label for="rejectedAt">{t('application.rejectedAt')}</label>
+						<DatePicker id="rejectedAt" bind:value={rejectedDateStr} />
+						<p class="field-hint">{t('application.rejectedAtHint')}</p>
+					</div>
+				{/if}
 
 				<div class="form-group col-span-2">
 					<label for="salary">{t('application.salary')}</label>
