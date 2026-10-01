@@ -1,12 +1,12 @@
-import { browser } from '$app/environment';
+import { browser } from '$app/env';
 import {
 	PROFILE_STORAGE_KEY,
 	emptyProfile,
 	parseProfile,
 	type Profile
-} from '$lib/utils/profile.js';
+} from '#lib/utils/profile.js';
 
-export { PROFILE_STORAGE_KEY, type Profile } from '$lib/utils/profile.js';
+export { PROFILE_STORAGE_KEY, type Profile } from '#lib/utils/profile.js';
 
 function createProfileStore() {
 	let profile = $state<Profile>(emptyProfile());

@@ -60,7 +60,7 @@ grepping the built output for bare package imports and finding none. **No
 
 - `app.cjs`
 - `build/` (the entire directory — `client/`, `server/`, `prerendered/`,
-  `index.js`, `handler.js`, `env.js`, `shims.js`, and their `.map` files)
+  `index.js`, `handler.js`, `adapter-node.js`, and their `.map` files)
 - `.htaccess` (Application Root config)
 - `package.json` (Passenger reads this for app metadata)
 
@@ -79,10 +79,11 @@ replacement for it.
    - **Document Root**: `/bewerby/build/client` — a subdirectory of
      Application Root, never the same path
    - **Application Startup File**: `app.cjs`
-   - **Node.js version**: 20 or newer. This is a separate requirement from
-     `package.json`'s `engines` field (`>=26.0.0`, matching current local dev
-     and CI - needed only to `npm install`/build, see "Build & deploy"
-     below): the server never runs npm at all, only the already-bundled
+   - **Node.js version**: 22.17 or newer - SvelteKit 3's minimum, and so
+     the floor for the bundled server code as well. This is a separate
+     requirement from `package.json`'s `engines` field (`>=26.0.0`, matching
+     current local dev and CI - needed only to `npm install`/build, see
+     "Build & deploy" below): the server never runs npm at all, only the already-bundled
      `build/handler.js`, which uses nothing beyond Node's own built-in
      modules (see "What actually needs to be on the server"). pdfjs-dist's
      actual install-time floor is lower still (`>=22.13`).

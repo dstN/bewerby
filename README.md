@@ -48,7 +48,7 @@ all running in your browser, with your application data never leaving it.
 
 ## Tech stack
 
-- SvelteKit 2 / Svelte 5 (runes). Every _page_ is client-rendered and
+- SvelteKit 3 / Svelte 5 (runes). Every _page_ is client-rendered and
   prerendered (`ssr = false`, `prerender = true`); the sole exception is the
   `/api/fetch-ad` endpoint - see [ARCHITECTURE.md](ARCHITECTURE.md)
 - [Dexie](https://dexie.org/) 4 over IndexedDB for application data; OPFS for
@@ -108,7 +108,7 @@ src/
     utils/             PDF/HTML parsing, backup serialization, reminders,
                        analytics, application export, OPFS helpers
     i18n/              de/en translations + typed accessor
-  service-worker.ts   offline precache and fetch strategy
+  service-worker/     offline precache and fetch strategy (own tsconfig)
 tests/e2e/            Playwright specs
 ```
 

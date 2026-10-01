@@ -1,19 +1,19 @@
 <script lang="ts">
 	import '../app.css';
 	import { onMount } from 'svelte';
-	import { theme } from '$lib/stores/theme.svelte.js';
-	import { i18n, t } from '$lib/i18n/index.svelte.js';
+	import { theme } from '#lib/stores/theme.svelte.js';
+	import { i18n, t } from '#lib/i18n/index.svelte.js';
 	import { resolve } from '$app/paths';
 	import { afterNavigate } from '$app/navigation';
-	import { browser } from '$app/environment';
-	import Sidebar from '$lib/components/layout/Sidebar.svelte';
-	import { startReminderEngine, registerBackgroundSyncBestEffort } from '$lib/utils/reminders.js';
-	import { colorStore } from '$lib/stores/colors.svelte.js';
-	import { db } from '$lib/db/index.js';
-	import { cleanupOrphanedPdfs } from '$lib/utils/opfs.js';
-	import { requestPersistentStorage } from '$lib/utils/storage.js';
-	import { announcer } from '$lib/stores/announcer.svelte.js';
-	import { profileStore } from '$lib/stores/profile.svelte.js';
+	import { browser } from '$app/env';
+	import Sidebar from '#lib/components/layout/Sidebar.svelte';
+	import { startReminderEngine, registerBackgroundSyncBestEffort } from '#lib/utils/reminders.js';
+	import { colorStore } from '#lib/stores/colors.svelte.js';
+	import { db } from '#lib/db/index.js';
+	import { cleanupOrphanedPdfs } from '#lib/utils/opfs.js';
+	import { requestPersistentStorage } from '#lib/utils/storage.js';
+	import { announcer } from '#lib/stores/announcer.svelte.js';
+	import { profileStore } from '#lib/stores/profile.svelte.js';
 
 	let { children } = $props();
 
@@ -51,7 +51,10 @@
 
 	// Close the mobile drawer whenever a route actually changes (e.g. a nav
 	// link was activated), so it doesn't stay open over the next page.
-	afterNavigate(() => {
+	// Shallow navigations (the board stripping its ?new=1 shortcut param)
+	// fire this hook too since SvelteKit 3, but don't change the route.
+	afterNavigate(({ shallow }) => {
+		if (shallow) return;
 		mobileNavOpen = false;
 	});
 
@@ -119,7 +122,7 @@
 	</div>
 {/if}
 
-<!-- App-wide live region for status-change announcements (see $lib/stores/announcer.svelte.ts) -->
+<!-- App-wide live region for status-change announcements (see #lib/stores/announcer.svelte.ts) -->
 <div class="sr-only" aria-live="polite" aria-atomic="true">{announcer.message}</div>
 
 {#if mobileNavOpen}

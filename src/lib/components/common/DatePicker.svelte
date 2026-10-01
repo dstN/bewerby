@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { tick } from 'svelte';
-	import { t, i18n } from '$lib/i18n/index.svelte.js';
-	import { announcer } from '$lib/stores/announcer.svelte.js';
+	import { t, i18n } from '#lib/i18n/index.svelte.js';
+	import { announcer } from '#lib/stores/announcer.svelte.js';
 
 	let {
 		value = $bindable(''),

@@ -1,20 +1,20 @@
 <script lang="ts">
 	import { onMount, untrack } from 'svelte';
-	import { i18n, t } from '$lib/i18n/index.svelte.js';
-	import { db, type Application } from '$lib/db/index.js';
-	import { profileStore } from '$lib/stores/profile.svelte.js';
-	import { announcer } from '$lib/stores/announcer.svelte.js';
-	import { validatePdfFile, PdfProcessingError, type PdfErrorCode } from '$lib/utils/pdf.js';
-	import { writePdfToOpfs, readPdfFromOpfs, deletePdfFromOpfs } from '$lib/utils/opfs.js';
-	import { markdownToBlocks, markdownToPlainText } from '$lib/utils/markdown.js';
-	import { renderCoverLetterPdf } from '$lib/utils/coverLetterPdf.js';
-	import { mergePdfs } from '$lib/utils/mergePdf.js';
-	import { buildMailtoUrl } from '$lib/utils/mailDraft.js';
+	import { i18n, t } from '#lib/i18n/index.svelte.js';
+	import { db, type Application } from '#lib/db/index.js';
+	import { profileStore } from '#lib/stores/profile.svelte.js';
+	import { announcer } from '#lib/stores/announcer.svelte.js';
+	import { validatePdfFile, PdfProcessingError, type PdfErrorCode } from '#lib/utils/pdf.js';
+	import { writePdfToOpfs, readPdfFromOpfs, deletePdfFromOpfs } from '#lib/utils/opfs.js';
+	import { markdownToBlocks, markdownToPlainText } from '#lib/utils/markdown.js';
+	import { renderCoverLetterPdf } from '#lib/utils/coverLetterPdf.js';
+	import { mergePdfs } from '#lib/utils/mergePdf.js';
+	import { buildMailtoUrl } from '#lib/utils/mailDraft.js';
 	import {
 		applyTemplate,
 		buildTemplateContext,
 		tidyFilledTemplate
-	} from '$lib/utils/coverLetterTemplate.js';
+	} from '#lib/utils/coverLetterTemplate.js';
 	import CoverLetterEditor from './CoverLetterEditor.svelte';
 
 	let { application, onclose }: { application: Application; onclose: () => void } = $props();

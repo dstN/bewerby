@@ -1,5 +1,5 @@
-import { isValidApplication, type Application } from '$lib/db/index.js';
-import { parseProfile, type Profile } from '$lib/utils/profile.js';
+import { isValidApplication, type Application } from '#lib/db/index.js';
+import { parseProfile, type Profile } from '#lib/utils/profile.js';
 
 /** Written by every new export. */
 export const BACKUP_FORMAT_VERSION = 3;

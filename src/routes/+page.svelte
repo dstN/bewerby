@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { t } from '$lib/i18n/index.svelte.js';
+	import { t } from '#lib/i18n/index.svelte.js';
 
 	const steps = [
 		{ title: 'landing.step1Title', body: 'landing.step1Body' },

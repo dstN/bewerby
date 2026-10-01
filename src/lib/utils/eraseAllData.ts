@@ -1,6 +1,6 @@
-import { browser } from '$app/environment';
-import { db } from '$lib/db/index.js';
-import { isOpfsSupported } from '$lib/utils/opfs.js';
+import { browser } from '$app/env';
+import { db } from '#lib/db/index.js';
+import { isOpfsSupported } from '#lib/utils/opfs.js';
 
 /**
  * Exercises the right to erasure completely: IndexedDB, every attached PDF in

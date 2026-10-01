@@ -1,4 +1,4 @@
-import { browser } from '$app/environment';
+import { browser } from '$app/env';
 import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?worker&url';
 import type { DocLine, JobDocument } from './jobText.js';
 

@@ -1,17 +1,14 @@
-/// <reference types="@sveltejs/kit" />
-/// <reference no-default-lib="true"/>
-/// <reference lib="esnext" />
-/// <reference lib="webworker" />
-
-import { build, files, version } from '$service-worker';
-
-const sw = self as unknown as ServiceWorkerGlobalScope;
+import { self as sw } from '$app/service-worker';
+import { version } from '$app/env';
+import { immutable, assets } from '$app/manifest';
+import { asset } from '$app/paths';
+import type { AssetPath } from '$app/types';
 
 const CACHE_NAME = `bewerby-cache-${version}`;
 
 // Every prerendered route (see +layout.ts: ssr = false, prerender = true) -
-// `build`/`files` below cover only the client JS/CSS bundle and static/, not
-// these HTML documents. Without listing them explicitly, a route's document
+// `immutable`/`assets` below cover only the client JS/CSS bundle and static/,
+// not these HTML documents. Without listing them explicitly, a route's document
 // only ever enters the cache the first time a *hard* (non-SPA) navigation to
 // it succeeds online - which normal in-app link-clicking never triggers,
 // since SvelteKit's client router swaps content without a real navigation.
@@ -30,11 +27,21 @@ const PRERENDERED_ROUTES = [
 ];
 
 // Assets to precache: built JS/CSS bundles + static files + the above.
-// `files` mirrors static/ verbatim, including dotfiles (e.g. static/.gitignore) -
-// adapter-node serves those via sirv, which refuses dotfiles by default and
-// answers 404. A single 404 during install used to fail cache.addAll()
-// atomically, which meant the service worker never activated at all.
-const ASSETS = [...build, ...files, ...PRERENDERED_ROUTES].filter((path) => {
+// `$app/manifest` paths are relative to the base path, so they go through
+// asset() to become the absolute pathnames cache.add() and the fetch handler
+// below work with. `immutable` is only typed as string[], not the generated
+// AssetPath union, but asset() prefixes either the same way (a service worker
+// can't use paths.assets, so it's always just the base path).
+// `assets` mirrors static/ verbatim, including dotfiles (e.g. static/.gitignore) -
+// adapter-node leaves those out of the static file table it records at build
+// time and answers 404. A single 404 during install used to fail
+// cache.addAll() atomically, which meant the service worker never activated
+// at all.
+const ASSETS = [
+	...immutable.map((file) => asset(file.path as AssetPath)),
+	...assets.map((file) => asset(file.path)),
+	...PRERENDERED_ROUTES
+].filter((path) => {
 	const basename = path.split('/').pop() ?? '';
 	return !basename.startsWith('.');
 });
@@ -47,10 +54,10 @@ sw.addEventListener('install', (event) => {
 		caches
 			.open(CACHE_NAME)
 			.then(async (cache) => {
-				const results = await Promise.allSettled(ASSETS.map((asset) => cache.add(asset)));
+				const results = await Promise.allSettled(ASSETS.map((path) => cache.add(path)));
 				const failed = results
 					.map((result, i) => (result.status === 'rejected' ? ASSETS[i] : null))
-					.filter((asset): asset is string => asset !== null);
+					.filter((path): path is string => path !== null);
 				if (failed.length > 0) {
 					console.warn('[service-worker] failed to precache', failed.length, 'asset(s):', failed);
 				}

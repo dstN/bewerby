@@ -1,6 +1,6 @@
 import 'fake-indexeddb/auto';
 import { describe, it, expect, beforeEach } from 'vitest';
-import { BewerbyDatabase, type Application } from '$lib/db/index.js';
+import { BewerbyDatabase, type Application } from '#lib/db/index.js';
 import {
 	blobToBase64,
 	base64ToBlob,

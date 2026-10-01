@@ -8,13 +8,13 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
  * best-effort steps never aborts the ones after it.
  */
 
-vi.mock('$app/environment', () => ({ browser: true }));
+vi.mock('$app/env', () => ({ browser: true }));
 
 const dbDelete = vi.fn(async () => {});
-vi.mock('$lib/db/index.js', () => ({ db: { delete: () => dbDelete() } }));
+vi.mock('#lib/db/index.js', () => ({ db: { delete: () => dbDelete() } }));
 
 const isOpfsSupported = vi.fn(() => true);
-vi.mock('$lib/utils/opfs.js', () => ({ isOpfsSupported: () => isOpfsSupported() }));
+vi.mock('#lib/utils/opfs.js', () => ({ isOpfsSupported: () => isOpfsSupported() }));
 
 let removedOpfsEntries: Array<{ name: string; options?: { recursive?: boolean } }>;
 let deletedCaches: string[];

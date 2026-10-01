@@ -1,10 +1,10 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-// The store is written for the browser; `$app/environment` reports `browser:
+// The store is written for the browser; `$app/env` reports `browser:
 // false` under Vitest's SSR-shaped module graph, which would short-circuit
 // init()/setLocale() before they touch localStorage or <html lang>.
-vi.mock('$app/environment', () => ({ browser: true }));
+vi.mock('$app/env', () => ({ browser: true }));
 
 type I18nModule = typeof import('./index.svelte.js');
 

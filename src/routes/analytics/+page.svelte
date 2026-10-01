@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { liveQuery } from 'dexie';
-	import { db } from '$lib/db/index.js';
-	import { t } from '$lib/i18n/index.svelte.js';
-	import { computeApplicationStats, type AnalyticsRow } from '$lib/utils/analytics.js';
+	import { db } from '#lib/db/index.js';
+	import { t } from '#lib/i18n/index.svelte.js';
+	import { computeApplicationStats, type AnalyticsRow } from '#lib/utils/analytics.js';
 
 	// Analytics only ever reads status, history and the entered dates - project down to that instead
 	// of holding every field (title, notes, contact info, pdfRef, ...) of

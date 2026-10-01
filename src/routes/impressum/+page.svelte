@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { t } from '$lib/i18n/index.svelte.js';
+	import { t } from '#lib/i18n/index.svelte.js';
 	import { resolve } from '$app/paths';
-	import ObfuscatedEmail from '$lib/components/common/ObfuscatedEmail.svelte';
+	import ObfuscatedEmail from '#lib/components/common/ObfuscatedEmail.svelte';
 </script>
 
 <svelte:head>

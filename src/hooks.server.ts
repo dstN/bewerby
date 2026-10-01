@@ -1,4 +1,4 @@
-import type { Handle } from '@sveltejs/kit';
+import type { Handle } from '@sveltejs/kit/hooks';
 
 // Every *page* route is prerendered (see src/routes/+layout.ts), and
 // adapter-node serves prerendered pages through a static-file fast path that

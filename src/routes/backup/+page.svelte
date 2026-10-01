@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { t } from '$lib/i18n/index.svelte.js';
-	import { db } from '$lib/db/index.js';
-	import { readPdfFromOpfs, writePdfToOpfs } from '$lib/utils/opfs.js';
-	import { buildBackupPayload, parseBackupPayload, prepareImportRows } from '$lib/utils/backup.js';
-	import { profileStore } from '$lib/stores/profile.svelte.js';
+	import { t } from '#lib/i18n/index.svelte.js';
+	import { db } from '#lib/db/index.js';
+	import { readPdfFromOpfs, writePdfToOpfs } from '#lib/utils/opfs.js';
+	import { buildBackupPayload, parseBackupPayload, prepareImportRows } from '#lib/utils/backup.js';
+	import { profileStore } from '#lib/stores/profile.svelte.js';
 
 	// File System Access API isn't part of lib.dom.d.ts yet; declare just enough
 	// of it for the feature-detected local dump below.

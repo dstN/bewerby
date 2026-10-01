@@ -1,8 +1,8 @@
 import { request as httpsRequest } from 'node:https';
 import type { IncomingMessage } from 'node:http';
-import { json, type RequestHandler } from '@sveltejs/kit';
-import { assertPublicUrl, publicLookup, UnsafeUrlError } from '$lib/server/urlGuard.js';
-import { extractJobPage } from '$lib/utils/htmlToJobText.js';
+import type { RequestHandler } from '@sveltejs/kit';
+import { assertPublicUrl, publicLookup, UnsafeUrlError } from '#lib/server/urlGuard.js';
+import { extractJobPage } from '#lib/utils/htmlToJobText.js';
 
 /**
  * Fetches a job ad server-side and hands back its text plus whatever the page
@@ -49,7 +49,7 @@ type FailureCode =
 	| 'http-error';
 
 function failure(code: FailureCode, status: number) {
-	return json({ error: code }, { status });
+	return Response.json({ error: code }, { status });
 }
 
 /**
@@ -216,7 +216,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		if (html === null) return failure('too-large', 413);
 
 		const { text, fields } = extractJobPage(html, url.toString());
-		return json({ text, fields, finalUrl: url.toString() });
+		return Response.json({ text, fields, finalUrl: url.toString() });
 	}
 
 	return failure('unreachable', 502);

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import type { Application } from '$lib/db/index.js';
+import type { Application } from '#lib/db/index.js';
 
 /**
  * Covers the reminder *engine* - the scheduling, de-duplication and cleanup
@@ -8,7 +8,7 @@ import type { Application } from '$lib/db/index.js';
  * and a notification sink, so all three are substituted here.
  */
 
-vi.mock('$app/environment', () => ({ browser: true }));
+vi.mock('$app/env', () => ({ browser: true }));
 
 /** Captures the subscriber startReminderEngine() hands to liveQuery, so a
  *  test can push a new snapshot of the applications table at will. */
@@ -30,7 +30,7 @@ vi.mock('dexie', () => ({
 }));
 
 const toArray = vi.fn<() => Promise<Application[]>>(async () => []);
-vi.mock('$lib/db/index.js', () => ({ db: { applications: { toArray: () => toArray() } } }));
+vi.mock('#lib/db/index.js', () => ({ db: { applications: { toArray: () => toArray() } } }));
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const NOW = Date.UTC(2026, 0, 15, 12, 0, 0);

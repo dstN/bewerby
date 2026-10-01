@@ -1,5 +1,5 @@
-import type { Application } from '$lib/db/index.js';
-import { getAppliedAt, getRejectedAt, wasSent } from '$lib/utils/reminders.js';
+import type { Application } from '#lib/db/index.js';
+import { getAppliedAt, getRejectedAt, wasSent } from '#lib/utils/reminders.js';
 
 /** Only the three columns a Vermittlungsnachweis actually asks for. */
 export type ExportRow = Pick<

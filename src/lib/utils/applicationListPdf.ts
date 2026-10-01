@@ -1,5 +1,5 @@
 import type { PDFFont } from 'pdf-lib';
-import { MARGIN, PAGE_HEIGHT, PAGE_WIDTH, toWinAnsi } from '$lib/utils/coverLetterPdf.js';
+import { MARGIN, PAGE_HEIGHT, PAGE_WIDTH, toWinAnsi } from '#lib/utils/coverLetterPdf.js';
 import {
 	toExportRows,
 	type ExportCells,

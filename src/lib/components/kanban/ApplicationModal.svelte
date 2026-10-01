@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount, untrack } from 'svelte';
-	import { t } from '$lib/i18n/index.svelte.js';
-	import { db, type Application } from '$lib/db/index.js';
+	import { t } from '#lib/i18n/index.svelte.js';
+	import { db, type Application } from '#lib/db/index.js';
 	import {
 		extractJobDocument,
 		parseJobDocument,
@@ -10,12 +10,12 @@
 		PdfProcessingError,
 		type PdfErrorCode,
 		type ParsedJobField
-	} from '$lib/utils/pdf.js';
-	import { writePdfToOpfs, readPdfFromOpfs, deletePdfFromOpfs } from '$lib/utils/opfs.js';
-	import DatePicker from '$lib/components/common/DatePicker.svelte';
-	import { INTERVAL_MS, getAppliedAt, getRejectedAt } from '$lib/utils/reminders.js';
-	import { colorStore } from '$lib/stores/colors.svelte.js';
-	import { announcer } from '$lib/stores/announcer.svelte.js';
+	} from '#lib/utils/pdf.js';
+	import { writePdfToOpfs, readPdfFromOpfs, deletePdfFromOpfs } from '#lib/utils/opfs.js';
+	import DatePicker from '#lib/components/common/DatePicker.svelte';
+	import { INTERVAL_MS, getAppliedAt, getRejectedAt } from '#lib/utils/reminders.js';
+	import { colorStore } from '#lib/stores/colors.svelte.js';
+	import { announcer } from '#lib/stores/announcer.svelte.js';
 
 	let {
 		application = null,
