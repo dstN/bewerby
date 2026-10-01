@@ -21,6 +21,12 @@ jobs:
     # the comment on the Playwright install step for why an in-job retry
     # loop with its own `timeout` actively made this worse, not better.
     timeout-minutes: 15
+    # Public OAuth client ids of the sync providers (#53). Not secrets - PKCE
+    # needs none - so repository variables, not secrets. Job-wide, so the
+    # artifact build and the build the E2E run makes come out the same. An
+    # unset variable builds without that provider (see vite.config.ts).
+    env:
+      PUBLIC_DROPBOX_APP_KEY: ${{ vars.PUBLIC_DROPBOX_APP_KEY }}
     steps:
       - uses: actions/checkout@v7
 

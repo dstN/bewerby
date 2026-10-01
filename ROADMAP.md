@@ -597,7 +597,7 @@ Setzt die beiden Backlog-Epics #36 (verschlüsselte Cloud-Ablage) und #41 (Live-
 | 50  | ✅ Krypto-Kern und verschlüsselte Sicherungsdatei (.bwv)                        | `enhancement` `security` `dsgvo` `a11y`         | [#50](https://github.com/dstN/bewerby/issues/50) |
 | 51  | ✅ Repository-Schicht: alle Schreibzugriffe über `src/lib/data`                 | `refactoring` `architecture`                    | [#51](https://github.com/dstN/bewerby/issues/51) |
 | 52  | ✅ CRDT-Schicht mit Yjs: verlustfreies Zusammenführen                           | `enhancement` `architecture`                    | [#52](https://github.com/dstN/bewerby/issues/52) |
-| 53  | Cloud-Transport, Ordner-Adapter und Dropbox                                     | `enhancement` `security` `dsgvo`                | [#53](https://github.com/dstN/bewerby/issues/53) |
+| 53  | 🟡 Cloud-Transport, Ordner-Adapter und Dropbox (Dropbox wartet auf #49)         | `enhancement` `security` `dsgvo`                | [#53](https://github.com/dstN/bewerby/issues/53) |
 | 54  | OneDrive und Google Drive (Token-Broker)                                        | `enhancement` `security` `dsgvo`                | [#54](https://github.com/dstN/bewerby/issues/54) |
 | 55  | Live-Sync von Gerät zu Gerät per WebRTC und QR-Pairing                          | `enhancement` `security` `dsgvo` `architecture` | [#55](https://github.com/dstN/bewerby/issues/55) |
 | 56  | Geräteverwaltung, Schlüsselrotation und Löschrecht für Sync                     | `enhancement` `security` `dsgvo`                | [#56](https://github.com/dstN/bewerby/issues/56) |

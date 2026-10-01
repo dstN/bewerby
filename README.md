@@ -43,6 +43,10 @@ all running in your browser, with your application data never leaving it.
   iCloud Drive or any other cloud folder and restorable on another device.
   Devices merge through it: notes and cover letters character by character,
   deletions included, no duplicates.
+- Sync between your devices, end-to-end encrypted: through a folder your
+  sync client keeps in step (Nextcloud, iCloud for Windows, Proton Drive,
+  Syncthing) or through Dropbox, which only ever sees ciphertext in an app
+  folder of its own.
 - Backup & restore: JSON export/import (attached PDFs included), plus an
   optional local-directory dump via the File System Access API.
 - Follow-up reminders via the Notifications API - a fixed interval, or a

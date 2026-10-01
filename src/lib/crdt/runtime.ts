@@ -341,7 +341,8 @@ export class SyncRuntime {
 		this.profilePort.set({ ...rest, cvRef });
 	}
 
-	private referencedBlobs(): Set<string> {
+	/** Every blob the document refers to, rows and profile alike. */
+	referencedBlobIds(): Set<string> {
 		const ids = new Set<string>();
 		for (const map of this.apps.values()) {
 			for (const key of ['pdfBlob', 'cvBlob']) {
@@ -357,12 +358,66 @@ export class SyncRuntime {
 	async exportSnapshot(): Promise<Snapshot> {
 		await this.flush();
 		const blobs: Record<string, Uint8Array> = {};
-		for (const blobId of this.referencedBlobs()) {
-			const ref = await this.refFor(blobId);
-			const file = ref ? await readPdfFromOpfs(ref) : null;
-			if (file) blobs[blobId] = new Uint8Array(await file.arrayBuffer());
+		for (const blobId of this.referencedBlobIds()) {
+			const bytes = await this.blobBytes(blobId);
+			if (bytes) blobs[blobId] = bytes;
 		}
 		return { update: Y.encodeStateAsUpdate(this.doc), blobs };
+	}
+
+	/** The PDF behind a blob id, if this device has it. */
+	async blobBytes(blobId: string): Promise<Uint8Array | null> {
+		const ref = await this.refFor(blobId);
+		const file = ref ? await readPdfFromOpfs(ref) : null;
+		return file ? new Uint8Array(await file.arrayBuffer()) : null;
+	}
+
+	async hasBlob(blobId: string): Promise<boolean> {
+		const ref = await this.refFor(blobId);
+		return Boolean(ref && (await readPdfFromOpfs(ref)));
+	}
+
+	/** What this device has, as a Yjs state vector. */
+	stateVector(): Uint8Array {
+		return Y.encodeStateVector(this.doc);
+	}
+
+	/**
+	 * Everything this device has that a peer at `stateVector` lacks - plus,
+	 * always, the whole delete set: Yjs cannot tell which deletions a peer has
+	 * seen, which is also why an "empty" diff is no sign that nothing changed.
+	 */
+	diffSince(stateVector?: Uint8Array): Uint8Array {
+		return Y.encodeStateAsUpdate(this.doc, stateVector);
+	}
+
+	/** True when a peer at `stateVector` already has every item this device has. */
+	covers(stateVector: Uint8Array | undefined): boolean {
+		const peer = stateVector ? Y.decodeStateVector(stateVector) : new Map<number, number>();
+		for (const [client, clock] of Y.decodeStateVector(this.stateVector())) {
+			if ((peer.get(client) ?? 0) < clock) return false;
+		}
+		return true;
+	}
+
+	/** `stateVector` raised by what the given updates contain, per client. */
+	advance(stateVector: Uint8Array | undefined, updates: Uint8Array[]): Uint8Array {
+		const merged = stateVector ? Y.decodeStateVector(stateVector) : new Map<number, number>();
+		for (const update of updates) {
+			for (const [client, clock] of Y.decodeStateVector(Y.encodeStateVectorFromUpdate(update))) {
+				merged.set(client, Math.max(merged.get(client) ?? 0, clock));
+			}
+		}
+		return Y.encodeStateVector(merged);
+	}
+
+	/** Called after each change made on this device: the transports' cue to push. */
+	onLocalChange(listener: () => void): () => void {
+		const handler = (_update: Uint8Array, origin: unknown) => {
+			if (origin === ORIGIN.local) listener();
+		};
+		this.doc.on('update', handler);
+		return () => this.doc.off('update', handler);
 	}
 
 	/** Writes PDFs this device does not have yet, under fresh local names. */
@@ -390,11 +445,18 @@ export class SyncRuntime {
 
 	/** Merges another device's state into this one. Nothing is overwritten. */
 	async merge(snapshot: Snapshot): Promise<void> {
-		// Validated on a scratch document first: a broken update must not
-		// leave this one half-applied.
-		SyncRuntime.decode(snapshot.update).destroy();
-		await this.storeBlobs(snapshot.blobs);
-		Y.applyUpdate(this.doc, snapshot.update, ORIGIN.remote);
+		await this.applyRemote([snapshot]);
+	}
+
+	/** Several devices' updates and PDFs at once, materialized once at the end. */
+	async applyRemote(snapshots: Snapshot[]): Promise<void> {
+		// Every update is validated on a scratch document first: a broken one
+		// must not leave this document half-applied.
+		for (const snapshot of snapshots) SyncRuntime.decode(snapshot.update).destroy();
+		for (const snapshot of snapshots) await this.storeBlobs(snapshot.blobs);
+		this.doc.transact(() => {
+			for (const snapshot of snapshots) Y.applyUpdate(this.doc, snapshot.update, ORIGIN.remote);
+		}, ORIGIN.remote);
 		await this.materialize();
 		await this.flush();
 	}

@@ -12,6 +12,7 @@
 	import { db } from '$lib/db/index.js';
 	import { cleanupOrphanedPdfs } from '$lib/utils/opfs.js';
 	import { activeSync } from '$lib/crdt/session.js';
+	import { syncRunner } from '$lib/sync/runner.svelte.js';
 	import { requestPersistentStorage } from '$lib/utils/storage.js';
 	import { announcer } from '$lib/stores/announcer.svelte.js';
 	import { profileStore } from '$lib/stores/profile.svelte.js';
@@ -93,6 +94,8 @@
 		// Starts the sync layer on a device with a vault, so rows written while
 		// it was off are adopted before anyone edits; a no-op without one.
 		void activeSync();
+		// Syncs with a connected folder or Dropbox while bewerby is open (#53).
+		void syncRunner.start();
 		cleanupOrphanedPdfsOnStartup();
 		requestPersistentStorage();
 		registerBackgroundSyncBestEffort();

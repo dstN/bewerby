@@ -5,12 +5,24 @@ import { defineConfig } from 'vitest/config';
 
 const pkg = JSON.parse(readFileSync('./package.json', 'utf-8'));
 
+// OAuth client ids of the sync providers (#53, #54). Public by design -
+// PKCE needs no secret - and set as GitHub environment variables for the
+// build. A provider without one is not offered, and its origins stay out of
+// the CSP below: no key, no new place the page may talk to.
+const syncClients = { dropbox: process.env.PUBLIC_DROPBOX_APP_KEY ?? '' };
+const syncOrigins: `https://${string}.${string}`[] = [
+	...(syncClients.dropbox
+		? (['https://api.dropboxapi.com', 'https://content.dropboxapi.com'] as const)
+		: [])
+];
+
 export default defineConfig({
 	// Single source of truth for the version shown in the sidebar (see
 	// Sidebar.svelte) - reading package.json directly there isn't possible in
 	// client code, so it's injected as a build-time constant instead.
 	define: {
-		__APP_VERSION__: JSON.stringify(pkg.version)
+		__APP_VERSION__: JSON.stringify(pkg.version),
+		__SYNC_CLIENTS__: JSON.stringify(syncClients)
 	},
 	plugins: [
 		sveltekit({
@@ -51,7 +63,7 @@ export default defineConfig({
 					// The contact form (see /kontakt) posts to a mail relay on separate
 					// infrastructure the same person operates - not a third-party
 					// service - documented in ARCHITECTURE.md and the Datenschutzerklärung.
-					'connect-src': ['self', 'https://contact.yinside.de'],
+					'connect-src': ['self', 'https://contact.yinside.de', ...syncOrigins],
 					'worker-src': ['self'],
 					'manifest-src': ['self'],
 					'object-src': ['none'],

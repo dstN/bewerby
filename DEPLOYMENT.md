@@ -154,6 +154,21 @@ upload, atomic activation, restart, smoke test) worked as designed. Keep
 watching new deploys for assumptions that don't hold; fix the workflow
 rather than trusting a green run blindly.
 
+**Sync providers** (#53). OAuth client ids are public - the PKCE flow
+needs no client secret - so they are **repository variables** (Settings →
+Secrets and variables → Actions → Variables), not secrets. `ci.yml` passes
+them to the build job-wide, and `vite.config.ts` bakes them in. A missing
+variable builds without that provider: no button, and none of its origins
+in the CSP.
+
+| Variable                 | Value                                                                                       |
+| ------------------------ | ------------------------------------------------------------------------------------------- |
+| `PUBLIC_DROPBOX_APP_KEY` | The app key of the Dropbox app (App Console, access type "App folder", redirect URIs below) |
+
+Redirect URIs to register with each provider:
+`https://bewerby.de/cloud/callback` and, for local development,
+`http://localhost:5173/cloud/callback`.
+
 ## Rollback
 
 The automated deploy above rolls back on a failed smoke test by itself

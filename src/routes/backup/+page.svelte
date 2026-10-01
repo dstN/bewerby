@@ -17,6 +17,13 @@
 	import { openFile, readFileHeader, sealFile, type UnlockedVault } from '$lib/vault/vault.js';
 	import { activeSync, enableSync, useRuntime } from '$lib/crdt/session.js';
 	import { decodeSnapshot, encodeSnapshot } from '$lib/crdt/snapshot.js';
+	import { setUnlockedVault } from '$lib/vault/session.js';
+	import { syncRunner } from '$lib/sync/runner.svelte.js';
+	import { JUST_CONNECTED, SyncState } from '$lib/sync/state.js';
+	import { isFolderSyncSupported, pickSyncFolder } from '$lib/sync/adapters/folder.js';
+	import { dropboxAuthorizeUrl } from '$lib/sync/adapters/dropbox.js';
+	import { pkcePair, redirectUri, rememberAuthorization } from '$lib/sync/oauth.js';
+	import { DROPBOX_CLIENT_ID, openStore } from '$lib/sync/targets.js';
 	import VaultSetupDialog from '$lib/components/vault/VaultSetupDialog.svelte';
 	import VaultUnlockDialog from '$lib/components/vault/VaultUnlockDialog.svelte';
 
@@ -54,6 +61,14 @@
 		{ kind: 'export'; share: boolean } | { kind: 'import'; bytes: Uint8Array; header: KeyHeader };
 	let unlockRequest = $state.raw<UnlockRequest | null>(null);
 
+	// SYNC (#53): the target, its status and the schedule live in syncRunner;
+	// this page only connects, disconnects and shows them.
+	const syncState = new SyncState();
+	let folderSyncSupported = $state(false);
+	let syncNotice = $state('');
+	let joinHeader = $state.raw<KeyHeader | null>(null);
+	let syncUnlockOpen = $state(false);
+
 	onMount(() => {
 		loadStoredVault()
 			.then((stored) => {
@@ -66,6 +81,14 @@
 		// promise to share a list of common file types (see MDN on
 		// navigator.share), and .bwv is not one of them. Where canShare says
 		// no, the download is the way; on iOS that lands in the Files app too.
+		folderSyncSupported = isFolderSyncSupported();
+		// Back from Dropbox's sign-in (see /cloud/callback).
+		if (sessionStorage.getItem(JUST_CONNECTED)) {
+			sessionStorage.removeItem(JUST_CONNECTED);
+			void afterConnect();
+		} else {
+			void syncRunner.start();
+		}
 		canShareFiles =
 			typeof navigator.canShare === 'function' &&
 			navigator.canShare({
@@ -80,6 +103,7 @@
 		vaultRoot = root;
 		rememberedKey = remember;
 		await enableSync();
+		setUnlockedVault({ header, root });
 	}
 
 	async function onVaultCreated(vault: UnlockedVault, remember: boolean) {
@@ -139,6 +163,7 @@
 			rememberedKey = true;
 		}
 		vaultRoot = root;
+		if (vaultHeader) setUnlockedVault({ header: vaultHeader, root });
 		await writeEncryptedBackup(root, share);
 	}
 
@@ -202,11 +227,131 @@
 		announcer.announce(t('backup.vault.imported'));
 	}
 
+	async function connectFolder() {
+		syncNotice = '';
+		try {
+			const { handle, name } = await pickSyncFolder();
+			await syncState.setTarget({ kind: 'folder', handle, name });
+		} catch (err) {
+			if (err instanceof DOMException && err.name === 'AbortError') return;
+			console.error('Connecting the sync folder failed:', err);
+			syncNotice = 'sync.statusError';
+			return;
+		}
+		await afterConnect();
+	}
+
+	async function connectDropbox() {
+		const { verifier, challenge } = await pkcePair();
+		const uri = redirectUri();
+		const state = rememberAuthorization('dropbox', verifier, uri);
+		location.assign(
+			dropboxAuthorizeUrl({ clientId: DROPBOX_CLIENT_ID, redirectUri: uri, challenge, state })
+		);
+	}
+
+	/**
+	 * After a target was connected: sync, if this device has a vault - or,
+	 * if not, offer to join the sync already there, unlocked with its
+	 * passphrase or recovery key like an imported file.
+	 */
+	async function afterConnect() {
+		if (vaultHeader) {
+			await syncRunner.start();
+			return;
+		}
+		const target = await syncState.target();
+		if (!target) return;
+		try {
+			const store = await openStore(target, syncState, true);
+			// Update files first: they are small, and any one carries the key header.
+			const files = (await store.list())
+				.filter((path) => path.endsWith('.bwv') && !path.startsWith('blob/'))
+				.sort((a, b) => Number(b.startsWith('upd/')) - Number(a.startsWith('upd/')));
+			for (const path of files) {
+				try {
+					joinHeader = readFileHeader(await store.read(path));
+					return;
+				} catch {
+					// Not a vault file; try the next one.
+				}
+			}
+			syncNotice = 'sync.joinEmpty';
+		} catch (err) {
+			console.error('Reading the sync target failed:', err);
+			syncNotice = 'sync.statusError';
+		}
+		await syncRunner.start();
+	}
+
+	async function joinedSync(header: KeyHeader, root: CryptoKey, remember: boolean) {
+		await adoptVault(header, root, remember);
+		syncNotice = 'sync.joined';
+		announcer.announce(t('sync.joined'));
+	}
+
+	async function unlockedForSync(root: CryptoKey, remember: boolean) {
+		if (!vaultHeader) return;
+		if (remember && !rememberedKey) {
+			await storeVault(vaultHeader, root);
+			rememberedKey = true;
+		}
+		vaultRoot = root;
+		setUnlockedVault({ header: vaultHeader, root });
+	}
+
+	async function syncNowClicked() {
+		syncNotice = '';
+		await syncRunner.syncNow(true);
+		announcer.announce(
+			syncRunner.status === 'idle' ? statusText(syncRunner.lastSync) : t('sync.statusError')
+		);
+	}
+
+	async function reconnectSync() {
+		if (syncRunner.target === 'dropbox') await connectDropbox();
+		else await syncRunner.syncNow(true);
+	}
+
+	async function disconnectSync() {
+		if (!confirm(t('sync.disconnectConfirm'))) return;
+		await syncRunner.disconnect();
+		syncNotice = 'sync.disconnected';
+	}
+
+	function statusText(lastSync: number | null): string {
+		if (!lastSync) return '';
+		return t('sync.statusIdle').replace(
+			'{time}',
+			new Date(lastSync).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+		);
+	}
+
+	let syncStatusText = $derived.by(() => {
+		switch (syncRunner.status) {
+			case 'idle':
+				return statusText(syncRunner.lastSync);
+			case 'syncing':
+				return t('sync.statusSyncing');
+			case 'error':
+				return t('sync.statusError');
+			case 'locked':
+				return t('sync.statusLocked');
+			case 'reconnect':
+				return syncRunner.target === 'dropbox'
+					? t('sync.statusReconnectDropbox')
+					: t('sync.statusReconnectFolder');
+			default:
+				return vaultHeader ? '' : t('sync.statusOff');
+		}
+	});
+
 	async function forgetKey() {
 		if (!confirm(t('backup.vault.forgetConfirm'))) return;
 		await forgetRoot();
 		rememberedKey = false;
 		vaultRoot = null;
+		setUnlockedVault(null);
 		vaultStatus = 'backup.vault.forgotten';
 		vaultError = '';
 	}
@@ -455,73 +600,108 @@
 			{/if}
 		</section>
 
-		<!-- Tier 3 Card (Cloud Sync Placeholder). Neither inert nor
-		     aria-disabled applies here: there's no interactive content to
-		     disable, inert would hide the "this is planned" messaging from
-		     assistive tech entirely (defeating the point), and aria-disabled
-		     isn't valid on a <section>'s implicit region role and wouldn't be
-		     announced by real screen readers on a non-widget container anyway.
-		     Relying on unambiguous, always-perceivable text instead: the
-		     "Geplant"/"Planned" badge and the notice below, both at normal
-		     contrast (see issue #28). -->
-		<section class="card disabled-card">
+		<!-- Tier 3: sync between devices (#53). Deliberately no live region on
+		     the status line - it changes every minute in the background; only
+		     results the user asked for are announced. -->
+		<section class="card wide-card" aria-labelledby="sync-title">
 			<div class="card-meta">
 				<span class="tier-tag">Tier 3</span>
-				<span class="planned-tag">{t('backup.plannedFeature')}</span>
-				<h2 class="card-title">{t('backup.cloudTitle')}</h2>
+				<h2 class="card-title" id="sync-title">{t('sync.title')}</h2>
 			</div>
-			<p class="card-desc">{t('backup.cloudDesc')}</p>
+			<p class="card-desc">{t('sync.desc')}</p>
 
-			<div class="cloud-providers">
-				<div class="provider-box">
-					<span class="provider-name">Google Drive</span>
-					<span class="provider-status">{t('backup.plannedFeature')}</span>
+			{#if syncRunner.target}
+				<p class="vault-state">
+					{syncRunner.target === 'folder'
+						? t('sync.connectedFolder').replace('{name}', syncRunner.targetName ?? '')
+						: t('sync.connectedDropbox')}
+				</p>
+				{#if syncStatusText}
+					<p class="card-desc">{syncStatusText}</p>
+				{/if}
+				{#if syncRunner.lastReport?.foreign}
+					<p class="card-desc">{t('sync.foreign')}</p>
+				{/if}
+				<div class="action-row">
+					{#if syncRunner.status === 'locked'}
+						<button class="btn-primary" onclick={() => (syncUnlockOpen = true)}>
+							{t('sync.unlock')}
+						</button>
+					{:else if syncRunner.status === 'reconnect'}
+						<button class="btn-primary" onclick={reconnectSync}>{t('sync.reconnect')}</button>
+					{:else if vaultHeader}
+						<button
+							class="btn-primary"
+							onclick={syncNowClicked}
+							disabled={syncRunner.status === 'syncing'}
+						>
+							{t('sync.syncNow')}
+						</button>
+					{/if}
+					<button class="btn-text" onclick={disconnectSync}>{t('sync.disconnect')}</button>
 				</div>
-				<div class="provider-box">
-					<span class="provider-name">Dropbox</span>
-					<span class="provider-status">{t('backup.plannedFeature')}</span>
-				</div>
-				<div class="provider-box">
-					<span class="provider-name">OneDrive</span>
-					<span class="provider-status">{t('backup.plannedFeature')}</span>
-				</div>
-			</div>
+			{:else}
+				{#if !vaultHeader}
+					<p class="card-desc">{t('sync.needsVault')}</p>
+				{/if}
+				{#if folderSyncSupported || DROPBOX_CLIENT_ID}
+					<div class="sync-options">
+						{#if folderSyncSupported}
+							<div class="sync-option">
+								<button class="btn-primary" onclick={connectFolder}>
+									{t('sync.connectFolder')}
+								</button>
+								<p class="card-desc">{t('sync.connectFolderHint')}</p>
+							</div>
+						{/if}
+						{#if DROPBOX_CLIENT_ID}
+							<div class="sync-option">
+								<button class="btn-secondary" onclick={connectDropbox}>
+									{t('sync.connectDropbox')}
+								</button>
+								<p class="card-desc">{t('sync.connectDropboxHint')}</p>
+							</div>
+						{/if}
+					</div>
+				{:else}
+					<p class="card-desc">{t('sync.unavailable')}</p>
+				{/if}
+			{/if}
 
-			<div class="disabled-notice">
-				<svg
-					width="16"
-					height="16"
-					viewBox="0 0 24 24"
-					fill="none"
-					aria-hidden="true"
-					class="lock-icon"
-				>
-					<rect
-						x="3"
-						y="11"
-						width="18"
-						height="11"
-						rx="2"
-						stroke="currentColor"
-						stroke-width="1.5"
-						stroke-linejoin="round"
-					/>
-					<path
-						d="M7 11V7a5 5 0 0110 0v4"
-						stroke="currentColor"
-						stroke-width="1.5"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-					/>
-				</svg>
-				<span>{t('backup.cloudSyncDisabled')}</span>
-			</div>
+			{#if syncNotice}
+				<div class="status-msg success-msg">{t(syncNotice)}</div>
+			{/if}
+			<p class="card-desc">{t('sync.plannedProviders')}</p>
 		</section>
 	</div>
 </div>
 
 {#if setupOpen}
 	<VaultSetupDialog onclose={() => (setupOpen = false)} oncreated={onVaultCreated} />
+{/if}
+
+{#if joinHeader}
+	{@const header = joinHeader}
+	<VaultUnlockDialog
+		title={t('sync.joinTitle')}
+		{header}
+		submitLabel={t('sync.joinSubmit')}
+		showRemember={true}
+		note={t('sync.joinNote')}
+		onunlock={(root, remember) => joinedSync(header, root, remember)}
+		onclose={() => (joinHeader = null)}
+	/>
+{/if}
+
+{#if syncUnlockOpen && vaultHeader}
+	<VaultUnlockDialog
+		title={t('sync.unlockTitle')}
+		header={vaultHeader}
+		submitLabel={t('sync.unlock')}
+		showRemember={!rememberedKey}
+		onunlock={unlockedForSync}
+		onclose={() => (syncUnlockOpen = false)}
+	/>
 {/if}
 
 {#if unlockRequest?.kind === 'export' && vaultHeader}
@@ -641,6 +821,19 @@
 		grid-column: span 2;
 	}
 
+	.sync-options {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 16px;
+	}
+
+	.sync-option {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 8px;
+	}
+
 	.vault-state {
 		font-size: 13px;
 		font-weight: 600;
@@ -663,18 +856,6 @@
 
 	.btn-text:hover {
 		color: var(--text-primary);
-	}
-
-	.planned-tag {
-		font-size: 10px;
-		font-weight: 700;
-		text-transform: uppercase;
-		letter-spacing: 0.04em;
-		background-color: var(--surface-2);
-		color: var(--text-secondary);
-		padding: 2px 6px;
-		border-radius: var(--radius-sm);
-		border: 1px solid var(--border-subtle);
 	}
 
 	.card-title {
@@ -797,72 +978,11 @@
 		border: 1px solid var(--status-danger-border);
 	}
 
-	/* Planned/not-yet-available state (Cloud sync) - deliberately not
-	   opacity-based (that dimmed the text below every contrast threshold) and
-	   not pointer-events: none (there's no interactive content inside this
-	   card to block, and it wouldn't affect assistive tech either way; see
-	   aria-disabled on the section itself and issue #28). The dashed border
-	   and slightly muted surface are enough to read as "not a normal card"
-	   without sacrificing legibility. */
-	.disabled-card {
-		grid-column: span 2;
-		background-color: var(--surface-1);
-		border-style: dashed;
-	}
-
-	.cloud-providers {
-		display: flex;
-		gap: 16px;
-		margin: 8px 0;
-	}
-
-	.provider-box {
-		flex: 1;
-		background-color: var(--surface-0);
-		border: 1px solid var(--border-default);
-		border-radius: var(--radius-lg);
-		padding: 16px;
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-	}
-
-	.provider-name {
-		font-size: 14px;
-		font-weight: 600;
-		color: var(--text-primary);
-	}
-
-	.provider-status {
-		font-size: 11px;
-		font-weight: 700;
-		color: var(--text-tertiary);
-		text-transform: uppercase;
-	}
-
-	.disabled-notice {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		font-size: 12px;
-		color: var(--text-secondary);
-		background-color: var(--surface-0);
-		border: 1px solid var(--border-default);
-		border-radius: var(--radius-md);
-		padding: 8px 12px;
-	}
-
-	.lock-icon {
-		color: var(--text-tertiary);
-		flex-shrink: 0;
-	}
-
 	@media (max-width: 768px) {
 		.backup-grid {
 			grid-template-columns: 1fr;
 		}
 
-		.disabled-card,
 		.wide-card {
 			grid-column: span 1;
 		}
@@ -872,8 +992,8 @@
 			align-items: stretch;
 		}
 
-		.cloud-providers {
-			flex-direction: column;
+		.sync-options {
+			grid-template-columns: 1fr;
 		}
 	}
 </style>

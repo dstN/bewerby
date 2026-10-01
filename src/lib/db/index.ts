@@ -88,6 +88,16 @@ export interface BlobLink {
 	ref: string;
 }
 
+/**
+ * Small per-device sync bookkeeping (#53): the connected target with its
+ * tokens or folder handle, which remote files were applied, what was pushed.
+ * Never synced itself.
+ */
+export interface SyncStateEntry {
+	key: string;
+	value: unknown;
+}
+
 /** Pre-v2 shape, kept only so the migration below can read old rows. */
 interface ApplicationV1 extends Omit<Application, 'pdfRef'> {
 	pdfBlob?: Blob;
@@ -102,6 +112,7 @@ export class BewerbyDatabase extends Dexie {
 	applications!: Table<Application>;
 	crdt!: Table<CrdtUpdate, number>;
 	blobs!: Table<BlobLink, string>;
+	syncState!: Table<SyncStateEntry, string>;
 
 	/** name defaults to the real database; tests pass a unique one for isolation. */
 	constructor(name = 'bewerby-db') {
@@ -159,6 +170,9 @@ export class BewerbyDatabase extends Dexie {
 						row.uid ??= crypto.randomUUID();
 					});
 			});
+
+		// v4 (#53): bookkeeping for the cloud and folder transports.
+		this.version(4).stores({ syncState: 'key' });
 
 		// Dexie runs an upgrade exactly once, so a row whose OPFS write failed
 		// in it (OPFS unavailable, quota) would keep its PDF in a field nothing

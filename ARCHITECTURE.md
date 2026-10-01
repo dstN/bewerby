@@ -454,6 +454,44 @@ alternatives: [docs/adr/0002-crdt-yjs.md](docs/adr/0002-crdt-yjs.md).
   can exchange files back and forth without duplicates. "Replace" restores
   the file's state instead.
 
+## Sync between devices: folders and cloud storage
+
+On top of the document, `src/lib/sync` moves updates between devices that
+are never online at the same time. Decision and alternatives:
+[docs/adr/0003-sync-transport.md](docs/adr/0003-sync-transport.md).
+
+- **Layout at the remote:**
+  - `upd/<device>/<stamp>.bwv`: changes
+  - `snap/<device>-<stamp>.bwv`: a whole document after compaction
+  - `blob/<blobId>.bwv`: PDFs
+
+  Every file is an encrypted `.bwv` of kind `sync` carrying the key header.
+  Each device writes only files of its own, so nothing needs locking.
+
+- **A pass** (`engine.ts`) pulls what it has not applied yet, pushes one
+  update file, moves PDFs both ways, and compacts once there are more than
+  30 update files. Compaction never deletes a file it has not applied, so
+  another vault's files are safe.
+- **When to push:** a persisted `dirty` flag, because deletions move no
+  state vector, plus a remote state vector, for content that arrived by
+  file import.
+- **Adapters:**
+  - a folder a sync client keeps in step (File System Access, Chromium
+    desktop)
+  - Dropbox: PKCE, offline refresh token, "App folder" scope
+- **OAuth return:** `/cloud/callback` is answered by the service worker from
+  its cache, so the code never reaches the server's access log, and is
+  stripped from the address bar at once.
+- **Configuration:** the Dropbox client id comes from the repository
+  variable `PUBLIC_DROPBOX_APP_KEY`. Without it, Dropbox is not offered and
+  its origins stay out of `connect-src`.
+- **The runner** syncs on start, 20 s after a local change, every minute,
+  and when the tab becomes visible - only while bewerby is open, like the
+  reminders.
+- **Joining:** a device without a vault that connects to a populated
+  target reads the key header from any file there, asks for the
+  passphrase, adopts the vault and merges its own rows in.
+
 ## Security headers
 
 Every route is prerendered, and `adapter-node` serves prerendered pages

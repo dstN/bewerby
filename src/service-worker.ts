@@ -26,7 +26,8 @@ const PRERENDERED_ROUTES = [
 	'/impressum',
 	'/datenschutz',
 	'/nutzungsbedingungen',
-	'/kontakt'
+	'/kontakt',
+	'/cloud/callback'
 ];
 
 // Assets to precache: built JS/CSS bundles + static files + the above.
@@ -95,6 +96,18 @@ sw.addEventListener('fetch', (event) => {
 
 	// Skip non-HTTP(S) requests
 	if (!url.protocol.startsWith('http')) return;
+
+	// The OAuth return page carries a sign-in code in its URL. Answered from
+	// the cache alone, so the code never reaches the server and its access
+	// log (#53); only an uncached first visit falls through to the network.
+	if (event.request.mode === 'navigate' && url.pathname === '/cloud/callback') {
+		event.respondWith(
+			caches
+				.match('/cloud/callback', { ignoreSearch: true })
+				.then((cached) => cached ?? fetch(event.request))
+		);
+		return;
+	}
 
 	if (event.request.mode === 'navigate') {
 		event.respondWith(
