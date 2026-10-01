@@ -1,32 +1,39 @@
 import { db, type Application, type StatusHistory } from '$lib/db/index.js';
+import { activeSync } from '$lib/crdt/session.js';
+import { MissingApplicationError } from './errors.js';
+
+export { MissingApplicationError };
 
 /**
  * The only place that writes application rows (#51). Board, edit dialog,
  * dispatch dialog and backup import all go through here, which is what lets
  * the sync layer see every change, and what keeps the rules below in one
  * place instead of in each caller. ESLint enforces it (eslint.config.js).
+ *
+ * On a device with a vault every function hands over to the sync layer
+ * (#52), which applies the same rules to the Yjs document and materializes
+ * the result into this table. Without one, the table is written directly.
  */
 
-export type NewApplication = Omit<Application, 'id' | 'createdAt' | 'updatedAt' | 'history'> & {
+export type NewApplication = Omit<
+	Application,
+	'id' | 'uid' | 'createdAt' | 'updatedAt' | 'history'
+> & {
 	/** Defaults to one entry for the initial status, dated now. */
 	history?: StatusHistory[];
 };
 
 export type ApplicationChanges = Partial<
-	Omit<Application, 'id' | 'createdAt' | 'updatedAt' | 'history'>
+	Omit<Application, 'id' | 'uid' | 'createdAt' | 'updatedAt' | 'history'>
 >;
 
-export class MissingApplicationError extends Error {
-	constructor(readonly id: number) {
-		super(`No application row matched id ${id}.`);
-		this.name = 'MissingApplicationError';
-	}
-}
-
 export async function createApplication(data: NewApplication, now = Date.now()): Promise<number> {
+	const sync = await activeSync();
+	if (sync) return sync.create(data, now);
 	const { history, ...fields } = data;
 	return db.applications.add({
 		...fields,
+		uid: crypto.randomUUID(),
 		history: history ?? [{ status: data.status, timestamp: now }],
 		createdAt: now,
 		updatedAt: now
@@ -47,6 +54,8 @@ export async function updateApplication(
 	changes: ApplicationChanges,
 	now = Date.now()
 ): Promise<void> {
+	const sync = await activeSync();
+	if (sync) return sync.update(id, changes, now);
 	await db.transaction('rw', db.applications, async () => {
 		const current = await db.applications.get(id);
 		if (!current) throw new MissingApplicationError(id);
@@ -69,6 +78,8 @@ export async function updateApplication(
 
 /** Deletes the row and hands it back, so the caller can remove its PDFs. */
 export async function removeApplication(id: number): Promise<Application | undefined> {
+	const sync = await activeSync();
+	if (sync) return sync.remove(id);
 	return db.transaction('rw', db.applications, async () => {
 		const row = await db.applications.get(id);
 		await db.applications.delete(id);
@@ -85,8 +96,12 @@ export async function importApplications(
 	rows: Application[],
 	mode: 'merge' | 'replace'
 ): Promise<void> {
+	const sync = await activeSync();
+	if (sync) return sync.importRows(rows, mode, Date.now());
 	await db.transaction('rw', db.applications, async () => {
 		if (mode === 'replace') await db.applications.clear();
-		await db.applications.bulkAdd(rows);
+		// Fresh uids, like the fresh ids prepareImportRows hands out: a backup
+		// of this very device would otherwise collide on the unique index.
+		await db.applications.bulkAdd(rows.map((row) => ({ ...row, uid: crypto.randomUUID() })));
 	});
 }

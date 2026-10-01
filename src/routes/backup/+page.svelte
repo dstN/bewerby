@@ -14,7 +14,9 @@
 	import { announcer } from '$lib/stores/announcer.svelte.js';
 	import { VaultError, type KeyHeader } from '$lib/vault/format.js';
 	import { forgetRoot, loadStoredVault, storeVault } from '$lib/vault/keystore.js';
-	import { openBackup, readFileHeader, sealBackup, type UnlockedVault } from '$lib/vault/vault.js';
+	import { openFile, readFileHeader, sealFile, type UnlockedVault } from '$lib/vault/vault.js';
+	import { activeSync, enableSync, useRuntime } from '$lib/crdt/session.js';
+	import { decodeSnapshot, encodeSnapshot } from '$lib/crdt/snapshot.js';
 	import VaultSetupDialog from '$lib/components/vault/VaultSetupDialog.svelte';
 	import VaultUnlockDialog from '$lib/components/vault/VaultUnlockDialog.svelte';
 
@@ -71,11 +73,17 @@
 			});
 	});
 
-	async function onVaultCreated(vault: UnlockedVault, remember: boolean) {
-		await storeVault(vault.header, remember ? vault.root : undefined);
-		vaultHeader = vault.header;
-		vaultRoot = vault.root;
+	/** Makes a vault this device's own; from here on it syncs (#52). */
+	async function adoptVault(header: KeyHeader, root: CryptoKey, remember: boolean) {
+		await storeVault(header, remember ? root : undefined);
+		vaultHeader = header;
+		vaultRoot = root;
 		rememberedKey = remember;
+		await enableSync();
+	}
+
+	async function onVaultCreated(vault: UnlockedVault, remember: boolean) {
+		await adoptVault(vault.header, vault.root, remember);
 	}
 
 	function exportEncrypted(share: boolean) {
@@ -91,7 +99,14 @@
 	async function writeEncryptedBackup(root: CryptoKey, share: boolean) {
 		if (!vaultHeader) return;
 		try {
-			const bytes = await sealBackup({ header: vaultHeader, root }, await currentBackup());
+			// A syncing device exports its document, so importing the file elsewhere
+			// merges instead of duplicating; the plain backup is the fallback
+			// should the sync layer not have started.
+			const sync = await activeSync();
+			const vault = { header: vaultHeader, root };
+			const bytes = sync
+				? await sealFile(vault, 'sync', encodeSnapshot(await sync.exportSnapshot()))
+				: await sealFile(vault, 'backup', await currentBackup());
 			const name = `bewerby-backup-${today()}.bwv`;
 			const blob = new Blob([bytes], { type: 'application/octet-stream' });
 			if (share) {
@@ -155,19 +170,33 @@
 		root: CryptoKey,
 		remember: boolean
 	): Promise<string | false | void> {
-		const parsed = parseBackupPayload(await openBackup(request.bytes, root));
-		if (!parsed.ok) {
-			return t(parsed.error === 'format' ? 'backup.errorFormat' : 'backup.errorValidation');
-		}
-		if (!(await applyBackup(parsed.data))) return false;
-
+		const { kind, json } = await openFile(request.bytes, root);
 		// A device without a vault of its own takes over the file's, so its own
 		// encrypted backups open with the same passphrase and recovery key.
-		if (adoptsVault(request.header)) {
-			await storeVault(request.header, remember ? root : undefined);
-			vaultHeader = request.header;
-			vaultRoot = root;
-			rememberedKey = remember;
+		const adopt = adoptsVault(request.header);
+
+		if (kind === 'sync') {
+			const snapshot = decodeSnapshot(json);
+			if (!snapshot) return t('backup.errorFormat');
+			if (importMode === 'replace' && !confirm(t('backup.confirmReplace'))) return false;
+			// Adopt first: merging needs the sync layer, which needs a vault.
+			if (adopt) await adoptVault(request.header, root, remember);
+			const sync = await enableSync();
+			if (!sync) return t('backup.vault.errorUnexpected');
+			try {
+				if (importMode === 'replace') useRuntime(await sync.replaceWith(snapshot));
+				else await sync.merge(snapshot);
+			} catch (err) {
+				console.error('Merging the encrypted backup failed:', err);
+				return t('backup.vault.errorCorrupt');
+			}
+		} else {
+			const parsed = parseBackupPayload(json);
+			if (!parsed.ok) {
+				return t(parsed.error === 'format' ? 'backup.errorFormat' : 'backup.errorValidation');
+			}
+			if (!(await applyBackup(parsed.data))) return false;
+			if (adopt) await adoptVault(request.header, root, remember);
 		}
 		vaultStatus = 'backup.vault.imported';
 		announcer.announce(t('backup.vault.imported'));

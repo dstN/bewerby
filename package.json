@@ -1,7 +1,7 @@
 {
 	"name": "bewerby",
 	"private": true,
-	"version": "1.6.1",
+	"version": "1.7.0",
 	"type": "module",
 	"engines": {
 		"node": ">=26.0.0"
@@ -47,6 +47,7 @@
 		"dexie": "^4.4.4",
 		"hash-wasm": "^4.12.0",
 		"pdf-lib": "^1.17.1",
-		"pdfjs-dist": "^6.1.200"
+		"pdfjs-dist": "^6.1.200",
+		"yjs": "^13.6.33"
 	}
 }

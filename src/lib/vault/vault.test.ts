@@ -4,7 +4,11 @@ import type { BackupPayload } from '$lib/utils/backup.js';
 import { runArgon2 } from './argon2.js';
 import { formatRecoveryKey, parseRecoveryKey, randomBytes } from './crypto.js';
 import { VaultError, decodeFile, pad, padme, unpad } from './format.js';
-import { createVault, openBackup, readFileHeader, sealBackup, unlock } from './vault.js';
+import { createVault, openFile, readFileHeader, sealFile, unlock } from './vault.js';
+
+const sealBackup = (vault: Parameters<typeof sealFile>[0], data: unknown) =>
+	sealFile(vault, 'backup', data);
+const openBackup = async (bytes: Uint8Array, root: CryptoKey) => (await openFile(bytes, root)).json;
 
 // The real default (64 MiB, t = 3) would take seconds per test; the format
 // and the code paths are the same at any cost setting.

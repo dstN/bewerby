@@ -68,9 +68,15 @@ export interface KeyHeader {
 	recovery: WrappedKey & { salt: string };
 }
 
+export type FileKind = 'backup' | 'sync';
+
 export interface FileHeader extends KeyHeader {
-	/** What the plaintext is. Phase 1 only writes backups (BackupPayload JSON). */
-	kind: 'backup';
+	/**
+	 * What the plaintext is: 'backup' is BackupPayload JSON (#50); 'sync' is a
+	 * Yjs document state with the PDFs it refers to (#52). Every new export of
+	 * a device with a vault is 'sync'; 'backup' files stay readable.
+	 */
+	kind: FileKind;
 	/** The IV of the content encryption. */
 	iv: string;
 }
@@ -83,8 +89,13 @@ export function utf8(text: string): Uint8Array<ArrayBuffer> {
 }
 
 export function toBase64(bytes: Uint8Array): string {
+	// In chunks: PDFs pass through here, and one fromCharCode call per byte
+	// is slow while one call for all of them overflows the argument limit.
+	const chunk = 0x8000;
 	let binary = '';
-	for (const byte of bytes) binary += String.fromCharCode(byte);
+	for (let i = 0; i < bytes.length; i += chunk) {
+		binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
+	}
 	return btoa(binary);
 }
 
@@ -202,10 +213,14 @@ export function parseKeyHeader(value: unknown): KeyHeader {
 }
 
 function parseFileHeader(value: unknown): FileHeader {
-	if (!isRecord(value) || value.kind !== 'backup' || !isB64(value.iv, 12)) {
+	if (
+		!isRecord(value) ||
+		(value.kind !== 'backup' && value.kind !== 'sync') ||
+		!isB64(value.iv, 12)
+	) {
 		throw new VaultError('format');
 	}
-	return { ...parseKeyHeader(value), kind: 'backup', iv: value.iv };
+	return { ...parseKeyHeader(value), kind: value.kind, iv: value.iv };
 }
 
 /**

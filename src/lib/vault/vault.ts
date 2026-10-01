@@ -1,4 +1,3 @@
-import type { BackupPayload } from '$lib/utils/backup.js';
 import {
 	DEFAULT_KDF,
 	RECOVERY_KEY_BYTES,
@@ -24,6 +23,7 @@ import {
 	unpad,
 	utf8,
 	type FileHeader,
+	type FileKind,
 	type KdfParams,
 	type KeyHeader
 } from './format.js';
@@ -99,16 +99,17 @@ export async function unlock(header: KeyHeader, secret: Secret): Promise<CryptoK
 }
 
 /**
- * Encrypts a backup into a self-contained `.bwv` file: the key header rides
+ * Encrypts a payload into a self-contained `.bwv` file: the key header rides
  * along, so the file opens on any device with the passphrase or the
  * recovery key, without anything else.
  */
-export async function sealBackup(
+export async function sealFile(
 	vault: UnlockedVault,
-	payload: BackupPayload
+	kind: FileKind,
+	payload: unknown
 ): Promise<Uint8Array<ArrayBuffer>> {
 	const iv = randomBytes(12);
-	const header: FileHeader = { ...vault.header, kind: 'backup', iv: toBase64(iv) };
+	const header: FileHeader = { ...vault.header, kind, iv: toBase64(iv) };
 	const prefix = encodePrefix(header);
 	const plaintext = pad(await gzip(utf8(JSON.stringify(payload))));
 	const key = await contentKey(vault.root, 'file');
@@ -136,11 +137,14 @@ function stripFileFields(header: FileHeader): KeyHeader {
 }
 
 /**
- * Decrypts a `.bwv` file with an already unlocked root. Returns the backup
- * JSON as text - validating it is parseBackupPayload's job, exactly as for
- * an unencrypted export.
+ * Decrypts a `.bwv` file with an already unlocked root. Returns the payload
+ * JSON as text with its kind - validating it is the caller's job
+ * (parseBackupPayload, decodeSnapshot), exactly as for an unencrypted export.
  */
-export async function openBackup(bytes: Uint8Array, root: CryptoKey): Promise<string> {
+export async function openFile(
+	bytes: Uint8Array,
+	root: CryptoKey
+): Promise<{ kind: FileKind; json: string }> {
 	const { header, aad, ciphertext } = decodeFile(bytes);
 	const key = await contentKey(root, 'file');
 	let plain: Uint8Array<ArrayBuffer>;
@@ -157,7 +161,7 @@ export async function openBackup(bytes: Uint8Array, root: CryptoKey): Promise<st
 	}
 	const json = await gunzip(new Uint8Array(unpad(plain)));
 	try {
-		return new TextDecoder('utf-8', { fatal: true }).decode(json);
+		return { kind: header.kind, json: new TextDecoder('utf-8', { fatal: true }).decode(json) };
 	} catch {
 		throw new VaultError('corrupt');
 	}

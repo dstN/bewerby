@@ -1,30 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { test, expect, type Page } from '@playwright/test';
 import { makeMinimalPdf } from './fixtures/make-pdf.js';
-
-const PASSPHRASE = 'korrekt pferd batterie heftklammer';
-
-/** Runs the setup assistant and returns the recovery key it displayed. */
-async function setUpEncryption(page: Page, remember: boolean): Promise<string> {
-	await page.goto('/backup');
-	await page.getByRole('button', { name: 'Verschlüsselung einrichten' }).click();
-	const dialog = page.getByRole('dialog', { name: 'Verschlüsselung einrichten' });
-	await dialog.getByLabel('Passwort', { exact: true }).fill(PASSPHRASE);
-	await dialog.getByLabel('Passwort wiederholen').fill(PASSPHRASE);
-	if (!remember) await dialog.getByLabel('Schlüssel auf diesem Gerät merken').uncheck();
-	await dialog.getByRole('button', { name: 'Weiter' }).click();
-
-	const recoveryKey = (await dialog.getByTestId('recovery-key').textContent())!.trim();
-	expect(recoveryKey).toMatch(/^([0-9A-Z]{4}-){7}[0-9A-Z]{4}$/);
-	// Confirming with the wrong group is refused, the right one accepted.
-	await dialog.getByLabel('Zur Bestätigung').fill('0000');
-	await dialog.getByRole('button', { name: 'Fertig' }).click();
-	await expect(dialog.getByRole('alert')).toContainText('stimmen nicht');
-	await dialog.getByLabel('Zur Bestätigung').fill(recoveryKey.slice(-4).toLowerCase());
-	await dialog.getByRole('button', { name: 'Fertig' }).click();
-	await expect(dialog).toBeHidden();
-	return recoveryKey;
-}
+import { PASSPHRASE, exportEncrypted, importEncrypted, setUpEncryption } from './fixtures/vault.js';
 
 async function eraseEverything(page: Page) {
 	await page.goto('/settings');
@@ -130,6 +107,79 @@ test.describe('Encrypted backup', () => {
 		await page.reload();
 		await page.getByRole('button', { name: 'Verschlüsselt herunterladen' }).click();
 		await expect(page.getByRole('dialog', { name: 'Passwort für den Export' })).toBeVisible();
+	});
+
+	test('the recovery key has to be confirmed before anything is stored', async ({ page }) => {
+		await page.goto('/backup');
+		await page.getByRole('button', { name: 'Verschlüsselung einrichten' }).click();
+		const dialog = page.getByRole('dialog', { name: 'Verschlüsselung einrichten' });
+		await dialog.getByLabel('Passwort', { exact: true }).fill(PASSPHRASE);
+		await dialog.getByLabel('Passwort wiederholen').fill(PASSPHRASE);
+		await dialog.getByRole('button', { name: 'Weiter' }).click();
+		const recoveryKey = (await dialog.getByTestId('recovery-key').textContent())!.trim();
+		expect(recoveryKey).toMatch(/^([0-9A-Z]{4}-){7}[0-9A-Z]{4}$/);
+
+		await dialog.getByLabel('Zur Bestätigung').fill('0000');
+		await dialog.getByRole('button', { name: 'Fertig' }).click();
+		await expect(dialog.getByRole('alert')).toContainText('stimmen nicht');
+
+		// Closing here leaves no vault behind.
+		await dialog.getByRole('button', { name: 'Schließen' }).click();
+		await page.reload();
+		await expect(page.getByRole('button', { name: 'Verschlüsselung einrichten' })).toBeVisible();
+	});
+
+	test('two devices merge their changes through the file, without duplicates', async ({
+		page,
+		browser
+	}, testInfo) => {
+		const modal = (target: typeof page) => target.locator('dialog.modal-content');
+		async function addApplication(target: typeof page, company: string, notes: string) {
+			await target.goto('/board');
+			await target.getByRole('button', { name: 'Bewerbung hinzufügen' }).click();
+			await modal(target).locator('#title').fill('Entwickler');
+			await modal(target).locator('#company').fill(company);
+			await modal(target).locator('#notes').fill(notes);
+			await modal(target).getByRole('button', { name: 'Speichern' }).click();
+			await expect(modal(target)).toBeHidden();
+		}
+		async function edit(target: typeof page, company: string, field: string, value: string) {
+			await target.goto('/board');
+			await target.locator('.card', { hasText: company }).locator('.card-open-btn').click();
+			await modal(target).locator(field).fill(value);
+			await modal(target).getByRole('button', { name: 'Speichern' }).click();
+			await expect(modal(target)).toBeHidden();
+		}
+
+		// The laptop sets up the vault and has one application.
+		const laptop = page;
+		await setUpEncryption(laptop);
+		await addApplication(laptop, 'Fabrikam AG', 'Erster Satz.');
+		const fromLaptop = await exportEncrypted(laptop);
+
+		// The phone has its own application before it ever sees the vault.
+		const phoneContext = await browser.newContext({ baseURL: testInfo.project.use.baseURL });
+		const phone = await phoneContext.newPage();
+		phone.on('dialog', (dialog) => dialog.accept());
+		await addApplication(phone, 'Northwind GmbH', '');
+		await importEncrypted(phone, fromLaptop);
+		await phone.goto('/board');
+		await expect(phone.locator('.card')).toHaveCount(2);
+
+		// Both edit the shared application while apart.
+		await edit(phone, 'Fabrikam AG', '#notes', 'Erster Satz. Vom Handy.');
+		await edit(laptop, 'Fabrikam AG', '#title', 'Senior Entwickler');
+
+		await importEncrypted(laptop, await exportEncrypted(phone));
+		await laptop.goto('/board');
+		// One Fabrikam, not two; the phone's application came along.
+		await expect(laptop.locator('.card')).toHaveCount(2);
+		const merged = laptop.locator('.card', { hasText: 'Fabrikam AG' });
+		await expect(merged.locator('.card-title')).toHaveText('Senior Entwickler');
+		await merged.locator('.card-open-btn').click();
+		await expect(modal(laptop).locator('#notes')).toHaveValue('Erster Satz. Vom Handy.');
+
+		await phoneContext.close();
 	});
 
 	test('a file that is not an encrypted backup is turned away before any passphrase prompt', async ({

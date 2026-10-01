@@ -8,6 +8,13 @@ export interface StatusHistory {
 
 export interface Application {
 	id?: number;
+	/**
+	 * Stable identity across devices (#52). `id` is this browser's
+	 * autoincrement key and differs on every device; the sync layer matches
+	 * rows by uid. Optional only for rows written before schema v3 or past
+	 * TypeScript (the E2E seed); the v3 upgrade and the repository assign one.
+	 */
+	uid?: string;
 	title: string;
 	company: string;
 	url: string;
@@ -65,16 +72,36 @@ export interface Application {
 	cvName?: string;
 }
 
+/** One persisted Yjs update (see $lib/crdt/runtime.ts); merged on load, compacted now and then. */
+export interface CrdtUpdate {
+	seq?: number;
+	update: Uint8Array;
+}
+
+/**
+ * Which local OPFS file holds the PDF a synced document calls `blobId`.
+ * Blob ids are random and shared by every device of a vault; OPFS names are
+ * per device, exactly as before.
+ */
+export interface BlobLink {
+	blobId: string;
+	ref: string;
+}
+
 /** Pre-v2 shape, kept only so the migration below can read old rows. */
 interface ApplicationV1 extends Omit<Application, 'pdfRef'> {
 	pdfBlob?: Blob;
 }
 
 const APPLICATIONS_SCHEMA = '++id, title, company, priority, status, *tags, createdAt, updatedAt';
+const APPLICATIONS_SCHEMA_V3 =
+	'++id, &uid, title, company, priority, status, *tags, createdAt, updatedAt';
 
 /** Exported (not just the singleton below) so tests can construct isolated instances. */
 export class BewerbyDatabase extends Dexie {
 	applications!: Table<Application>;
+	crdt!: Table<CrdtUpdate, number>;
+	blobs!: Table<BlobLink, string>;
 
 	/** name defaults to the real database; tests pass a unique one for isolation. */
 	constructor(name = 'bewerby-db') {
@@ -118,6 +145,19 @@ export class BewerbyDatabase extends Dexie {
 						delete row.pdfBlob;
 					}
 				});
+			});
+
+		// v3 (#52): a uid on every row, so devices can tell the same application
+		// apart from their own local ids, plus the sync layer's own tables.
+		this.version(3)
+			.stores({ applications: APPLICATIONS_SCHEMA_V3, crdt: '++seq', blobs: 'blobId, &ref' })
+			.upgrade(async (tx) => {
+				await tx
+					.table('applications')
+					.toCollection()
+					.modify((row: Application) => {
+						row.uid ??= crypto.randomUUID();
+					});
 			});
 
 		// Dexie runs an upgrade exactly once, so a row whose OPFS write failed
@@ -170,6 +210,7 @@ export function isValidApplication(value: unknown): value is Application {
 	if (!value || typeof value !== 'object') return false;
 	const app = value as Record<string, unknown>;
 	return (
+		(app.uid === undefined || typeof app.uid === 'string') &&
 		typeof app.title === 'string' &&
 		typeof app.company === 'string' &&
 		typeof app.url === 'string' &&

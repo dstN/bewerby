@@ -11,6 +11,7 @@
 	import { colorStore } from '$lib/stores/colors.svelte.js';
 	import { db } from '$lib/db/index.js';
 	import { cleanupOrphanedPdfs } from '$lib/utils/opfs.js';
+	import { activeSync } from '$lib/crdt/session.js';
 	import { requestPersistentStorage } from '$lib/utils/storage.js';
 	import { announcer } from '$lib/stores/announcer.svelte.js';
 	import { profileStore } from '$lib/stores/profile.svelte.js';
@@ -89,6 +90,9 @@
 		colorStore.init();
 		// Before the orphan sweep: it reads profileStore.cvRef.
 		profileStore.init();
+		// Starts the sync layer on a device with a vault, so rows written while
+		// it was off are adopted before anyone edits; a no-op without one.
+		void activeSync();
 		cleanupOrphanedPdfsOnStartup();
 		requestPersistentStorage();
 		registerBackgroundSyncBestEffort();

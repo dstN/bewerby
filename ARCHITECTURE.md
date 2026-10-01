@@ -6,11 +6,12 @@ short. Written for whoever next touches this code, including future me.
 
 ## Where data lives in the browser
 
-| What                                                                    | Where                                                              | Why there                                                                                                                                                                                                                                                                                                                                                        |
-| ----------------------------------------------------------------------- | ------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Application rows (title, company, status, history, notes, ...)          | IndexedDB, via [Dexie](https://dexie.org/) (`src/lib/db/index.ts`) | Structured, queryable, and reactive - the board, analytics, and reminder engine all subscribe to the same `liveQuery` and update automatically when a row changes.                                                                                                                                                                                               |
-| Attached PDFs                                                           | OPFS (Origin Private File System), via `src/lib/utils/opfs.ts`     | An application row stores only a `pdfRef` (a random filename), not the PDF bytes. Keeping large blobs out of IndexedDB rows means every board/analytics/reminder read - which touches _every_ row - stays cheap regardless of how many or how large the attached PDFs are. Each application row's `pdfRef` points at exactly one file under `application-pdfs/`. |
-| Encrypted-backup keys (wrapped root key, optionally the remembered key) | IndexedDB `bewerby-keys`, via `src/lib/vault/keystore.ts`          | Only exists once encryption is set up. A database of its own rather than a table in `bewerby-db`: key material stays out of every query the board, analytics and reminders run, and erasing it is one `deleteDatabase`. See "Encrypted backups" below.                                                                                                           |
+| What                                                                        | Where                                                              | Why there                                                                                                                                                                                                                                                                                                                                                        |
+| --------------------------------------------------------------------------- | ------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Application rows (title, company, status, history, notes, ...)              | IndexedDB, via [Dexie](https://dexie.org/) (`src/lib/db/index.ts`) | Structured, queryable, and reactive - the board, analytics, and reminder engine all subscribe to the same `liveQuery` and update automatically when a row changes.                                                                                                                                                                                               |
+| Attached PDFs                                                               | OPFS (Origin Private File System), via `src/lib/utils/opfs.ts`     | An application row stores only a `pdfRef` (a random filename), not the PDF bytes. Keeping large blobs out of IndexedDB rows means every board/analytics/reminder read - which touches _every_ row - stays cheap regardless of how many or how large the attached PDFs are. Each application row's `pdfRef` points at exactly one file under `application-pdfs/`. |
+| Sync state on a device with a vault: the Yjs update log and the blob-id map | IndexedDB `bewerby-db`, tables `crdt` and `blobs` (schema v3)      | The document the rows are materialized from (see "Syncing devices" below), kept in the same database so erasure takes it along.                                                                                                                                                                                                                                  |
+| Encrypted-backup keys (wrapped root key, optionally the remembered key)     | IndexedDB `bewerby-keys`, via `src/lib/vault/keystore.ts`          | Only exists once encryption is set up. A database of its own rather than a table in `bewerby-db`: key material stays out of every query the board, analytics and reminders run, and erasing it is one `deleteDatabase`. See "Encrypted backups" below.                                                                                                           |
 
 Nothing else exists: no server database, no account, no first-party or
 third-party analytics. Application data (rows, PDFs, settings) never leaves
@@ -415,6 +416,43 @@ format and the key handling are in
 - The import accepts `application/octet-stream` as well as `.bwv`: iOS greys
   out files whose extension it does not know when only the extension is
   listed.
+
+## Syncing devices: a Yjs document behind the table
+
+On a device with a vault, a Yjs document is the source of truth, and the
+`applications` table is materialized from it. The board, analytics and
+reminders keep reading Dexie through `liveQuery`, unchanged. Decision and
+alternatives: [docs/adr/0002-crdt-yjs.md](docs/adr/0002-crdt-yjs.md).
+
+- **Where it plugs in.** The repository (`src/lib/data/applications.ts`)
+  asks `activeSync()` (`src/lib/crdt/session.ts`) on every write. With a
+  vault, the write goes to `SyncRuntime` (`runtime.ts`), which applies the
+  same rules to the document and then writes the affected rows. Without
+  one, nothing changes and Yjs is never loaded.
+- **Identity.** Schema v3 gives every row a `uid`, because the local `id`
+  differs on every device.
+- **Merge rules** (`schema.ts`): notes and cover letter merge character by
+  character; tags and history keep both devices' additions; other fields
+  resolve to one value. Status follows a history entry only if that entry
+  is newer than the stored status, so two devices moving the same card keep
+  the later move, and old rows whose history stops short of their status
+  keep it.
+- **Deletions are tombstones** (`deleted` in the document). A table row the
+  document does not know is adopted, never deleted. That is how the first
+  start brings every existing row in, and how rows written while sync was
+  off survive.
+- **PDFs** stay in OPFS. Rows refer to them by random blob ids, and the
+  `blobs` table maps those to this device's files.
+- **Persistence**: updates go into the `crdt` table and are merged into one
+  once there are more than 200. Each start replays them and materializes
+  the table, which also repairs a crash in between.
+- **The profile** syncs through a port the profile store registers once it
+  has loaded. Registered earlier, an empty profile could have been taken
+  for the device's and synced out over the real one.
+- **The encrypted file** of a syncing device has kind `sync`: the document
+  state plus the PDFs it refers to. Importing it merges, and two devices
+  can exchange files back and forth without duplicates. "Replace" restores
+  the file's state instead.
 
 ## Security headers
 

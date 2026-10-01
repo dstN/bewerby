@@ -39,7 +39,8 @@ export default defineConfig(
 		// change, and the status-history rule must not depend on each caller
 		// remembering it. Reads stay free.
 		files: ['src/**/*.ts', 'src/**/*.svelte'],
-		ignores: ['src/lib/data/**', 'src/lib/db/**', 'src/**/*.test.ts'],
+		// src/lib/crdt materializes the synced document into the table.
+		ignores: ['src/lib/data/**', 'src/lib/db/**', 'src/lib/crdt/**', 'src/**/*.test.ts'],
 		rules: {
 			'no-restricted-syntax': [
 				'error',
