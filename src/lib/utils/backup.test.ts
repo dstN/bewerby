@@ -244,6 +244,35 @@ describe('backup format versioning', () => {
 		expect(parsed.data.profile).toBeUndefined();
 	});
 
+	it('reads rows whose optional fields an older instance exported as null', () => {
+		// Real 1.5.0 exports carry rows like this - imported long ago, before
+		// rows were validated, with a string id and `appliedAt: null`. The app
+		// reads them fine, so its own export of them has to import again.
+		const legacyRow = {
+			...baseApp({ status: 'sent' }),
+			id: '029e7295-0000-4000-8000-000000000000',
+			appliedAt: null
+		};
+		const parsed = parseBackupPayload(
+			JSON.stringify({ version: 3, exportedAt: Date.now(), applications: [legacyRow], pdfs: {} })
+		);
+
+		expect(parsed.ok).toBe(true);
+		if (!parsed.ok) return;
+		expect(parsed.data.applications[0]).not.toHaveProperty('appliedAt');
+	});
+
+	it('still rejects a row whose required field is null', () => {
+		const parsed = parseBackupPayload(
+			JSON.stringify({
+				version: BACKUP_FORMAT_VERSION,
+				applications: [{ ...baseApp(), title: null }],
+				pdfs: {}
+			})
+		);
+		expect(parsed).toEqual({ ok: false, error: 'validation' });
+	});
+
 	it('rejects a version outside the readable range', () => {
 		const future = JSON.stringify({
 			version: 99,
