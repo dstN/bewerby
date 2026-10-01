@@ -13,6 +13,7 @@
 	import { cleanupOrphanedPdfs } from '$lib/utils/opfs.js';
 	import { activeSync } from '$lib/crdt/session.js';
 	import { syncRunner } from '$lib/sync/runner.svelte.js';
+	import { liveSync } from '$lib/sync/live/live.svelte.js';
 	import { requestPersistentStorage } from '$lib/utils/storage.js';
 	import { announcer } from '$lib/stores/announcer.svelte.js';
 	import { profileStore } from '$lib/stores/profile.svelte.js';
@@ -96,6 +97,8 @@
 		void activeSync();
 		// Syncs with a connected folder or Dropbox while bewerby is open (#53).
 		void syncRunner.start();
+		// Live sync between open devices, if switched on for this one (#55).
+		void liveSync.init();
 		cleanupOrphanedPdfsOnStartup();
 		requestPersistentStorage();
 		registerBackgroundSyncBestEffort();

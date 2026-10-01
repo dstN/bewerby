@@ -505,6 +505,37 @@ are never online at the same time. Decision and alternatives:
   target reads the key header from any file there, asks for the
   passphrase, adopts the vault and merges its own rows in.
 
+## Devices connected directly: pairing and live sync
+
+Two devices can also talk to each other without a cloud in between, over a
+WebRTC data channel (`src/lib/sync/live`). Decision and alternatives:
+[docs/adr/0004-live-sync.md](docs/adr/0004-live-sync.md).
+
+- **Signaling:** `/api/signal` keeps sealed messages as files under
+  `tmp/signal` in the Application Root, because Passenger's workers share
+  only the disk. They live two minutes, and requests long-poll up to 25 s.
+  The server sees room ids and ciphertext, never the data that later flows
+  between the devices.
+- **Adding a device:** the existing device asks for the passphrase or
+  recovery key once - the stored key is non-extractable, so this is what
+  yields the bytes to hand over. It then shows a QR code (a `/pair#p=...`
+  link) and a typed code.
+  - Both devices derive room, signaling key and a six-digit comparison
+    code from the secret and the two DTLS fingerprints.
+  - Only after the user confirms the codes match does the key go over the
+    data channel.
+  - The new device adopts the vault and the documents merge (`link.ts`):
+    state vectors, the missing updates, PDFs in 48 KB chunks.
+- **Live sync**, switched on per device, keeps tabs of one vault in step
+  while they are open at the same time. They find each other in a room
+  derived from the root key. A presence note every 20 seconds and an open
+  long poll are the cost, each request with the IP in the access log -
+  which is why it is off by default.
+- **Network:** STUN comes from the build variable `PUBLIC_STUN_URL` and is
+  empty for now, so devices only find each other on the same network.
+  There is no TURN; when no direct path exists, cloud or folder sync
+  carries the changes.
+
 ## Security headers
 
 Every route is prerendered, and `adapter-node` serves prerendered pages

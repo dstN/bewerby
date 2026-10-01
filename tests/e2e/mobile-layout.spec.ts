@@ -23,7 +23,8 @@ const ROUTES = [
 	'/impressum',
 	'/datenschutz',
 	'/nutzungsbedingungen',
-	'/kontakt'
+	'/kontakt',
+	'/pair'
 ];
 
 /**

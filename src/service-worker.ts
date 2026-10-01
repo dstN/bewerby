@@ -27,7 +27,8 @@ const PRERENDERED_ROUTES = [
 	'/datenschutz',
 	'/nutzungsbedingungen',
 	'/kontakt',
-	'/cloud/callback'
+	'/cloud/callback',
+	'/pair'
 ];
 
 // Assets to precache: built JS/CSS bundles + static files + the above.

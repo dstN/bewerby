@@ -411,10 +411,13 @@ export class SyncRuntime {
 		return Y.encodeStateVector(merged);
 	}
 
-	/** Called after each change made on this device: the transports' cue to push. */
-	onLocalChange(listener: () => void): () => void {
-		const handler = (_update: Uint8Array, origin: unknown) => {
-			if (origin === ORIGIN.local) listener();
+	/**
+	 * Called after each change made on this device, with its update: the
+	 * cue for the transports to push, and what a live link sends as is.
+	 */
+	onLocalChange(listener: (update: Uint8Array) => void): () => void {
+		const handler = (update: Uint8Array, origin: unknown) => {
+			if (origin === ORIGIN.local) listener(update);
 		};
 		this.doc.on('update', handler);
 		return () => this.doc.off('update', handler);

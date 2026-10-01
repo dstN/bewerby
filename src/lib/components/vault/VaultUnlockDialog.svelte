@@ -2,7 +2,7 @@
 	import type { Snippet } from 'svelte';
 	import { t } from '$lib/i18n/index.svelte.js';
 	import { VaultError, type KeyHeader } from '$lib/vault/format.js';
-	import { unlock } from '$lib/vault/vault.js';
+	import { unlockWithBytes } from '$lib/vault/vault.js';
 	import VaultDialog from './VaultDialog.svelte';
 
 	let {
@@ -12,6 +12,7 @@
 		showRemember,
 		note,
 		extra,
+		keepRaw = false,
 		onunlock,
 		onclose
 	}: {
@@ -24,11 +25,20 @@
 		/** Extra controls between the secret and the buttons (the import mode). */
 		extra?: Snippet;
 		/**
+		 * Also hand the root's bytes to onunlock - only for passing the vault
+		 * to a new device (#55); otherwise they are zeroed here.
+		 */
+		keepRaw?: boolean;
+		/**
 		 * Runs with the unlocked root. Resolves with an error message to stay
 		 * open and show it, `false` to stay open silently (a declined
 		 * confirm), anything else to close. A thrown VaultError is shown too.
 		 */
-		onunlock: (root: CryptoKey, remember: boolean) => Promise<string | false | void>;
+		onunlock: (
+			root: CryptoKey,
+			remember: boolean,
+			raw?: Uint8Array
+		) => Promise<string | false | void>;
 		onclose: () => void;
 	} = $props();
 
@@ -61,11 +71,12 @@
 		}
 		busy = true;
 		try {
-			const root = await unlock(
+			const { root, raw } = await unlockWithBytes(
 				header,
 				method === 'passphrase' ? { passphrase: secret } : { recoveryKey: secret }
 			);
-			const result = await onunlock(root, showRemember && remember);
+			if (!keepRaw) raw.fill(0);
+			const result = await onunlock(root, showRemember && remember, keepRaw ? raw : undefined);
 			if (typeof result === 'string') error = result;
 			else if (result !== false) onclose();
 		} catch (err) {

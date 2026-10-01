@@ -48,7 +48,9 @@ const ROUTES: Array<{ path: string; name: string }> = [
 	{ path: '/impressum', name: 'Impressum' },
 	{ path: '/datenschutz', name: 'Datenschutz' },
 	{ path: '/nutzungsbedingungen', name: 'Nutzungsbedingungen' },
-	{ path: '/kontakt', name: 'Kontakt' }
+	{ path: '/kontakt', name: 'Kontakt' },
+	{ path: '/pair', name: 'Pair a device' },
+	{ path: '/cloud/callback', name: 'Sign-in return' }
 ];
 
 type Theme = 'light' | 'dark';

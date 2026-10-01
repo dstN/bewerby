@@ -1,4 +1,6 @@
-import { loadStoredVault } from './keystore.js';
+import { enableSync } from '$lib/crdt/session.js';
+import type { KeyHeader } from './format.js';
+import { loadStoredVault, storeVault } from './keystore.js';
 import type { UnlockedVault } from './vault.js';
 
 /**
@@ -21,6 +23,20 @@ export async function unlockedVault(): Promise<UnlockedVault | null> {
 export function setUnlockedVault(vault: UnlockedVault | null): void {
 	unlocked = vault;
 	for (const listener of listeners) listener();
+}
+
+/**
+ * Makes a vault this device's own: stored (with the key, if it is to be
+ * remembered), unlocked for this visit, and syncing from here on (#52).
+ */
+export async function adoptVault(
+	header: KeyHeader,
+	root: CryptoKey,
+	remember: boolean
+): Promise<void> {
+	await storeVault(header, remember ? root : undefined);
+	await enableSync();
+	setUnlockedVault({ header, root });
 }
 
 /** Called whenever the key becomes available or goes away. */

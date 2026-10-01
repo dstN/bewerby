@@ -17,7 +17,7 @@
 	import { openFile, readFileHeader, sealFile, type UnlockedVault } from '$lib/vault/vault.js';
 	import { activeSync, enableSync, useRuntime } from '$lib/crdt/session.js';
 	import { decodeSnapshot, encodeSnapshot } from '$lib/crdt/snapshot.js';
-	import { setUnlockedVault } from '$lib/vault/session.js';
+	import { adoptVault as adoptVaultForDevice, setUnlockedVault } from '$lib/vault/session.js';
 	import { syncRunner } from '$lib/sync/runner.svelte.js';
 	import { JUST_CONNECTED, SyncState } from '$lib/sync/state.js';
 	import { isFolderSyncSupported, pickSyncFolder } from '$lib/sync/adapters/folder.js';
@@ -31,6 +31,8 @@
 		ONEDRIVE_CLIENT_ID,
 		openStore
 	} from '$lib/sync/targets.js';
+	import { liveSync } from '$lib/sync/live/live.svelte.js';
+	import PairDialog from '$lib/components/vault/PairDialog.svelte';
 	import VaultSetupDialog from '$lib/components/vault/VaultSetupDialog.svelte';
 	import VaultUnlockDialog from '$lib/components/vault/VaultUnlockDialog.svelte';
 
@@ -75,6 +77,10 @@
 	let syncNotice = $state('');
 	let joinHeader = $state.raw<KeyHeader | null>(null);
 	let syncUnlockOpen = $state(false);
+	// Adding a device (#55): the passphrase first, which yields the key bytes
+	// the new device receives, then the pairing dialog.
+	let pairUnlockOpen = $state(false);
+	let pairRaw = $state.raw<Uint8Array | null>(null);
 
 	onMount(() => {
 		loadStoredVault()
@@ -105,12 +111,10 @@
 
 	/** Makes a vault this device's own; from here on it syncs (#52). */
 	async function adoptVault(header: KeyHeader, root: CryptoKey, remember: boolean) {
-		await storeVault(header, remember ? root : undefined);
+		await adoptVaultForDevice(header, root, remember);
 		vaultHeader = header;
 		vaultRoot = root;
 		rememberedKey = remember;
-		await enableSync();
-		setUnlockedVault({ header, root });
 	}
 
 	async function onVaultCreated(vault: UnlockedVault, remember: boolean) {
@@ -713,6 +717,32 @@
 			{#if syncNotice}
 				<div class="status-msg success-msg">{t(syncNotice)}</div>
 			{/if}
+
+			{#if vaultHeader}
+				<div class="device-link">
+					<div class="sync-option">
+						<button class="btn-secondary" onclick={() => (pairUnlockOpen = true)}>
+							{t('pair.addDevice')}
+						</button>
+						<p class="card-desc">{t('pair.addDeviceHint')}</p>
+					</div>
+					<label class="import-mode-option">
+						<input
+							type="checkbox"
+							checked={liveSync.enabled}
+							onchange={(event) => liveSync.setEnabled(event.currentTarget.checked)}
+							aria-describedby="live-hint"
+						/>
+						{t('pair.liveLabel')}
+					</label>
+					<p class="card-desc" id="live-hint">{t('pair.liveHint')}</p>
+					{#if liveSync.peers > 0}
+						<p class="vault-state">
+							{t('pair.livePeers').replace('{count}', String(liveSync.peers))}
+						</p>
+					{/if}
+				</div>
+			{/if}
 		</section>
 	</div>
 </div>
@@ -732,6 +762,24 @@
 		onunlock={(root, remember) => joinedSync(header, root, remember)}
 		onclose={() => (joinHeader = null)}
 	/>
+{/if}
+
+{#if pairUnlockOpen && vaultHeader}
+	<VaultUnlockDialog
+		title={t('pair.unlockTitle')}
+		header={vaultHeader}
+		submitLabel={t('pair.unlockSubmit')}
+		showRemember={false}
+		keepRaw={true}
+		onunlock={async (_root, _remember, raw) => {
+			pairRaw = raw ?? null;
+		}}
+		onclose={() => (pairUnlockOpen = false)}
+	/>
+{/if}
+
+{#if pairRaw && vaultHeader}
+	<PairDialog header={vaultHeader} raw={pairRaw} onclose={() => (pairRaw = null)} />
 {/if}
 
 {#if syncUnlockOpen && vaultHeader}
@@ -866,6 +914,14 @@
 		display: grid;
 		grid-template-columns: 1fr 1fr;
 		gap: 16px;
+	}
+
+	.device-link {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+		padding-top: 16px;
+		border-top: 1px solid var(--border-default);
 	}
 
 	.sync-option {

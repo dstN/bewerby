@@ -383,7 +383,9 @@
 			"syncDropboxBody": "Über Dropbox: Wenn du dein Dropbox-Konto verbindest, sendet dein Browser die verschlüsselten Dateien direkt an Dropbox, in einen eigenen App-Ordner. bewerby erhält dabei nur Zugriff auf diesen App-Ordner, nicht auf deine übrigen Dateien. Dropbox verarbeitet die Dateien als dein Vertragspartner nach den Bedingungen deines Dropbox-Kontos; dabei fallen bei Dropbox auch deine IP-Adresse sowie Zeitpunkt, Name und Größe der Dateien an. Dropbox kann Daten in die USA übermitteln. Da die Dateien Ende-zu-Ende-verschlüsselt sind, kann Dropbox ihren Inhalt nicht lesen. Die Anmeldung findet auf der Website von Dropbox statt. Das Zugriffsrecht, das bewerby dabei erhält, wird nur im Speicher deines Browsers abgelegt (IndexedDB, Datenbank „bewerby-db“) und beim Trennen bei Dropbox widerrufen. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO, da die Synchronisation ausschließlich auf deine Anforderung hin erfolgt.",
 			"syncOneDriveBody": "Über OneDrive: Wenn du dein Microsoft-Konto verbindest, sendet dein Browser die verschlüsselten Dateien direkt an Microsoft, in einen eigenen App-Ordner. bewerby erhält dabei nur Zugriff auf diesen App-Ordner, nicht auf deine übrigen Dateien. Microsoft verarbeitet die Dateien als dein Vertragspartner nach den Bedingungen deines Microsoft-Kontos; dabei fallen bei Microsoft auch deine IP-Adresse sowie Zeitpunkt, Name und Größe der Dateien an. Microsoft kann Daten in die USA übermitteln. Den Inhalt der Dateien kann Microsoft nicht lesen. Die Zugriffsberechtigung, die bewerby erhält, liegt nur im Speicher deines Browsers und gilt höchstens 24 Stunden; danach meldest du dich erneut an. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO.",
 			"syncGoogleBody": "Über Google Drive: Wenn du dein Google-Konto verbindest, sendet dein Browser die verschlüsselten Dateien direkt an Google, in einen versteckten App-Ordner, auf den nur bewerby zugreifen kann. Google verarbeitet die Dateien als dein Vertragspartner nach den Bedingungen deines Google-Kontos; dabei fallen bei Google auch deine IP-Adresse sowie Zeitpunkt, Name und Größe der Dateien an. Google kann Daten in die USA übermitteln. Den Inhalt der Dateien kann Google nicht lesen. Anders als die anderen Anbieter verlangt Google, dass der Anmeldecode und später die Erneuerung der Zugriffsberechtigung über einen Server mit einem geheimen Schlüssel laufen. Diese Anfragen gehen deshalb über den Server von bewerby.de (Pfad „/api/oauth/google“): Er ergänzt den Schlüssel, leitet die Anfrage an Google weiter und gibt die Antwort an deinen Browser zurück. Der einmalige Anmeldecode und die Zugriffsberechtigung laufen dabei durch den Server, werden aber weder gespeichert noch protokolliert. Sie stehen im Anfragetext, nicht in der Adresse, so dass in den Zugriffsprotokollen des Webservers nur der Aufruf mit IP-Adresse und Zeitpunkt erscheint. Zum Schutz vor Missbrauch zählt der Server die Anfragen je IP-Adresse höchstens eine Stunde lang im Arbeitsspeicher. Die Zugriffsberechtigung reicht nur bis zu dem App-Ordner, der ausschließlich verschlüsselte Dateien enthält. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO.",
-			"syncReturnBody": "Nach der Anmeldung leitet dich der Anbieter auf die Seite „/cloud/callback“ von bewerby.de zurück. Ist bewerby auf deinem Gerät bereits geladen, beantwortet die Anwendung diese Seite selbst, ohne den Server zu kontaktieren; Microsoft übergibt den Anmeldecode zudem in einem Teil der Adresse, den Browser nie an einen Server senden. Andernfalls erscheint der Aufruf wie jeder andere in den Zugriffsprotokollen des Webservers, einschließlich eines einmal verwendbaren Anmeldecodes, der ohne einen nur in deinem Browser vorhandenen Prüfwert wertlos ist. Diesen Prüfwert legt bewerby für die Dauer der Anmeldung im sessionStorage deines Browsers ab (Schlüssel „bewerby-oauth“) und löscht ihn danach."
+			"syncReturnBody": "Nach der Anmeldung leitet dich der Anbieter auf die Seite „/cloud/callback“ von bewerby.de zurück. Ist bewerby auf deinem Gerät bereits geladen, beantwortet die Anwendung diese Seite selbst, ohne den Server zu kontaktieren; Microsoft übergibt den Anmeldecode zudem in einem Teil der Adresse, den Browser nie an einen Server senden. Andernfalls erscheint der Aufruf wie jeder andere in den Zugriffsprotokollen des Webservers, einschließlich eines einmal verwendbaren Anmeldecodes, der ohne einen nur in deinem Browser vorhandenen Prüfwert wertlos ist. Diesen Prüfwert legt bewerby für die Dauer der Anmeldung im sessionStorage deines Browsers ab (Schlüssel „bewerby-oauth“) und löscht ihn danach.",
+			"liveTitle": "Geräte direkt verbinden (optional)",
+			"liveBody": "Fügst du ein Gerät per QR-Code hinzu oder schaltest du den Live-Abgleich ein, bauen deine Geräte eine direkte, verschlüsselte Verbindung zueinander auf (WebRTC). Um sich zu finden, tauschen sie über den Server von bewerby.de (Pfad „/api/signal“) Verbindungsdaten aus. Diese sind mit einem Schlüssel verschlüsselt, den nur deine Geräte kennen; der Server kann sie nicht lesen und speichert sie höchstens zwei Minuten. Die Aufrufe erscheinen mit IP-Adresse und Zeitpunkt in den Zugriffsprotokollen des Webservers; zum Schutz vor Missbrauch zählt der Server die Anfragen je IP-Adresse höchstens eine Stunde lang im Arbeitsspeicher. Deine Bewerbungen selbst gehen danach direkt von Gerät zu Gerät, nicht über den Server. Für die direkte Verbindung erfahren deine Geräte gegenseitig ihre IP-Adressen. Ohne weitere Hilfe finden sich Geräte nur im selben Netzwerk; für Verbindungen über verschiedene Netze wird ein STUN-Server eingesetzt, sobald einer eingerichtet ist. Dessen Betreiber erfährt dann die öffentliche IP-Adresse deiner Geräte und wird an dieser Stelle genannt. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO."
 		},
 		"nutzungsbedingungen": {
 			"title": "Nutzungsbedingungen",
@@ -558,5 +560,39 @@
 		"connectOneDriveHint": "bewerby erhält nur Zugriff auf einen eigenen App-Ordner in deinem OneDrive. Microsoft verlangt etwa einmal am Tag eine kurze erneute Anmeldung, meist ohne Eingabe.",
 		"connectGoogle": "Mit Google Drive verbinden",
 		"connectGoogleHint": "bewerby erhält nur Zugriff auf einen versteckten App-Ordner in deinem Google Drive, nicht auf deine Dateien. Die Anmeldung läuft dabei über den Server von bewerby.de, weil Google es nicht anders zulässt; er speichert nichts."
+	},
+	"pair": {
+		"addDevice": "Gerät hinzufügen",
+		"addDeviceHint": "Verbinde ein weiteres Gerät direkt mit diesem, ohne dort dein Passwort einzugeben.",
+		"unlockTitle": "Gerät hinzufügen: Passwort bestätigen",
+		"unlockSubmit": "Weiter",
+		"title": "Gerät hinzufügen",
+		"scan": "Scanne den Code mit der Kamera des neuen Geräts oder öffne dort diesen Link:",
+		"qrLabel": "QR-Code mit dem Link zum Verbinden",
+		"copyLink": "Link kopieren",
+		"linkCopied": "Link kopiert.",
+		"typeCode": "Oder öffne auf dem neuen Gerät bewerby.de/pair und gib diesen Code ein:",
+		"waiting": "Warte auf das neue Gerät …",
+		"compare": "Steht auf dem neuen Gerät ({peer}) derselbe Code?",
+		"matches": "Ja, derselbe Code",
+		"differs": "Nein, abbrechen",
+		"sending": "Schlüssel und Bewerbungen werden übertragen …",
+		"done": "Das Gerät ist verbunden.",
+		"failed": "Das Verbinden hat nicht geklappt. Es wurde nichts übertragen. Versuche es noch einmal.",
+		"privacyNote": "Die Geräte tauschen über bewerby.de nur verschlüsselte Verbindungsdaten aus. Deine Bewerbungen gehen direkt von Gerät zu Gerät.",
+		"joinTitle": "Mit einem anderen Gerät verbinden",
+		"joinIntro": "Öffne auf deinem anderen Gerät „Backup & Sync“, wähle „Gerät hinzufügen“ und scanne den QR-Code – oder gib hier den Code ein, der dort steht.",
+		"codeLabel": "Code",
+		"join": "Verbinden",
+		"codeInvalid": "Dieser Code ist nicht vollständig.",
+		"connecting": "Verbinde mit deinem anderen Gerät …",
+		"compareGuest": "Prüfe, ob auf deinem anderen Gerät derselbe Code steht, und bestätige es dort:",
+		"syncing": "Verbunden. Deine Bewerbungen werden übertragen …",
+		"joinedDone": "Fertig. Dieses Gerät verwendet jetzt denselben Schlüssel und gleicht sich ab.",
+		"toBoard": "Zum Board",
+		"joinFailed": "Das Verbinden hat nicht geklappt. Prüfe, ob auf dem anderen Gerät „Gerät hinzufügen“ noch geöffnet ist, und versuche es erneut.",
+		"liveLabel": "Live-Abgleich, wenn mehrere Geräte gleichzeitig geöffnet sind",
+		"liveHint": "Gleicht Änderungen sofort direkt zwischen deinen Geräten ab. Solange er an ist, meldet sich dieses Gerät etwa alle 20 Sekunden verschlüsselt bei bewerby.de, damit deine anderen Geräte es finden; dabei wird wie bei jedem Aufruf die IP-Adresse protokolliert.",
+		"livePeers": "Live verbunden mit {count} Gerät(en)."
 	}
 }

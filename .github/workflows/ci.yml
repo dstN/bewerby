@@ -29,6 +29,7 @@ jobs:
       PUBLIC_DROPBOX_APP_KEY: ${{ vars.PUBLIC_DROPBOX_APP_KEY }}
       PUBLIC_MS_CLIENT_ID: ${{ vars.PUBLIC_MS_CLIENT_ID }}
       PUBLIC_GOOGLE_CLIENT_ID: ${{ vars.PUBLIC_GOOGLE_CLIENT_ID }}
+      PUBLIC_STUN_URL: ${{ vars.PUBLIC_STUN_URL }}
     steps:
       - uses: actions/checkout@v7
 

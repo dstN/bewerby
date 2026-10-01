@@ -81,6 +81,20 @@ export async function createVault(
 
 /** Throws VaultError('secret') when the passphrase or recovery key does not fit. */
 export async function unlock(header: KeyHeader, secret: Secret): Promise<CryptoKey> {
+	const { root, raw } = await unlockWithBytes(header, secret);
+	raw.fill(0);
+	return root;
+}
+
+/**
+ * Like unlock, but hands back the root secret's bytes as well - only for
+ * passing the vault to a new device (#55), since the stored key cannot be
+ * exported. The caller must zero `raw` once it is sent.
+ */
+export async function unlockWithBytes(
+	header: KeyHeader,
+	secret: Secret
+): Promise<{ root: CryptoKey; raw: Uint8Array<ArrayBuffer> }> {
 	let root: Uint8Array<ArrayBuffer>;
 	if ('passphrase' in secret) {
 		const kek = await passphraseKek(secret.passphrase, header.kdf);
@@ -91,11 +105,7 @@ export async function unlock(header: KeyHeader, secret: Secret): Promise<CryptoK
 		const kek = await recoveryKek(recovery, fromBase64(header.recovery.salt));
 		root = await unwrapRoot(header.recovery, kek, slotAad(header, 'recovery'));
 	}
-	try {
-		return await importRoot(root);
-	} finally {
-		root.fill(0);
-	}
+	return { root: await importRoot(root), raw: root };
 }
 
 /**

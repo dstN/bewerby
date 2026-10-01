@@ -174,6 +174,15 @@ in the repository or in GitHub: `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`.
 Without them the broker answers 503 and Google Drive cannot be connected;
 nothing else is affected.
 
+**Live sync between devices** (#55) needs nothing to set up. Signaling
+messages are files under `tmp/signal/` in the Application Root - outside
+the Document Root, so never reachable from the web - created on first use
+and gone after two minutes; `SIGNAL_DIR` in the Node app's environment moves
+them elsewhere. The directory does not need to survive a deploy. For
+devices on different networks, set the repository variable
+`PUBLIC_STUN_URL` (for example `stun:stun.example.org:3478`) once a STUN
+operator is chosen, and name that operator in the privacy policy.
+
 Redirect URIs to register with each provider:
 `https://bewerby.de/cloud/callback` and, for local development,
 `http://localhost:5173/cloud/callback`.

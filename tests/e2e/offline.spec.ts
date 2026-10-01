@@ -9,7 +9,9 @@ const ROUTES = [
 	'/impressum',
 	'/datenschutz',
 	'/nutzungsbedingungen',
-	'/kontakt'
+	'/kontakt',
+	'/pair',
+	'/cloud/callback'
 ];
 
 test.describe('Offline hard reload', () => {

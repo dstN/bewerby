@@ -138,6 +138,32 @@ export async function contentKey(root: CryptoKey, purpose: KeyPurpose): Promise<
 const CROCKFORD = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
 export const RECOVERY_KEY_BYTES = 20;
 
+/** Any bytes as Crockford characters, ungrouped. */
+export function toCrockford(bytes: Uint8Array): string {
+	return formatRecoveryKey(bytes).replace(/-/g, '');
+}
+
+/** The inverse of toCrockford for exactly `length` bytes; null otherwise. */
+export function fromCrockford(text: string, length: number): Uint8Array<ArrayBuffer> | null {
+	const clean = normalizeRecoveryInput(text);
+	if (clean.length !== Math.ceil((length * 8) / 5)) return null;
+	const out = new Uint8Array(length);
+	let bits = 0;
+	let value = 0;
+	let index = 0;
+	for (const char of clean) {
+		const digit = CROCKFORD.indexOf(char);
+		if (digit < 0) return null;
+		value = ((value << 5) | digit) & 0xffff;
+		bits += 5;
+		if (bits >= 8 && index < length) {
+			out[index++] = (value >>> (bits - 8)) & 0xff;
+			bits -= 8;
+		}
+	}
+	return out;
+}
+
 /** 20 bytes as 32 Crockford characters in groups of four: ABCD-EFGH-… */
 export function formatRecoveryKey(bytes: Uint8Array): string {
 	let bits = 0;
@@ -165,24 +191,7 @@ export function normalizeRecoveryInput(text: string): string {
 
 /** Strict on length; null when the text cannot be a recovery key at all. */
 export function parseRecoveryKey(text: string): Uint8Array<ArrayBuffer> | null {
-	const clean = normalizeRecoveryInput(text);
-	if (clean.length !== Math.ceil((RECOVERY_KEY_BYTES * 8) / 5)) return null;
-
-	const out = new Uint8Array(RECOVERY_KEY_BYTES);
-	let bits = 0;
-	let value = 0;
-	let index = 0;
-	for (const char of clean) {
-		const digit = CROCKFORD.indexOf(char);
-		if (digit < 0) return null;
-		value = ((value << 5) | digit) & 0xffff;
-		bits += 5;
-		if (bits >= 8) {
-			out[index++] = (value >>> (bits - 8)) & 0xff;
-			bits -= 8;
-		}
-	}
-	return out;
+	return fromCrockford(text, RECOVERY_KEY_BYTES);
 }
 
 export async function gzip(data: Uint8Array<ArrayBuffer>): Promise<Uint8Array<ArrayBuffer>> {

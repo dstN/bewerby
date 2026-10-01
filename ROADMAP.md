@@ -591,17 +591,17 @@ Fixtures werden als **pseudonymisiertes Zeilenmodell** eingecheckt (JSON mit Sei
 
 Setzt die beiden Backlog-Epics #36 (verschlüsselte Cloud-Ablage) und #41 (Live-Sync von Gerät zu Gerät) gemeinsam um. Es gibt ein Datenmodell (Yjs-CRDT) und drei Transportwege: Cloud-Anbieter, WebRTC direkt zwischen den Geräten und eine verschlüsselte Datei. Ver- und entschlüsselt wird ausschließlich im Browser. Anbieter, bewerby.de, das Signaling und STUN sehen nie Klartext oder Schlüssel. Bedrohungsmodell, Krypto-Design, Anbieterwahl und was Dustin vorab liefern muss: [Plan](docs/e2e-sync-plan.md).
 
-| #   | Aufgabe                                                                         | Labels                                          | Issue                                            |
-| :-- | :------------------------------------------------------------------------------ | :---------------------------------------------- | :----------------------------------------------- |
-| 49  | Sync-Vorarbeiten: Anbieter-Prototypen, Passenger-Signaling, Argon2-Kalibrierung | `dx` `architecture`                             | [#49](https://github.com/dstN/bewerby/issues/49) |
-| 50  | ✅ Krypto-Kern und verschlüsselte Sicherungsdatei (.bwv)                        | `enhancement` `security` `dsgvo` `a11y`         | [#50](https://github.com/dstN/bewerby/issues/50) |
-| 51  | ✅ Repository-Schicht: alle Schreibzugriffe über `src/lib/data`                 | `refactoring` `architecture`                    | [#51](https://github.com/dstN/bewerby/issues/51) |
-| 52  | ✅ CRDT-Schicht mit Yjs: verlustfreies Zusammenführen                           | `enhancement` `architecture`                    | [#52](https://github.com/dstN/bewerby/issues/52) |
-| 53  | 🟡 Cloud-Transport, Ordner-Adapter und Dropbox (Dropbox wartet auf #49)         | `enhancement` `security` `dsgvo`                | [#53](https://github.com/dstN/bewerby/issues/53) |
-| 54  | 🟡 OneDrive und Google Drive (Token-Broker) (wartet auf #49)                    | `enhancement` `security` `dsgvo`                | [#54](https://github.com/dstN/bewerby/issues/54) |
-| 55  | Live-Sync von Gerät zu Gerät per WebRTC und QR-Pairing                          | `enhancement` `security` `dsgvo` `architecture` | [#55](https://github.com/dstN/bewerby/issues/55) |
-| 56  | Geräteverwaltung, Schlüsselrotation und Löschrecht für Sync                     | `enhancement` `security` `dsgvo`                | [#56](https://github.com/dstN/bewerby/issues/56) |
-| 57  | Weitere Sync-Anbieter (S3-kompatibel, pCloud) und Härtung                       | `enhancement` `security` `dx`                   | [#57](https://github.com/dstN/bewerby/issues/57) |
+| #   | Aufgabe                                                                               | Labels                                          | Issue                                            |
+| :-- | :------------------------------------------------------------------------------------ | :---------------------------------------------- | :----------------------------------------------- |
+| 49  | Sync-Vorarbeiten: Anbieter-Prototypen, Passenger-Signaling, Argon2-Kalibrierung       | `dx` `architecture`                             | [#49](https://github.com/dstN/bewerby/issues/49) |
+| 50  | ✅ Krypto-Kern und verschlüsselte Sicherungsdatei (.bwv)                              | `enhancement` `security` `dsgvo` `a11y`         | [#50](https://github.com/dstN/bewerby/issues/50) |
+| 51  | ✅ Repository-Schicht: alle Schreibzugriffe über `src/lib/data`                       | `refactoring` `architecture`                    | [#51](https://github.com/dstN/bewerby/issues/51) |
+| 52  | ✅ CRDT-Schicht mit Yjs: verlustfreies Zusammenführen                                 | `enhancement` `architecture`                    | [#52](https://github.com/dstN/bewerby/issues/52) |
+| 53  | 🟡 Cloud-Transport, Ordner-Adapter und Dropbox (Dropbox wartet auf #49)               | `enhancement` `security` `dsgvo`                | [#53](https://github.com/dstN/bewerby/issues/53) |
+| 54  | 🟡 OneDrive und Google Drive (Token-Broker) (wartet auf #49)                          | `enhancement` `security` `dsgvo`                | [#54](https://github.com/dstN/bewerby/issues/54) |
+| 55  | 🟡 Live-Sync von Gerät zu Gerät per WebRTC und QR-Pairing (Produktion wartet auf #49) | `enhancement` `security` `dsgvo` `architecture` | [#55](https://github.com/dstN/bewerby/issues/55) |
+| 56  | Geräteverwaltung, Schlüsselrotation und Löschrecht für Sync                           | `enhancement` `security` `dsgvo`                | [#56](https://github.com/dstN/bewerby/issues/56) |
+| 57  | Weitere Sync-Anbieter (S3-kompatibel, pCloud) und Härtung                             | `enhancement` `security` `dx`                   | [#57](https://github.com/dstN/bewerby/issues/57) |
 
 Reihenfolge der Umsetzung:
 

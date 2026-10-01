@@ -383,7 +383,9 @@
 			"syncDropboxBody": "Through Dropbox: if you connect your Dropbox account, your browser sends the encrypted files directly to Dropbox, into an app folder of their own. bewerby only gets access to that app folder, not to your other files. Dropbox processes the files as your contractual partner under the terms of your Dropbox account; in doing so, Dropbox also receives your IP address and the time, name and size of the files. Dropbox may transfer data to the USA. As the files are end-to-end encrypted, Dropbox cannot read their content. You sign in on Dropbox's website. The access right bewerby receives is stored only in your browser's storage (IndexedDB, database “bewerby-db”) and revoked at Dropbox when you disconnect. The legal basis is Art. 6(1)(b) GDPR, as syncing happens only at your request.",
 			"syncOneDriveBody": "Through OneDrive: if you connect your Microsoft account, your browser sends the encrypted files directly to Microsoft, into an app folder of their own. bewerby only gets access to that app folder, not to your other files. Microsoft processes the files as your contractual partner under the terms of your Microsoft account; in doing so, Microsoft also receives your IP address and the time, name and size of the files. Microsoft may transfer data to the USA. Microsoft cannot read the files' content. The access right bewerby receives is stored only in your browser and lasts at most 24 hours; after that you sign in again. The legal basis is Art. 6(1)(b) GDPR.",
 			"syncGoogleBody": "Through Google Drive: if you connect your Google account, your browser sends the encrypted files directly to Google, into a hidden app folder only bewerby can access. Google processes the files as your contractual partner under the terms of your Google account; in doing so, Google also receives your IP address and the time, name and size of the files. Google may transfer data to the USA. Google cannot read the files' content. Unlike the other providers, Google requires the sign-in code, and later the renewal of the access right, to go through a server holding a secret key. These requests therefore pass through the bewerby.de server (path “/api/oauth/google”): it adds the key, forwards the request to Google and returns the answer to your browser. The single-use sign-in code and the access right pass through the server but are neither stored nor logged. They are sent in the request body, not in the address, so the web server's access logs show only the request with IP address and time. To prevent abuse, the server counts requests per IP address in memory for at most one hour. The access right reaches only the app folder, which holds nothing but encrypted files. The legal basis is Art. 6(1)(b) GDPR.",
-			"syncReturnBody": "After you sign in, the provider sends you back to the page “/cloud/callback” on bewerby.de. If bewerby is already loaded on your device, the application answers that page itself, without contacting the server; Microsoft additionally passes the sign-in code in a part of the address browsers never send to a server. Otherwise the request appears in the web server's access logs like any other, including a single-use sign-in code that is worthless without a check value that exists only in your browser. bewerby keeps that check value in your browser's sessionStorage for the duration of the sign-in (key “bewerby-oauth”) and deletes it afterwards."
+			"syncReturnBody": "After you sign in, the provider sends you back to the page “/cloud/callback” on bewerby.de. If bewerby is already loaded on your device, the application answers that page itself, without contacting the server; Microsoft additionally passes the sign-in code in a part of the address browsers never send to a server. Otherwise the request appears in the web server's access logs like any other, including a single-use sign-in code that is worthless without a check value that exists only in your browser. bewerby keeps that check value in your browser's sessionStorage for the duration of the sign-in (key “bewerby-oauth”) and deletes it afterwards.",
+			"liveTitle": "Connecting devices directly (optional)",
+			"liveBody": "If you add a device by QR code or switch on live sync, your devices set up a direct, encrypted connection to each other (WebRTC). To find each other, they exchange connection data through the bewerby.de server (path “/api/signal”). That data is encrypted with a key only your devices know; the server cannot read it and keeps it for at most two minutes. The requests appear with IP address and time in the web server's access logs; to prevent abuse, the server counts requests per IP address in memory for at most one hour. Your applications themselves then go directly from device to device, not through the server. For the direct connection, your devices learn each other's IP addresses. Without further help, devices only find each other on the same network; for connections across networks a STUN server is used once one is set up. Its operator then learns the public IP address of your devices and will be named here. The legal basis is Art. 6(1)(b) GDPR."
 		},
 		"nutzungsbedingungen": {
 			"title": "Terms of Use",
@@ -558,5 +560,39 @@
 		"connectOneDriveHint": "bewerby only gets access to an app folder of its own in your OneDrive. Microsoft asks for a short new sign-in about once a day, usually without typing anything.",
 		"connectGoogle": "Connect Google Drive",
 		"connectGoogleHint": "bewerby only gets access to a hidden app folder in your Google Drive, not to your files. Signing in goes through bewerby.de's server, because Google allows no other way; it stores nothing."
+	},
+	"pair": {
+		"addDevice": "Add device",
+		"addDeviceHint": "Connect another device directly to this one, without typing your passphrase there.",
+		"unlockTitle": "Add device: confirm your passphrase",
+		"unlockSubmit": "Continue",
+		"title": "Add device",
+		"scan": "Scan the code with the new device's camera, or open this link there:",
+		"qrLabel": "QR code with the link for connecting",
+		"copyLink": "Copy link",
+		"linkCopied": "Link copied.",
+		"typeCode": "Or open bewerby.de/pair on the new device and enter this code:",
+		"waiting": "Waiting for the new device …",
+		"compare": "Does the new device ({peer}) show the same code?",
+		"matches": "Yes, the same code",
+		"differs": "No, cancel",
+		"sending": "Transferring the key and your applications …",
+		"done": "The device is connected.",
+		"failed": "Connecting did not work. Nothing was transferred. Please try again.",
+		"privacyNote": "The devices only exchange encrypted connection data through bewerby.de. Your applications go directly from device to device.",
+		"joinTitle": "Connect to another device",
+		"joinIntro": "On your other device, open “Backup & Sync”, choose “Add device” and scan the QR code - or enter the code shown there.",
+		"codeLabel": "Code",
+		"join": "Connect",
+		"codeInvalid": "This code is incomplete.",
+		"connecting": "Connecting to your other device …",
+		"compareGuest": "Check that your other device shows the same code, and confirm it there:",
+		"syncing": "Connected. Transferring your applications …",
+		"joinedDone": "Done. This device now uses the same key and keeps in step.",
+		"toBoard": "Go to the board",
+		"joinFailed": "Connecting did not work. Check that “Add device” is still open on the other device, and try again.",
+		"liveLabel": "Live sync while several devices are open at once",
+		"liveHint": "Brings changes across between your devices straight away. While it is on, this device checks in with bewerby.de, encrypted, about every 20 seconds so your other devices can find it; like every request, this logs the IP address.",
+		"livePeers": "Live-connected to {count} device(s)."
 	}
 }

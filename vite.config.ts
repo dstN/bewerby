@@ -12,7 +12,11 @@ const pkg = JSON.parse(readFileSync('./package.json', 'utf-8'));
 const syncClients = {
 	dropbox: process.env.PUBLIC_DROPBOX_APP_KEY ?? '',
 	onedrive: process.env.PUBLIC_MS_CLIENT_ID ?? '',
-	google: process.env.PUBLIC_GOOGLE_CLIENT_ID ?? ''
+	google: process.env.PUBLIC_GOOGLE_CLIENT_ID ?? '',
+	// For live sync between devices (#55): e.g. stun:stun.example.org:3478.
+	// WebRTC is not governed by connect-src, so nothing to add to the CSP.
+	// Empty: devices only find each other on the same network.
+	stun: process.env.PUBLIC_STUN_URL ?? ''
 };
 const syncOrigins: `https://${string}.${string}`[] = [
 	...(syncClients.dropbox

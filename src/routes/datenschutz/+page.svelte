@@ -126,6 +126,11 @@
 		<p>{t('legal.datenschutz.syncReturnBody')}</p>
 	</section>
 
+	<section class="legal-card" id="geraete">
+		<h2>{t('legal.datenschutz.liveTitle')}</h2>
+		<p>{t('legal.datenschutz.liveBody')}</p>
+	</section>
+
 	<section class="legal-card" id="kontaktformular">
 		<h2>{t('legal.datenschutz.contactFormTitle')}</h2>
 		<p>{t('legal.datenschutz.contactFormBody')}</p>

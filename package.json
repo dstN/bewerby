@@ -1,7 +1,7 @@
 {
 	"name": "bewerby",
 	"private": true,
-	"version": "1.9.0",
+	"version": "1.10.0",
 	"type": "module",
 	"engines": {
 		"node": ">=26.0.0"
@@ -48,6 +48,7 @@
 		"hash-wasm": "^4.12.0",
 		"pdf-lib": "^1.17.1",
 		"pdfjs-dist": "^6.1.200",
+		"qrcode-generator": "^2.0.4",
 		"yjs": "^13.6.33"
 	}
 }

@@ -47,6 +47,9 @@ all running in your browser, with your application data never leaving it.
   sync client keeps in step (Nextcloud, iCloud for Windows, Proton Drive,
   Syncthing) or through Dropbox, OneDrive or Google Drive, which only ever
   see ciphertext in an app folder of their own.
+- Add a device by QR code without typing the passphrase on it, and keep
+  devices that are open at the same time in step live, over a direct
+  WebRTC connection.
 - Backup & restore: JSON export/import (attached PDFs included), plus an
   optional local-directory dump via the File System Access API.
 - Follow-up reminders via the Notifications API - a fixed interval, or a
