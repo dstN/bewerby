@@ -44,6 +44,29 @@ clearly-labeled placeholder for a _planned_, not yet implemented,
 end-to-end-encrypted sync feature - see the Backlog section of
 [ROADMAP.md](ROADMAP.md).
 
+## One write path for application rows
+
+Every write to `applications` goes through `src/lib/data/applications.ts`:
+`createApplication`, `updateApplication`, `removeApplication` and
+`importApplications`. That covers the edit dialog, the board's moves and
+deletes, the dispatch dialog and the backup import. Reads stay free, and
+`liveQuery` keeps working unchanged.
+
+There are two reasons for it. First, the rules that used to live in each
+caller now live in one place:
+
+- a changed status is appended to `history`
+- a move drops an entered rejection date unless the caller sets one
+- `updatedAt` is set on every write
+- an update that matches no row throws instead of resolving like a
+  successful write (Dexie's own `update()` resolves with 0)
+
+Second, it gives the sync layer (#52) exactly one place to see every change.
+An ESLint `no-restricted-syntax` rule in `eslint.config.js` fails the build
+on any `db.applications` write or `db.transaction` outside `src/lib/data`
+and `src/lib/db`. The profile and colour stores need no such layer: their
+store methods already are the only way to change them.
+
 ## Importing a job ad: three routes, one parser
 
 A posting reaches the form three ways, and all of them converge on

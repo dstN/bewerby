@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { t } from '$lib/i18n/index.svelte.js';
 	import { db } from '$lib/db/index.js';
+	import { importApplications } from '$lib/data/applications.js';
 	import { readPdfFromOpfs, writePdfToOpfs } from '$lib/utils/opfs.js';
 	import {
 		buildBackupPayload,
@@ -216,15 +217,7 @@
 			writePdfToOpfs
 		);
 
-		// The whole write happens in one transaction, so a failure partway
-		// through (e.g. a bulkAdd constraint error) rolls back completely
-		// instead of leaving the database half-cleared and half-imported.
-		await db.transaction('rw', db.applications, async () => {
-			if (importMode === 'replace') {
-				await db.applications.clear();
-			}
-			await db.applications.bulkAdd(rowsToInsert);
-		});
+		await importApplications(rowsToInsert, importMode);
 
 		// Only after the rows are committed, and only on a replace - merging
 		// into an existing setup must not silently overwrite the sender

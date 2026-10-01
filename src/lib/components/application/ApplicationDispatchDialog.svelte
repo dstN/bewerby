@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { onMount, untrack } from 'svelte';
 	import { i18n, t } from '$lib/i18n/index.svelte.js';
-	import { db, type Application } from '$lib/db/index.js';
+	import type { Application } from '$lib/db/index.js';
+	import { updateApplication } from '$lib/data/applications.js';
 	import { profileStore } from '$lib/stores/profile.svelte.js';
 	import { announcer } from '$lib/stores/announcer.svelte.js';
 	import { validatePdfFile, PdfProcessingError, type PdfErrorCode } from '$lib/utils/pdf.js';
@@ -140,15 +141,9 @@
 		if (!application.id) {
 			throw new Error('The application has no id, so there is no row to update.');
 		}
-		const changed = await db.applications.update(application.id, {
-			coverLetter,
-			cvRef,
-			cvName,
-			updatedAt: Date.now()
-		});
-		if (changed === 0) {
-			throw new Error(`No application row matched id ${application.id}.`);
-		}
+		// Throws when no row matches, rather than resolving like a successful
+		// write - see MissingApplicationError.
+		await updateApplication(application.id, { coverLetter, cvRef, cvName });
 		// Only once the row points at the new file: deleting first would orphan
 		// a live reference if the write had failed.
 		if (originalCvRef && originalCvRef !== cvRef) {

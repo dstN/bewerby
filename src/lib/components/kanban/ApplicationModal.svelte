@@ -1,7 +1,12 @@
 <script lang="ts">
 	import { onMount, untrack } from 'svelte';
 	import { t } from '$lib/i18n/index.svelte.js';
-	import { db, type Application } from '$lib/db/index.js';
+	import type { Application } from '$lib/db/index.js';
+	import {
+		createApplication,
+		updateApplication,
+		type NewApplication
+	} from '$lib/data/applications.js';
 	import {
 		extractJobDocument,
 		parseJobDocument,
@@ -583,18 +588,8 @@
 			? parseDateInput(appliedDateStr)
 			: application?.appliedAt || application?.createdAt || now;
 
-		let history: Application['history'];
-		if (!application) {
-			history = [{ status, timestamp: status === 'sent' ? parsedAppliedAt : now }];
-		} else if (statusChanged) {
-			// `?? []` on both branches: saving a row that somehow lost its history
-			// repairs it into a valid empty log instead of writing undefined back.
-			history = [...(application.history ?? []), { status, timestamp: now }];
-		} else {
-			history = application.history ?? [];
-		}
-
-		const appData: Omit<Application, 'id'> = {
+		// Complete enough to create a row; as an update it is a full field set.
+		const appData: Omit<NewApplication, 'history'> = {
 			title: title.trim(),
 			company: company.trim(),
 			url: url.trim(),
@@ -620,17 +615,22 @@
 				appliedDateStr && appliedDateStr !== initialAppliedDateStr
 					? parsedAppliedAt
 					: application?.sentAt,
-			rejectedAt: computeRejectedAt(),
-			createdAt: application ? application.createdAt : now,
-			updatedAt: now,
-			history: $state.snapshot(history)
+			rejectedAt: computeRejectedAt()
 		};
 
 		try {
 			if (application?.id) {
-				await db.applications.update(application.id, $state.snapshot(appData));
+				// A changed status is logged to the history by the repository.
+				await updateApplication(application.id, $state.snapshot(appData), now);
 			} else {
-				await db.applications.add($state.snapshot(appData) as Application);
+				await createApplication(
+					{
+						...$state.snapshot(appData),
+						// A new card created as "sent" is dated by the application date.
+						history: [{ status, timestamp: status === 'sent' ? parsedAppliedAt : now }]
+					},
+					now
+				);
 			}
 		} catch (err) {
 			console.error('Failed to save application:', err);

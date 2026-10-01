@@ -3,6 +3,7 @@
 	import { liveQuery } from 'dexie';
 	import { SvelteSet } from 'svelte/reactivity';
 	import { db, type Application } from '$lib/db/index.js';
+	import { removeApplication, updateApplication } from '$lib/data/applications.js';
 	import { t, i18n } from '$lib/i18n/index.svelte.js';
 	import ApplicationModal from '$lib/components/kanban/ApplicationModal.svelte';
 	import ApplicationDispatchDialog from '$lib/components/application/ApplicationDispatchDialog.svelte';
@@ -200,8 +201,7 @@
 	async function deleteApp(id: number, company: string) {
 		if (!confirm(t('kanban.confirmDelete'))) return;
 		try {
-			const app = await db.applications.get(id);
-			await db.applications.delete(id);
+			const app = await removeApplication(id);
 			collapsedIds.delete(id);
 			if (app?.pdfRef) {
 				await deletePdfFromOpfs(app.pdfRef);
@@ -318,18 +318,10 @@
 		}
 		if (app.status === targetStatus) return;
 
-		const now = Date.now();
-		const currentHistory = $state.snapshot(app.history) || [];
-		const updatedHistory = [...currentHistory, { status: targetStatus, timestamp: now }];
 		try {
-			await db.applications.update(id, {
-				status: targetStatus,
-				updatedAt: now,
-				history: updatedHistory,
-				// An entered rejection date belongs to the rejection it was entered
-				// for; undefined makes Dexie drop the field.
-				rejectedAt: undefined
-			});
+			// The repository logs the move to the history and drops an entered
+			// rejection date with it.
+			await updateApplication(id, { status: targetStatus });
 			announcer.announce(
 				t('kanban.statusChangedAnnouncement')
 					.replace('{company}', app.company)
