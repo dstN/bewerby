@@ -79,14 +79,14 @@ replacement for it.
    - **Document Root**: `/bewerby/build/client` — a subdirectory of
      Application Root, never the same path
    - **Application Startup File**: `app.cjs`
-   - **Node.js version**: 22.17 or newer - SvelteKit 3's minimum, and so
-     the floor for the bundled server code as well. This is a separate
-     requirement from `package.json`'s `engines` field (`>=26.0.0`, matching
-     current local dev and CI - needed only to `npm install`/build, see
-     "Build & deploy" below): the server never runs npm at all, only the already-bundled
-     `build/handler.js`, which uses nothing beyond Node's own built-in
-     modules (see "What actually needs to be on the server"). pdfjs-dist's
-     actual install-time floor is lower still (`>=22.13`).
+   - **Node.js version**: 26 - what production runs, and the same version
+     as local dev and CI (`package.json`'s `engines` field, `>=26.0.0`).
+     Strictly, the server only needs SvelteKit 3's minimum of 22.17: it never
+     runs npm at all, only the already-bundled `build/handler.js`, which uses
+     nothing beyond Node's own built-in modules (see "What actually needs to
+     be on the server"). The `engines` floor is for `npm install`/build (see
+     "Build & deploy" below); pdfjs-dist's own install-time floor is lower
+     still (`>=22.13`).
 2. Confirm `mod_headers`, `mod_rewrite`, `mod_expires` and `mod_mime` are
    enabled for the vhost — `build/client/.htaccess` (generated from
    `static/.htaccess`) depends on all four for security headers, the
@@ -105,9 +105,8 @@ replacement for it.
 ```sh
 # 1. Build locally (or in CI) - never build directly on the shared host.
 #    Requires Node >=26 (package.json's engines field, enforced by
-#    .npmrc's engine-strict) - that requirement only applies here, not to
-#    the server itself (see the Node.js version note in "First-time setup"
-#    above).
+#    .npmrc's engine-strict) - the same version the server runs (see the
+#    Node.js version note in "First-time setup" above).
 npm ci
 npm run lint && npm run check
 npm run build

@@ -70,9 +70,9 @@ npm install
 npm run dev
 ```
 
-Requires Node ≥26 to install/build (see `package.json`'s `engines` field).
-The production server itself only needs Node ≥20 - see
-[DEPLOYMENT.md](DEPLOYMENT.md) for why those two numbers differ.
+Requires Node ≥26 (see `package.json`'s `engines` field) - the same version
+the production server runs. See [DEPLOYMENT.md](DEPLOYMENT.md) for the
+server setup.
 
 ## Testing
 
