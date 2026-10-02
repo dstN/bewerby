@@ -72,6 +72,16 @@ function writeFolder(page: Page, contents: FolderContents): Promise<void> {
 	}, contents);
 }
 
+/** What a sync client does: makes one folder an exact copy of the other, deletions included. */
+async function mirrorFolder(from: Page, to: Page): Promise<void> {
+	const contents = await readFolder(from);
+	await to.evaluate(async () => {
+		const root = await navigator.storage.getDirectory();
+		await root.removeEntry('Nextcloud', { recursive: true }).catch(() => undefined);
+	});
+	await writeFolder(to, contents);
+}
+
 async function addApplication(page: Page, company: string) {
 	await page.goto('/board');
 	await page.getByRole('button', { name: 'Bewerbung hinzufügen' }).click();
@@ -100,7 +110,9 @@ test.describe('Sync between devices', () => {
 			laptop.locator('.card-desc', { hasText: /Zuletzt synchronisiert um/ })
 		).toBeVisible();
 		const fromLaptop = await readFolder(laptop);
-		expect(Object.keys(fromLaptop).some((path) => path.startsWith('bewerby-sync/upd/'))).toBe(true);
+		expect(
+			Object.keys(fromLaptop).some((path) => /^bewerby-sync\/[\w-]{22}\/0\/upd\//.test(path))
+		).toBe(true);
 		// What a sync client would carry: ciphertext only.
 		for (const bytes of Object.values(fromLaptop)) {
 			expect(Buffer.from(bytes).includes('Fabrikam')).toBe(false);
@@ -135,6 +147,105 @@ test.describe('Sync between devices', () => {
 		await laptop.goto('/board');
 		await expect(laptop.locator('.card')).toHaveCount(2);
 		await expect(laptop.locator('.card', { hasText: 'Northwind GmbH' })).toBeVisible();
+
+		await phoneContext.close();
+	});
+
+	test('a key change locks a device out until it has the new passphrase; its files can be erased', async ({
+		page,
+		browser
+	}, testInfo) => {
+		const NEW_PASSPHRASE = 'ein ganz neues passwort für alle';
+		const laptop = page;
+		laptop.on('dialog', (dialog) => dialog.accept());
+		await fakeFolderPicker(laptop.context());
+		await setUpEncryption(laptop);
+		await addApplication(laptop, 'Fabrikam AG');
+		await laptop.goto('/backup');
+		await laptop.getByRole('button', { name: 'Ordner wählen' }).click();
+		await expect(
+			laptop.locator('.card-desc', { hasText: /Zuletzt synchronisiert um/ })
+		).toBeVisible();
+
+		const phoneContext = await browser.newContext({ baseURL: testInfo.project.use.baseURL });
+		await fakeFolderPicker(phoneContext);
+		const phone = await phoneContext.newPage();
+		phone.on('dialog', (dialog) => dialog.accept());
+		await phone.goto('/backup');
+		await writeFolder(phone, await readFolder(laptop));
+		await phone.getByRole('button', { name: 'Ordner wählen' }).click();
+		const join = phone.getByRole('dialog', { name: 'Mit bestehender Synchronisation verbinden' });
+		await join.locator('#vault-secret').fill(PASSPHRASE);
+		await join.getByRole('button', { name: 'Entsperren und verbinden' }).click();
+		await expect(
+			phone.locator('.card-desc', { hasText: /Zuletzt synchronisiert um/ })
+		).toBeVisible();
+
+		// The laptop changes the key - the current passphrase first - and adds
+		// an application under the new one.
+		await laptop.getByRole('button', { name: 'Passwort ändern und Geräte ausschließen' }).click();
+		const confirm = laptop.getByRole('dialog', {
+			name: 'Neuer Schlüssel: aktuelles Passwort bestätigen'
+		});
+		await confirm.locator('#vault-secret').fill(PASSPHRASE);
+		await confirm.getByRole('button', { name: 'Weiter' }).click();
+		const setup = laptop.getByRole('dialog', { name: 'Neues Passwort und neuer Schlüssel' });
+		await setup.getByLabel('Passwort', { exact: true }).fill(NEW_PASSPHRASE);
+		await setup.getByLabel('Passwort wiederholen').fill(NEW_PASSPHRASE);
+		await setup.getByRole('button', { name: 'Weiter' }).click();
+		const recoveryKey = (await setup.getByTestId('recovery-key').textContent())!.trim();
+		await setup.getByLabel('Zur Bestätigung').fill(recoveryKey.slice(-4));
+		await setup.getByRole('button', { name: 'Fertig' }).click();
+		await expect(setup).toBeHidden();
+		await addApplication(laptop, 'Contoso GmbH');
+		await laptop.goto('/backup');
+		// Twice: a pass already running when the application was added would
+		// be the one the first click waits for.
+		const syncNow = laptop.getByRole('button', { name: 'Jetzt synchronisieren' });
+		for (let i = 0; i < 2; i++) {
+			await syncNow.click();
+			await expect(syncNow).toBeEnabled();
+		}
+		// Only the new key's directory is left.
+		await expect
+			.poll(async () =>
+				Object.keys(await readFolder(laptop)).every((path) =>
+					/^bewerby-sync\/[\w-]{22}\/1\//.test(path)
+				)
+			)
+			.toBe(true);
+
+		// The phone, still on the old key, stops and receives nothing new.
+		await mirrorFolder(laptop, phone);
+		await phone.goto('/backup');
+		const rekey = phone.getByRole('button', { name: 'Neues Passwort eingeben' });
+		await expect(rekey).toBeVisible();
+		await phone.goto('/board');
+		await expect(phone.locator('.card', { hasText: 'Fabrikam AG' })).toBeVisible();
+		await expect(phone.locator('.card', { hasText: 'Contoso GmbH' })).toHaveCount(0);
+
+		// With the new passphrase it follows.
+		await phone.goto('/backup');
+		await rekey.click();
+		const unlock = phone.getByRole('dialog', { name: 'Neuer Schlüssel', exact: true });
+		await unlock.locator('#vault-secret').fill(NEW_PASSPHRASE);
+		await unlock.getByRole('button', { name: 'Neues Passwort eingeben' }).click();
+		await expect(unlock).toBeHidden();
+		await expect(
+			phone.locator('.card-desc', { hasText: /Zuletzt synchronisiert um/ })
+		).toBeVisible();
+		await phone.goto('/board');
+		await expect(phone.locator('.card', { hasText: 'Contoso GmbH' })).toBeVisible();
+
+		// Right to erasure: the files at the target go, the data here stays.
+		await phone.goto('/backup');
+		await phone.getByRole('button', { name: 'Trennen und Dateien dort löschen' }).click();
+		await expect(phone.locator('.status-msg.success-msg')).toHaveText(
+			'Die Dateien am Speicherort sind gelöscht, die Verbindung ist getrennt.'
+		);
+		expect(await readFolder(phone)).toEqual({});
+		await phone.goto('/board');
+		await expect(phone.locator('.card')).toHaveCount(2);
 
 		await phoneContext.close();
 	});

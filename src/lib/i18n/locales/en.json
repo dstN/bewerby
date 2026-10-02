@@ -253,7 +253,12 @@
 			"importSubmit": "Unlock and import",
 			"unlocking": "Unlocking …",
 			"adoptNote": "This device will then use the same key for its own encrypted backups.",
-			"close": "Close"
+			"close": "Close",
+			"rotateButton": "Change passphrase and lock devices out",
+			"rotateConfirmTitle": "New key: confirm the current passphrase",
+			"rotateTitle": "New passphrase and new key",
+			"rotateIntro": "bewerby sets up a new key with a new passphrase and a new recovery key. The old passphrase and the old recovery key open nothing new after that. Your other devices ask for the new passphrase once, on their next sync; a device that does not get it is locked out from then on. What a device already has, bewerby cannot take back. Devices without a shared storage location need to be paired again afterwards.",
+			"rotated": "New key set up. Your other devices ask for the new passphrase on their next sync."
 		}
 	},
 	"analytics": {
@@ -326,7 +331,9 @@
 		"placeholderSenderStreet": "1 Example Road",
 		"placeholderSenderCity": "12345 Exampletown",
 		"placeholderSenderEmail": "name@example.com",
-		"placeholderSenderPhone": "+49 30 12345678"
+		"placeholderSenderPhone": "+49 30 12345678",
+		"eraseRemote": "Also delete the encrypted sync files at the connected storage location",
+		"eraseRemoteFailed": "The sync files at the storage location could not be deleted, so nothing was deleted here either. Try again once the storage location can be reached, or erase without this option."
 	},
 	"legal": {
 		"impressum": {
@@ -366,7 +373,7 @@
 			"hostingBody": "When you load this page, the hosting provider's web server processes technically unavoidable access data (e.g. IP address, time of access, requested file), as is standard for any website visit. These log entries concern only the delivery of the application itself, not the application data you enter within it. The legal basis is Art. 6(1)(f) GDPR; the legitimate interest lies in delivering the application securely and reliably and in fending off attacks. The access logs are rotated daily and deleted after 48 hours at the latest. No visitor statistics are generated; log analysis is switched off in the hosting panel.",
 			"hostingProcessing": "A data processing agreement under Art. 28 GDPR is in place with netcup GmbH. The servers are located in Germany; no transfer to a third country takes place.",
 			"rightsTitle": "Your rights",
-			"rightsBody": "Your application data lives on your device, and you exercise your rights to access, rectification, and erasure directly within the application: applications can be viewed, edited, and individually deleted at any time. Settings also lets you permanently delete all data in one click (right to erasure). The backup page lets you export your applications, PDFs and profile as a file (right to data portability) and import them again. Encrypted files that a sync has placed in a folder or in your Dropbox are deleted there; the bewerby.de server has no access to them. For the data that does arise on the server (access logs, contact form inquiries), write to the address below: there you can request access, rectification, erasure and restriction of processing, and object to the processing under Art. 21 GDPR. You also have the right to lodge a complaint with a data protection supervisory authority (Art. 77 GDPR).",
+			"rightsBody": "Your application data lives on your device, and you exercise your rights to access, rectification, and erasure directly within the application: applications can be viewed, edited, and individually deleted at any time. Settings also lets you permanently delete all data in one click (right to erasure). The backup page lets you export your applications, PDFs and profile as a file (right to data portability) and import them again. Encrypted files that a sync has placed in a folder or with a cloud provider can be deleted along with it on the backup page (“Disconnect and delete the files there”) or when erasing all data, or you delete them there yourself. On disconnecting and on erasing all data, bewerby also revokes its access where the provider allows it. The bewerby.de server has no access to these files. For the data that does arise on the server (access logs, contact form inquiries), write to the address below: there you can request access, rectification, erasure and restriction of processing, and object to the processing under Art. 21 GDPR. You also have the right to lodge a complaint with a data protection supervisory authority (Art. 77 GDPR).",
 			"contactFormTitle": "Contact form",
 			"contactFormBody": "If you use the contact form, your name, email address, and message are forwarded by email to the controller. This is processed by a script on the same server that serves this page - not by a third party. It is not stored in a database, only delivered by email to a mailbox with the same hosting provider; the data processing agreement with netcup stated above applies. The web server logs the call to the script as described under “Hosting” (IP address, time, requested file, but not the content of your message); these logs, too, are deleted after 48 hours at the latest. The email is deleted once your inquiry has been dealt with, unless statutory retention obligations require otherwise. The legal basis is Art. 6(1)(f) GDPR (legitimate interest in responding to your inquiry).",
 			"contactRightsTitle": "Contact for inquiries",
@@ -559,7 +566,15 @@
 		"connectOneDrive": "Connect OneDrive",
 		"connectOneDriveHint": "bewerby only gets access to an app folder of its own in your OneDrive. Microsoft asks for a short new sign-in about once a day, usually without typing anything.",
 		"connectGoogle": "Connect Google Drive",
-		"connectGoogleHint": "bewerby only gets access to a hidden app folder in your Google Drive, not to your files. Signing in goes through bewerby.de's server, because Google allows no other way; it stores nothing."
+		"connectGoogleHint": "bewerby only gets access to a hidden app folder in your Google Drive, not to your files. Signing in goes through bewerby.de's server, because Google allows no other way; it stores nothing.",
+		"statusRekey": "A new key was set up on another device. Syncing pauses until you enter the new passphrase here.",
+		"rekeyButton": "Enter the new passphrase",
+		"rekeyTitle": "New key",
+		"rekeyNote": "Enter the new passphrase or the new recovery key set on the other device. Your data on this device stays and is merged.",
+		"eraseButton": "Disconnect and delete the files there",
+		"eraseConfirm": "Delete all encrypted files of this vault at the storage location and disconnect? Your data on this device stays. Other devices still connected to the same location upload their state again on their next sync; disconnect them too if the files are to stay gone.",
+		"erased": "The files at the storage location are deleted, and it is disconnected.",
+		"eraseFailed": "The files at the storage location could not be deleted; it stays connected. Try again once the storage location can be reached."
 	},
 	"pair": {
 		"addDevice": "Add device",

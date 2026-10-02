@@ -16,6 +16,11 @@ vi.mock('#lib/db/index.js', () => ({ db: { delete: () => dbDelete() } }));
 const keystoreDelete = vi.fn(async () => {});
 vi.mock('#lib/vault/keystore.js', () => ({ deleteKeystore: () => keystoreDelete() }));
 
+const disconnect = vi.fn<(erase?: boolean) => Promise<void>>(async () => {});
+vi.mock('#lib/sync/runner.svelte.js', () => ({
+	syncRunner: { disconnect: (erase?: boolean) => disconnect(erase) }
+}));
+
 const isOpfsSupported = vi.fn(() => true);
 vi.mock('#lib/utils/opfs.js', () => ({ isOpfsSupported: () => isOpfsSupported() }));
 
@@ -76,6 +81,7 @@ async function loadEraser() {
 beforeEach(() => {
 	dbDelete.mockClear();
 	keystoreDelete.mockClear();
+	disconnect.mockClear();
 	isOpfsSupported.mockReturnValue(true);
 	installBrowserApis();
 	localStorage.setItem('bewerby-theme', 'dark');
@@ -147,6 +153,21 @@ describe('eraseAllData', () => {
 		expect(closedNotifications).toBe(2);
 	});
 
+	it('disconnects the sync target first, which revokes its access token', async () => {
+		const { eraseAllData } = await loadEraser();
+		await eraseAllData();
+		expect(disconnect).toHaveBeenCalledWith(false);
+		expect(disconnect.mock.invocationCallOrder[0]).toBeLessThan(
+			dbDelete.mock.invocationCallOrder[0]
+		);
+	});
+
+	it('deletes the encrypted files at the sync target when asked to', async () => {
+		const { eraseAllData } = await loadEraser();
+		await eraseAllData({ remote: true });
+		expect(disconnect).toHaveBeenCalledWith(true);
+	});
+
 	it('leaves the origin in a fresh-install state in one pass', async () => {
 		const { eraseAllData } = await loadEraser();
 		await eraseAllData();
@@ -190,6 +211,15 @@ describe('eraseAllData resilience', () => {
 		await expect(eraseAllData()).resolves.toBeUndefined();
 		expect(deletedCaches).toEqual([]);
 		expect(closedNotifications).toBe(0);
+	});
+
+	it('erases nothing here when the files at the sync target could not be deleted', async () => {
+		disconnect.mockRejectedValueOnce(new Error('offline'));
+		const { eraseAllData } = await loadEraser();
+		await expect(eraseAllData({ remote: true })).rejects.toThrow('offline');
+		// Still here, so the user can retry rather than lose the key to files that exist.
+		expect(dbDelete).not.toHaveBeenCalled();
+		expect(keystoreDelete).not.toHaveBeenCalled();
 	});
 
 	it('propagates a failed database delete rather than reporting a clean wipe', async () => {

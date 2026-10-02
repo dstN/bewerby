@@ -1,9 +1,12 @@
 import { browser } from '$app/env';
 import { activeSync } from '#lib/crdt/session.js';
-import { onVaultChange, unlockedVault } from '#lib/vault/session.js';
+import type { KeyHeader } from '#lib/vault/format.js';
+import { loadStoredVault } from '#lib/vault/keystore.js';
+import { adoptVault, onVaultChange, unlockedVault } from '#lib/vault/session.js';
+import type { UnlockedVault } from '#lib/vault/vault.js';
 import { DropboxStore } from './adapters/dropbox.js';
 import { GoogleDriveStore } from './adapters/gdrive.js';
-import { SyncEngine, type SyncReport } from './engine.js';
+import { SyncEngine, eraseVaultFiles, type SyncReport } from './engine.js';
 import { ReconnectRequiredError } from './port.js';
 import { SyncState, type TargetConfig } from './state.js';
 import { openStore } from './targets.js';
@@ -15,7 +18,7 @@ import { openStore } from './targets.js';
  * while no tab is open - there is no server to do it.
  */
 
-export type SyncStatus = 'off' | 'locked' | 'reconnect' | 'idle' | 'syncing' | 'error';
+export type SyncStatus = 'off' | 'locked' | 'reconnect' | 'rekey' | 'idle' | 'syncing' | 'error';
 
 /** After a local change: long enough to bundle a burst of edits into one file. */
 const PUSH_DELAY = 20_000;
@@ -27,6 +30,8 @@ class SyncRunner {
 	targetName = $state<string | null>(null);
 	lastSync = $state<number | null>(null);
 	lastReport = $state.raw<SyncReport | null>(null);
+	/** With status 'rekey': the newer key another device made, to unlock (#56). */
+	newerKey = $state.raw<KeyHeader | null>(null);
 
 	private readonly state = new SyncState();
 	private running: Promise<void> | null = null;
@@ -93,7 +98,13 @@ class SyncRunner {
 		this.status = 'syncing';
 		try {
 			const store = await openStore(target, this.state, interactive);
-			this.lastReport = await new SyncEngine(runtime, store, vault, this.state).run();
+			const report = await new SyncEngine(runtime, store, vault, this.state).run();
+			this.lastReport = report;
+			this.newerKey = report.newerKey ?? null;
+			if (report.newerKey) {
+				this.status = 'rekey';
+				return;
+			}
 			this.lastSync = Date.now();
 			this.status = 'idle';
 		} catch (err) {
@@ -102,10 +113,34 @@ class SyncRunner {
 		}
 	}
 
-	/** Forgets the target here; the files stay where they are. Revokes tokens where possible. */
-	async disconnect(): Promise<void> {
+	/**
+	 * Key change (#56): first everything the other devices pushed under the
+	 * old key, then the new key takes over. Its first pass writes the whole
+	 * document under the new key and removes the old key's files; the other
+	 * devices find the new key there and ask for the new passphrase.
+	 */
+	async rotate(next: UnlockedVault, remember: boolean): Promise<void> {
+		if (this.target) await this.syncNow(true);
+		await adoptVault(next.header, next.root, remember);
+	}
+
+	/**
+	 * Forgets the target here and revokes its tokens where possible. With
+	 * `erase`, this vault's files there go first (right to erasure, #56) -
+	 * that throws when the target cannot be reached, so nothing is claimed
+	 * deleted that is not.
+	 */
+	async disconnect(erase = false): Promise<void> {
 		this.stopTimers();
+		// A pass still running would write files again after the erase.
+		await this.running;
 		const target = await this.state.target();
+		if (erase && target) {
+			const stored = await loadStoredVault();
+			if (stored) {
+				await eraseVaultFiles(await openStore(target, this.state, true), stored.header.vaultId);
+			}
+		}
 		// OneDrive has no revocation endpoint for a single-page app; its refresh
 		// token expires within 24 hours anyway.
 		if (target?.kind === 'dropbox' || target?.kind === 'google') {
@@ -122,6 +157,7 @@ class SyncRunner {
 		this.target = null;
 		this.targetName = null;
 		this.lastReport = null;
+		this.newerKey = null;
 		this.status = 'off';
 	}
 }

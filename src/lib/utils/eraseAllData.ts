@@ -1,5 +1,6 @@
 import { browser } from '$app/env';
 import { db } from '#lib/db/index.js';
+import { syncRunner } from '#lib/sync/runner.svelte.js';
 import { isOpfsSupported } from '#lib/utils/opfs.js';
 import { deleteKeystore } from '#lib/vault/keystore.js';
 
@@ -9,9 +10,16 @@ import { deleteKeystore } from '#lib/vault/keystore.js';
  * OPFS, all localStorage, every Cache Storage entry, and any notifications
  * still shown. Afterwards the origin is in the same state as a fresh
  * install - there is no partial/soft-delete state to reason about.
+ *
+ * A connected sync target is disconnected first, which revokes its access
+ * token. With `remote`, this vault's encrypted files there are deleted too
+ * (#56); if that fails, nothing here is erased either, so the user can
+ * retry instead of losing the key to files that still exist.
  */
-export async function eraseAllData(): Promise<void> {
+export async function eraseAllData({ remote = false }: { remote?: boolean } = {}): Promise<void> {
 	if (!browser) return;
+
+	await syncRunner.disconnect(remote);
 
 	// db.delete() closes the connection and removes the IndexedDB database.
 	await db.delete();

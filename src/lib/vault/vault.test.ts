@@ -134,6 +134,29 @@ describe('vault', () => {
 		const greedy = text.replace(`"m":${FAST_KDF.m}`, '"m":99999999');
 		expect(() => readFileHeader(new Uint8Array(Buffer.from(greedy, 'latin1')))).toThrow(VaultError);
 	});
+
+	it('changes the key (#56): same vault, next epoch, and nothing old opens it', async () => {
+		const old = await createVault('ein langes passwort', FAST_KDF);
+		const next = await createVault('ein neues passwort', FAST_KDF, old.vault.header);
+		expect(next.vault.header.vaultId).toBe(old.vault.header.vaultId);
+		expect(next.vault.header.epoch).toBe(old.vault.header.epoch + 1);
+		expect(next.recoveryKey).not.toBe(old.recoveryKey);
+
+		const file = await sealBackup(next.vault, payload);
+		const header = readFileHeader(file);
+		expect(await vaultError(unlock(header, { passphrase: 'ein langes passwort' }))).toBe('secret');
+		expect(await vaultError(unlock(header, { recoveryKey: old.recoveryKey }))).toBe('secret');
+		expect(await vaultError(openBackup(file, old.vault.root))).toBe('corrupt');
+		// The old passphrase wrap, carried into the new epoch, does not open either:
+		// each wrap is bound to its epoch.
+		const replayed = { ...header, kdf: old.vault.header.kdf, pass: old.vault.header.pass };
+		expect(await vaultError(unlock(replayed, { passphrase: 'ein langes passwort' }))).toBe(
+			'secret'
+		);
+
+		const root = await unlock(header, { passphrase: 'ein neues passwort' });
+		expect(JSON.parse(await openBackup(file, root)).pdfs).toEqual(payload.pdfs);
+	});
 });
 
 describe('padding', () => {

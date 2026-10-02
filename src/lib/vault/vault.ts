@@ -46,12 +46,19 @@ function slotAad(header: Pick<KeyHeader, 'vaultId' | 'epoch'>, slot: 'pass' | 'r
  * A new vault: a random root secret, wrapped once under the passphrase and
  * once under a freshly generated recovery key. The recovery key is returned
  * for display exactly once and never stored anywhere.
+ *
+ * With `previous`, the same vault under a new key (#56): same id, the next
+ * epoch, a root that has nothing to do with the old one. Whoever only knows
+ * the old passphrase, recovery key or root opens nothing written after.
  */
 export async function createVault(
 	passphrase: string,
-	kdf: Omit<KdfParams, 'alg' | 'salt'> = DEFAULT_KDF
+	kdf: Omit<KdfParams, 'alg' | 'salt'> = DEFAULT_KDF,
+	previous?: Pick<KeyHeader, 'vaultId' | 'epoch'>
 ): Promise<{ vault: UnlockedVault; recoveryKey: string }> {
-	const ids = { vaultId: toBase64(randomBytes(16)), epoch: 0 };
+	const ids = previous
+		? { vaultId: previous.vaultId, epoch: previous.epoch + 1 }
+		: { vaultId: toBase64(randomBytes(16)), epoch: 0 };
 	const kdfParams: KdfParams = { alg: 'argon2id', ...kdf, salt: toBase64(randomBytes(16)) };
 	const root = randomBytes(32);
 	const recovery = randomBytes(RECOVERY_KEY_BYTES);

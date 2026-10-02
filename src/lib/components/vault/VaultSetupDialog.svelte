@@ -2,14 +2,25 @@
 	import { tick } from 'svelte';
 	import { t } from '#lib/i18n/index.svelte.js';
 	import { announcer } from '#lib/stores/announcer.svelte.js';
-	import { normalizeRecoveryInput } from '#lib/vault/crypto.js';
+	import { DEFAULT_KDF, normalizeRecoveryInput } from '#lib/vault/crypto.js';
+	import type { KeyHeader } from '#lib/vault/format.js';
 	import { createVault, type UnlockedVault } from '#lib/vault/vault.js';
 	import VaultDialog from './VaultDialog.svelte';
 
 	let {
+		previous,
+		title = t('backup.vault.setupTitle'),
+		intro,
+		doneMessage = t('backup.vault.created'),
 		onclose,
 		oncreated
 	}: {
+		/** Set for a key change (#56): the same vault under a new key. */
+		previous?: KeyHeader;
+		title?: string;
+		/** Shown above the passphrase fields. */
+		intro?: string;
+		doneMessage?: string;
 		onclose: () => void;
 		/** Persists the new vault; the dialog closes once this resolves. */
 		oncreated: (vault: UnlockedVault, remember: boolean) => Promise<void>;
@@ -43,7 +54,7 @@
 		}
 		busy = true;
 		try {
-			const result = await createVault(passphrase);
+			const result = await createVault(passphrase, DEFAULT_KDF, previous);
 			created = result.vault;
 			recoveryKey = result.recoveryKey;
 			passphrase = '';
@@ -95,7 +106,7 @@
 		busy = true;
 		try {
 			await oncreated(created, remember);
-			announcer.announce(t('backup.vault.created'));
+			announcer.announce(doneMessage);
 			onclose();
 		} catch (err) {
 			console.error('Storing the vault failed:', err);
@@ -106,9 +117,12 @@
 	}
 </script>
 
-<VaultDialog title={t('backup.vault.setupTitle')} closeLabel={t('backup.vault.close')} {onclose}>
+<VaultDialog {title} closeLabel={t('backup.vault.close')} {onclose}>
 	{#if step === 'passphrase'}
 		<form onsubmit={submitPassphrase} novalidate>
+			{#if intro}
+				<p>{intro}</p>
+			{/if}
 			<div class="field">
 				<label for="vault-passphrase">{t('backup.vault.passphraseLabel')}</label>
 				<input

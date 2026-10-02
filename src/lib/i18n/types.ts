@@ -330,6 +330,11 @@ export type TranslationKeys = {
 			unlocking: string;
 			adoptNote: string;
 			close: string;
+			rotateButton: string;
+			rotateConfirmTitle: string;
+			rotateTitle: string;
+			rotateIntro: string;
+			rotated: string;
 		};
 	};
 	sync: {
@@ -371,6 +376,14 @@ export type TranslationKeys = {
 		callbackWorking: string;
 		callbackFailed: string;
 		backToBackup: string;
+		statusRekey: string;
+		rekeyButton: string;
+		rekeyTitle: string;
+		rekeyNote: string;
+		eraseButton: string;
+		eraseConfirm: string;
+		erased: string;
+		eraseFailed: string;
 	};
 	pair: {
 		addDevice: string;
@@ -469,6 +482,8 @@ export type TranslationKeys = {
 		eraseInProgress: string;
 		eraseConfirm: string;
 		eraseFailed: string;
+		eraseRemote: string;
+		eraseRemoteFailed: string;
 		privacyTitle: string;
 		privacyItem1Title: string;
 		privacyItem1Desc: string;

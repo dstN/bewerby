@@ -20,7 +20,9 @@ the same time. The constraints:
 has four methods: list, read, write, remove. `SyncEngine` (`engine.ts`) does
 everything else, so a new provider is an adapter of about a hundred lines.
 
-**Each device only writes files of its own.**
+**Each device only writes files of its own.** Below `<vault>/<epoch>/` (the
+vault id as base64url and the key's epoch; added with #56, see
+[ADR 0005](0005-key-change.md)):
 
 ```
 upd/<deviceId>/<stamp>.bwv   this device's changes since its last push

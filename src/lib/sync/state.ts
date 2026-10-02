@@ -36,6 +36,8 @@ export interface Progress {
 	remoteSV?: Uint8Array;
 	/** A change was made on this device that has not been pushed yet. */
 	dirty: boolean;
+	/** The `<vault>/<epoch>/` this progress was made in; another key starts over. */
+	base?: string;
 }
 
 export class SyncState {

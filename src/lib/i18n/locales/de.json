@@ -253,7 +253,12 @@
 			"importSubmit": "Entsperren und importieren",
 			"unlocking": "Wird entsperrt …",
 			"adoptNote": "Dieses Gerät verwendet danach denselben Schlüssel für eigene verschlüsselte Sicherungen.",
-			"close": "Schließen"
+			"close": "Schließen",
+			"rotateButton": "Passwort ändern und Geräte ausschließen",
+			"rotateConfirmTitle": "Neuer Schlüssel: aktuelles Passwort bestätigen",
+			"rotateTitle": "Neues Passwort und neuer Schlüssel",
+			"rotateIntro": "bewerby legt einen neuen Schlüssel mit neuem Passwort und neuem Wiederherstellungsschlüssel an. Das alte Passwort und der alte Wiederherstellungsschlüssel öffnen danach nichts Neues mehr. Deine anderen Geräte fragen beim nächsten Abgleich einmal nach dem neuen Passwort; ein Gerät, das es nicht bekommt, ist ab dann ausgeschlossen. Was ein Gerät bis jetzt hatte, kann bewerby ihm nicht wieder nehmen. Geräte ohne gemeinsamen Speicherort koppelst du danach neu.",
+			"rotated": "Neuer Schlüssel eingerichtet. Deine anderen Geräte fragen beim nächsten Abgleich nach dem neuen Passwort."
 		}
 	},
 	"analytics": {
@@ -326,7 +331,9 @@
 		"placeholderSenderStreet": "Musterweg 1",
 		"placeholderSenderCity": "12345 Musterstadt",
 		"placeholderSenderEmail": "name@example.com",
-		"placeholderSenderPhone": "+49 30 12345678"
+		"placeholderSenderPhone": "+49 30 12345678",
+		"eraseRemote": "Auch die verschlüsselten Sync-Dateien am verbundenen Speicherort löschen",
+		"eraseRemoteFailed": "Die Sync-Dateien am Speicherort konnten nicht gelöscht werden, deshalb wurde auch hier nichts gelöscht. Versuch es noch einmal, wenn der Speicherort erreichbar ist, oder lösche ohne diese Option."
 	},
 	"legal": {
 		"impressum": {
@@ -366,7 +373,7 @@
 			"hostingBody": "Beim Aufruf dieser Seite verarbeitet der Webserver des Hosting-Anbieters technisch unvermeidbare Zugriffsdaten (z. B. IP-Adresse, Zeitpunkt des Zugriffs, angeforderte Datei), wie bei jedem Website-Aufruf üblich. Diese Protokolldaten betreffen ausschließlich die Auslieferung der Anwendung selbst, nicht die Bewerbungsdaten, die du in der Anwendung einträgst. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO; das berechtigte Interesse liegt in der sicheren und stabilen Auslieferung der Anwendung und der Abwehr von Angriffen. Die Zugriffsprotokolle werden täglich rotiert und spätestens nach 48 Stunden gelöscht. Eine Besucherstatistik wird nicht erzeugt; die Auswertung der Protokolle ist im Hosting-Panel abgeschaltet.",
 			"hostingProcessing": "Mit der netcup GmbH besteht ein Auftragsverarbeitungsvertrag nach Art. 28 DSGVO. Die Server stehen in Deutschland; eine Übermittlung in ein Drittland findet nicht statt.",
 			"rightsTitle": "Deine Rechte",
-			"rightsBody": "Deine Bewerbungsdaten liegen auf deinem Gerät, und deine Rechte auf Auskunft, Berichtigung und Löschung übst du direkt in der Anwendung aus: Bewerbungen lassen sich jederzeit einsehen, bearbeiten und einzeln löschen. In den Einstellungen kannst du zudem mit einem Klick alle Daten vollständig und unwiderruflich löschen (Recht auf Löschung). Über die Backup-Seite kannst du deine Bewerbungen samt PDFs und Profil als Datei exportieren (Recht auf Datenübertragbarkeit) und wieder importieren. Verschlüsselte Dateien, die eine Synchronisation in einem Ordner oder in deiner Dropbox abgelegt hat, löschst du dort; der Server von bewerby.de hat darauf keinen Zugriff. Für die Daten, die auf dem Server anfallen (Zugriffsprotokolle, Anfragen über das Kontaktformular), wende dich an die unten genannte Adresse: Dort kannst du Auskunft, Berichtigung, Löschung und Einschränkung der Verarbeitung verlangen und der Verarbeitung nach Art. 21 DSGVO widersprechen. Außerdem hast du das Recht, dich bei einer Datenschutz-Aufsichtsbehörde zu beschweren (Art. 77 DSGVO).",
+			"rightsBody": "Deine Bewerbungsdaten liegen auf deinem Gerät, und deine Rechte auf Auskunft, Berichtigung und Löschung übst du direkt in der Anwendung aus: Bewerbungen lassen sich jederzeit einsehen, bearbeiten und einzeln löschen. In den Einstellungen kannst du zudem mit einem Klick alle Daten vollständig und unwiderruflich löschen (Recht auf Löschung). Über die Backup-Seite kannst du deine Bewerbungen samt PDFs und Profil als Datei exportieren (Recht auf Datenübertragbarkeit) und wieder importieren. Verschlüsselte Dateien, die eine Synchronisation in einem Ordner oder bei einem Cloud-Anbieter abgelegt hat, lässt du auf der Backup-Seite („Trennen und Dateien dort löschen“) oder beim Löschen aller Daten mitlöschen, oder du löschst sie dort selbst. Beim Trennen und beim Löschen aller Daten widerruft bewerby außerdem seine Zugriffsberechtigung, soweit der Anbieter das vorsieht. Der Server von bewerby.de hat auf diese Dateien keinen Zugriff. Für die Daten, die auf dem Server anfallen (Zugriffsprotokolle, Anfragen über das Kontaktformular), wende dich an die unten genannte Adresse: Dort kannst du Auskunft, Berichtigung, Löschung und Einschränkung der Verarbeitung verlangen und der Verarbeitung nach Art. 21 DSGVO widersprechen. Außerdem hast du das Recht, dich bei einer Datenschutz-Aufsichtsbehörde zu beschweren (Art. 77 DSGVO).",
 			"contactFormTitle": "Kontaktformular",
 			"contactFormBody": "Wenn du das Kontaktformular nutzt, werden Name, E-Mail-Adresse und Nachrichtentext per E-Mail an den Verantwortlichen weitergeleitet. Diese Daten werden dabei von einem Skript auf demselben Server verarbeitet, der auch diese Seite ausliefert — nicht von einem Drittanbieter. Sie werden nicht in einer Datenbank gespeichert, sondern ausschließlich per E-Mail in ein Postfach beim selben Hosting-Anbieter zugestellt; es gilt der oben genannte Auftragsverarbeitungsvertrag mit netcup. Der Webserver protokolliert den Aufruf des Skripts wie unter „Hosting“ beschrieben (IP-Adresse, Zeitpunkt, aufgerufene Datei, nicht aber den Inhalt deiner Nachricht); auch diese Protokolle werden spätestens nach 48 Stunden gelöscht. Die E-Mail wird gelöscht, sobald deine Anfrage abschließend bearbeitet ist und keine gesetzlichen Aufbewahrungspflichten entgegenstehen. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an der Beantwortung deiner Anfrage).",
 			"contactRightsTitle": "Kontakt für Anfragen",
@@ -559,7 +566,15 @@
 		"connectOneDrive": "Mit OneDrive verbinden",
 		"connectOneDriveHint": "bewerby erhält nur Zugriff auf einen eigenen App-Ordner in deinem OneDrive. Microsoft verlangt etwa einmal am Tag eine kurze erneute Anmeldung, meist ohne Eingabe.",
 		"connectGoogle": "Mit Google Drive verbinden",
-		"connectGoogleHint": "bewerby erhält nur Zugriff auf einen versteckten App-Ordner in deinem Google Drive, nicht auf deine Dateien. Die Anmeldung läuft dabei über den Server von bewerby.de, weil Google es nicht anders zulässt; er speichert nichts."
+		"connectGoogleHint": "bewerby erhält nur Zugriff auf einen versteckten App-Ordner in deinem Google Drive, nicht auf deine Dateien. Die Anmeldung läuft dabei über den Server von bewerby.de, weil Google es nicht anders zulässt; er speichert nichts.",
+		"statusRekey": "Auf einem anderen Gerät wurde ein neuer Schlüssel eingerichtet. Bis du hier das neue Passwort eingibst, ruht der Abgleich.",
+		"rekeyButton": "Neues Passwort eingeben",
+		"rekeyTitle": "Neuer Schlüssel",
+		"rekeyNote": "Gib das neue Passwort oder den neuen Wiederherstellungsschlüssel ein, die auf dem anderen Gerät festgelegt wurden. Deine Daten auf diesem Gerät bleiben erhalten und werden zusammengeführt.",
+		"eraseButton": "Trennen und Dateien dort löschen",
+		"eraseConfirm": "Alle verschlüsselten Dateien dieses Tresors am Speicherort löschen und die Verbindung trennen? Deine Daten auf diesem Gerät bleiben erhalten. Andere Geräte, die noch mit demselben Speicherort verbunden sind, laden ihren Stand beim nächsten Abgleich wieder hoch; trenne sie ebenfalls, wenn die Dateien weg bleiben sollen.",
+		"erased": "Die Dateien am Speicherort sind gelöscht, die Verbindung ist getrennt.",
+		"eraseFailed": "Die Dateien am Speicherort konnten nicht gelöscht werden; die Verbindung besteht weiter. Versuch es noch einmal, wenn der Speicherort erreichbar ist."
 	},
 	"pair": {
 		"addDevice": "Gerät hinzufügen",

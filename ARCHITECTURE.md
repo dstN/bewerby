@@ -460,7 +460,8 @@ On top of the document, `src/lib/sync` moves updates between devices that
 are never online at the same time. Decision and alternatives:
 [docs/adr/0003-sync-transport.md](docs/adr/0003-sync-transport.md).
 
-- **Layout at the remote:**
+- **Layout at the remote**, below `<vault>/<epoch>/` (vault id as base64url,
+  key epoch):
   - `upd/<device>/<stamp>.bwv`: changes
   - `snap/<device>-<stamp>.bwv`: a whole document after compaction
   - `blob/<blobId>.bwv`: PDFs
@@ -490,6 +491,30 @@ are never online at the same time. Decision and alternatives:
     the Origin, accepts only this app's callback as redirect URI, caps the
     body and throttles per IP with the same limiter as `/api/fetch-ad`.
     Every file request goes from the browser to Google directly.
+- **Changing the key** (#56,
+  [docs/adr/0005-key-change.md](docs/adr/0005-key-change.md)): one action
+  sets a new passphrase, a new recovery key and a new random root, under
+  the same vault id with the next epoch. It is how the passphrase is
+  changed and how a device is locked out.
+  - The current passphrase is asked for first, so a device left unlocked
+    cannot lock the owner's other devices out.
+  - The changing device pulls under the old key once more, then writes its
+    whole document into the new epoch's directory. Every device on the
+    current key removes older epochs' files on each pass, including
+    whatever a locked-out device keeps writing there.
+  - A device still on the old key finds the newer directory, stops before
+    writing, and asks for the new passphrase. The header it needs travels
+    in every file. Devices without a shared target follow by being paired
+    again or by importing a newer encrypted backup, which adopts the
+    newer key.
+  - What a locked-out device already had cannot be taken back; the UI says
+    so.
+- **Erasure** (#56): "Disconnect and delete the files there" and the
+  option on "Erase all data" delete every file of this vault at the
+  target, all epochs, before anything local goes; if that fails, nothing
+  local is deleted. Disconnecting and erasing all data also revoke the
+  provider's token where the provider supports it. A device still
+  connected to an emptied target pushes its whole document again.
 - **OAuth return:** `/cloud/callback` is answered by the service worker from
   its cache, so the code never reaches the server's access log, and is
   stripped from the address bar at once.

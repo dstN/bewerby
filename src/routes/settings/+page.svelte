@@ -12,6 +12,7 @@
 		type StorageEstimate
 	} from '#lib/utils/storage.js';
 	import { eraseAllData } from '#lib/utils/eraseAllData.js';
+	import { syncRunner } from '#lib/sync/runner.svelte.js';
 	import { onMount } from 'svelte';
 	import { profileStore } from '#lib/stores/profile.svelte.js';
 	import { validatePdfFile, PdfProcessingError, type PdfErrorCode } from '#lib/utils/pdf.js';
@@ -109,16 +110,19 @@
 	}
 
 	let isErasing = $state(false);
+	// The encrypted sync files at the connected target as well (#56).
+	let eraseRemote = $state(false);
 
 	async function handleEraseAllData() {
+		const remote = eraseRemote && syncRunner.target !== null;
 		if (!confirm(t('settings.eraseConfirm'))) return;
 		isErasing = true;
 		try {
-			await eraseAllData();
+			await eraseAllData({ remote });
 			window.location.reload();
 		} catch (err) {
 			console.error('Failed to erase all data:', err);
-			alert(t('settings.eraseFailed'));
+			alert(t(remote ? 'settings.eraseRemoteFailed' : 'settings.eraseFailed'));
 			isErasing = false;
 		}
 	}
@@ -367,6 +371,12 @@
 				{t('settings.eraseTitle')}
 			</h2>
 			<p class="card-desc">{t('settings.eraseDesc')}</p>
+			{#if syncRunner.target}
+				<label class="erase-remote">
+					<input type="checkbox" bind:checked={eraseRemote} />
+					{t('settings.eraseRemote')}
+				</label>
+			{/if}
 			<div class="settings-control">
 				<a class="export-hint-link" href={resolve('/backup')}>{t('settings.eraseExportHint')}</a>
 				<button class="btn-danger" onclick={handleEraseAllData} disabled={isErasing}>
@@ -473,6 +483,19 @@
 		line-height: 1.6;
 		color: var(--text-secondary);
 		margin: 0;
+	}
+
+	.erase-remote {
+		display: flex;
+		align-items: flex-start;
+		gap: 8px;
+		font-size: 13px;
+		line-height: 1.6;
+		color: var(--text-primary);
+	}
+
+	.erase-remote input {
+		margin-top: 4px;
 	}
 
 	.settings-control {

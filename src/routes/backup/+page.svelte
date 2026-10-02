@@ -19,6 +19,7 @@
 	import { decodeSnapshot, encodeSnapshot } from '#lib/crdt/snapshot.js';
 	import { adoptVault as adoptVaultForDevice, setUnlockedVault } from '#lib/vault/session.js';
 	import { syncRunner } from '#lib/sync/runner.svelte.js';
+	import { parsePath } from '#lib/sync/engine.js';
 	import { JUST_CONNECTED, SyncState } from '#lib/sync/state.js';
 	import { isFolderSyncSupported, pickSyncFolder } from '#lib/sync/adapters/folder.js';
 	import { dropboxAuthorizeUrl } from '#lib/sync/adapters/dropbox.js';
@@ -81,6 +82,11 @@
 	// the new device receives, then the pairing dialog.
 	let pairUnlockOpen = $state(false);
 	let pairRaw = $state.raw<Uint8Array | null>(null);
+	// Key change (#56): the current passphrase first, then the new one.
+	let rotateStep = $state<'confirm' | 'new' | null>(null);
+	// Another device changed the key: unlock the new one here.
+	let rekeyOpen = $state(false);
+	let syncError = $state('');
 
 	onMount(() => {
 		loadStoredVault()
@@ -196,9 +202,27 @@
 		}
 	}
 
-	/** True when importing this file should make its vault this device's own. */
+	/**
+	 * True when importing this file should make its vault this device's own:
+	 * no vault here yet, a newer key of this vault (how a device without a
+	 * shared target follows a key change, #56), or the same key while it is
+	 * not remembered. Never an older key.
+	 */
 	function adoptsVault(header: KeyHeader): boolean {
-		return !vaultHeader || (vaultHeader.vaultId === header.vaultId && !rememberedKey);
+		if (!vaultHeader) return true;
+		if (vaultHeader.vaultId !== header.vaultId) return false;
+		return (
+			header.epoch > vaultHeader.epoch || (header.epoch === vaultHeader.epoch && !rememberedKey)
+		);
+	}
+
+	async function rotated(vault: UnlockedVault, remember: boolean) {
+		await syncRunner.rotate(vault, remember);
+		vaultHeader = vault.header;
+		vaultRoot = vault.root;
+		rememberedKey = remember;
+		vaultStatus = 'backup.vault.rotated';
+		vaultError = '';
 	}
 
 	async function unlockedForImport(
@@ -309,10 +333,17 @@
 		if (!target) return;
 		try {
 			const store = await openStore(target, syncState, true);
-			// Update files first: they are small, and any one carries the key header.
+			// The newest key first, and update files before snapshots: they are
+			// small, and any one carries the key header.
 			const files = (await store.list())
-				.filter((path) => path.endsWith('.bwv') && !path.startsWith('blob/'))
-				.sort((a, b) => Number(b.startsWith('upd/')) - Number(a.startsWith('upd/')));
+				.map((path) => ({ path, parsed: parsePath(path) }))
+				.filter(({ parsed }) => parsed && parsed.kind !== 'blob')
+				.sort(
+					(a, b) =>
+						b.parsed!.epoch - a.parsed!.epoch ||
+						Number(b.parsed!.kind === 'upd') - Number(a.parsed!.kind === 'upd')
+				)
+				.map(({ path }) => path);
 			for (const path of files) {
 				try {
 					joinHeader = readFileHeader(await store.read(path));
@@ -359,10 +390,21 @@
 		else await syncRunner.syncNow(true);
 	}
 
-	async function disconnectSync() {
-		if (!confirm(t('sync.disconnectConfirm'))) return;
-		await syncRunner.disconnect();
-		syncNotice = 'sync.disconnected';
+	/** With `erase`, this vault's files at the target are deleted first (#56). */
+	async function disconnectSync(erase = false) {
+		if (!confirm(t(erase ? 'sync.eraseConfirm' : 'sync.disconnectConfirm'))) return;
+		syncNotice = '';
+		syncError = '';
+		try {
+			await syncRunner.disconnect(erase);
+		} catch (err) {
+			console.error('Deleting the sync files failed:', err);
+			syncError = 'sync.eraseFailed';
+			void syncRunner.start();
+			return;
+		}
+		syncNotice = erase ? 'sync.erased' : 'sync.disconnected';
+		announcer.announce(t(syncNotice));
 	}
 
 	function statusText(lastSync: number | null): string {
@@ -383,6 +425,8 @@
 				return t('sync.statusError');
 			case 'locked':
 				return t('sync.statusLocked');
+			case 'rekey':
+				return t('sync.statusRekey');
 			case 'reconnect':
 				return syncRunner.target && syncRunner.target !== 'folder'
 					? t('sync.statusReconnectCloud').replace('{name}', PROVIDER_NAMES[syncRunner.target])
@@ -575,6 +619,11 @@
 					/>
 					{t('backup.vault.importButton')}
 				</label>
+				{#if vaultHeader}
+					<button class="btn-text" onclick={() => (rotateStep = 'confirm')}>
+						{t('backup.vault.rotateButton')}
+					</button>
+				{/if}
 				{#if rememberedKey}
 					<button class="btn-text" onclick={forgetKey}>{t('backup.vault.forgetButton')}</button>
 				{/if}
@@ -673,6 +722,10 @@
 						<button class="btn-primary" onclick={() => (syncUnlockOpen = true)}>
 							{t('sync.unlock')}
 						</button>
+					{:else if syncRunner.status === 'rekey'}
+						<button class="btn-primary" onclick={() => (rekeyOpen = true)}>
+							{t('sync.rekeyButton')}
+						</button>
 					{:else if syncRunner.status === 'reconnect'}
 						<button class="btn-primary" onclick={reconnectSync}>{t('sync.reconnect')}</button>
 					{:else if vaultHeader}
@@ -684,7 +737,10 @@
 							{t('sync.syncNow')}
 						</button>
 					{/if}
-					<button class="btn-text" onclick={disconnectSync}>{t('sync.disconnect')}</button>
+					<button class="btn-text" onclick={() => disconnectSync()}>{t('sync.disconnect')}</button>
+					<button class="btn-text" onclick={() => disconnectSync(true)}>
+						{t('sync.eraseButton')}
+					</button>
 				</div>
 			{:else}
 				{#if !vaultHeader}
@@ -716,6 +772,9 @@
 
 			{#if syncNotice}
 				<div class="status-msg success-msg">{t(syncNotice)}</div>
+			{/if}
+			{#if syncError}
+				<div class="status-msg error-msg" role="alert">{t(syncError)}</div>
 			{/if}
 
 			{#if vaultHeader}
@@ -749,6 +808,49 @@
 
 {#if setupOpen}
 	<VaultSetupDialog onclose={() => (setupOpen = false)} oncreated={onVaultCreated} />
+{/if}
+
+{#if rotateStep === 'confirm' && vaultHeader}
+	<!-- The current secret first, so a device left unlocked cannot lock the
+	     owner's other devices out. -->
+	<VaultUnlockDialog
+		title={t('backup.vault.rotateConfirmTitle')}
+		header={vaultHeader}
+		submitLabel={t('backup.vault.next')}
+		showRemember={false}
+		onunlock={async (root) => {
+			// Unlocked for this visit, so the key change can fetch the other
+			// devices' latest changes under the old key first.
+			if (vaultHeader) setUnlockedVault({ header: vaultHeader, root });
+			vaultRoot = root;
+			rotateStep = 'new';
+		}}
+		onclose={() => {
+			if (rotateStep === 'confirm') rotateStep = null;
+		}}
+	/>
+{:else if rotateStep === 'new' && vaultHeader}
+	<VaultSetupDialog
+		previous={vaultHeader}
+		title={t('backup.vault.rotateTitle')}
+		intro={t('backup.vault.rotateIntro')}
+		doneMessage={t('backup.vault.rotated')}
+		onclose={() => (rotateStep = null)}
+		oncreated={rotated}
+	/>
+{/if}
+
+{#if rekeyOpen && syncRunner.newerKey}
+	{@const header = syncRunner.newerKey}
+	<VaultUnlockDialog
+		title={t('sync.rekeyTitle')}
+		{header}
+		submitLabel={t('sync.rekeyButton')}
+		showRemember={true}
+		note={t('sync.rekeyNote')}
+		onunlock={(root, remember) => adoptVault(header, root, remember)}
+		onclose={() => (rekeyOpen = false)}
+	/>
 {/if}
 
 {#if joinHeader}

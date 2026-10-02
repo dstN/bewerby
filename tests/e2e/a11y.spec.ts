@@ -2,6 +2,7 @@ import AxeBuilder from '@axe-core/playwright';
 import { test, expect, type Page } from '@playwright/test';
 import type { AxeResults, Result } from 'axe-core';
 import { representativeBoard, seedApplications } from './fixtures/seed.js';
+import { PASSPHRASE, setUpEncryption } from './fixtures/vault.js';
 
 /**
  * Accessibility conformance sweep.
@@ -160,6 +161,23 @@ for (const theme of ['light', 'dark'] as const) {
 			await dialog.getByLabel('Passwort wiederholen').fill('korrekt pferd batterie');
 			await dialog.getByRole('button', { name: 'Weiter' }).click();
 			await expect(dialog.getByTestId('recovery-key')).toBeVisible();
+			await expectNoViolations(page);
+		});
+
+		test('the key change has no violations, on both of its dialogs', async ({ page }) => {
+			await setUpEncryption(page);
+			await gotoWithTheme(page, '/backup', theme);
+			await page.getByRole('button', { name: 'Passwort ändern und Geräte ausschließen' }).click();
+			const confirm = page.getByRole('dialog', {
+				name: 'Neuer Schlüssel: aktuelles Passwort bestätigen'
+			});
+			await expect(confirm).toBeVisible();
+			await expectNoViolations(page);
+
+			await confirm.locator('#vault-secret').fill(PASSPHRASE);
+			await confirm.getByRole('button', { name: 'Weiter' }).click();
+			const setup = page.getByRole('dialog', { name: 'Neues Passwort und neuer Schlüssel' });
+			await expect(setup).toBeVisible();
 			await expectNoViolations(page);
 		});
 
