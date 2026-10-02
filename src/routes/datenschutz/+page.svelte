@@ -2,6 +2,8 @@
 	import { t } from '#lib/i18n/index.svelte.js';
 	import { resolve } from '$app/paths';
 	import ObfuscatedEmail from '#lib/components/common/ObfuscatedEmail.svelte';
+
+	const clients = __SYNC_CLIENTS__;
 </script>
 
 <svelte:head>
@@ -120,10 +122,14 @@
 		<h2>{t('legal.datenschutz.syncTitle')}</h2>
 		<p>{t('legal.datenschutz.syncBody')}</p>
 		<p>{t('legal.datenschutz.syncFolderBody')}</p>
-		<p>{t('legal.datenschutz.syncDropboxBody')}</p>
-		<p>{t('legal.datenschutz.syncOneDriveBody')}</p>
-		<p>{t('legal.datenschutz.syncGoogleBody')}</p>
-		<p>{t('legal.datenschutz.syncReturnBody')}</p>
+		<!-- Only the providers this build offers (no client id, no button): a
+		     provider that is never contacted is not a recipient. -->
+		{#if clients.dropbox}<p>{t('legal.datenschutz.syncDropboxBody')}</p>{/if}
+		{#if clients.onedrive}<p>{t('legal.datenschutz.syncOneDriveBody')}</p>{/if}
+		{#if clients.google}<p>{t('legal.datenschutz.syncGoogleBody')}</p>{/if}
+		{#if clients.dropbox || clients.onedrive || clients.google}
+			<p>{t('legal.datenschutz.syncReturnBody')}</p>
+		{/if}
 	</section>
 
 	<section class="legal-card" id="geraete">
