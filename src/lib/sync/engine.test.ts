@@ -20,7 +20,7 @@ const { BewerbyDatabase } = await import('#lib/db/index.js');
 const { SyncRuntime } = await import('#lib/crdt/runtime.js');
 const { createVault, openFile, sealFile, unlock } = await import('#lib/vault/vault.js');
 const { encodeSnapshot } = await import('#lib/crdt/snapshot.js');
-const { SyncEngine, eraseVaultFiles, vaultDir } = await import('./engine.js');
+const { SyncEngine, announceKey, eraseVaultFiles, vaultDir } = await import('./engine.js');
 const { SyncState } = await import('./state.js');
 import type { RemoteStore } from './port.js';
 
@@ -52,8 +52,10 @@ async function device(vault: Vault, store: RemoteStore) {
 	const runtime = await SyncRuntime.open(db);
 	const state = new SyncState(db);
 	runtime.onLocalChange(() => void state.markDirty());
-	// The key can change (#56); each pass runs with the one passed in.
-	const sync = (key: Vault = vault) => new SyncEngine(runtime, store, key, state).run();
+	// The key can change (#56), and with the bewerby.de store the place too
+	// (#58); each pass runs with the ones passed in.
+	const sync = (key: Vault = vault, at: RemoteStore = store) =>
+		new SyncEngine(runtime, at, key, state).run();
 	return { db, runtime, state, sync };
 }
 
@@ -306,6 +308,30 @@ describe('changing the key (#56)', () => {
 		expect(report.unreadable).toBe(1);
 		expect(store.files.has(`${dir}/0/upd/removed/a.bwv`)).toBe(false);
 		expect((await rows(laptop.db)).map((row) => row.company)).not.toContain('Eindringling AG');
+	});
+
+	it('leaves word of the new key in the old place when every key has its own (#58)', async () => {
+		const { old, next, store: oldSpace, laptop, phone } = await twoDevices();
+		const newSpace = new MemoryStore();
+		await laptop.runtime.create(fields({ company: 'Contoso GmbH' }), 3000);
+		await announceKey(oldSpace, next);
+		await laptop.sync(next, newSpace);
+
+		// The old space keeps nothing but the notice, which the old key cannot open.
+		const left = [...oldSpace.files.keys()];
+		expect(left).toHaveLength(1);
+		expect(left[0]).toMatch(new RegExp(`^${vaultDir(old.header.vaultId)}/1/upd/key/`));
+		await expect(openFile(oldSpace.files.get(left[0])!, old.root)).rejects.toThrow();
+
+		const stopped = await phone.sync(old, oldSpace);
+		expect(stopped.newerKey?.epoch).toBe(1);
+		const root = await unlock(stopped.newerKey!, { passphrase: 'ein neues passwort' });
+		await phone.sync({ header: stopped.newerKey!, root }, newSpace);
+		expect((await rows(phone.db)).map((row) => row.company)).toEqual([
+			'Contoso GmbH',
+			'Fabrikam AG',
+			'Northwind GmbH'
+		]);
 	});
 
 	it('erases every file of the vault from the store, all keys, and leaves other vaults be', async () => {

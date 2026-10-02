@@ -2,6 +2,8 @@ import { activeSync } from '#lib/crdt/session.js';
 import { fromCrockford, importRoot, randomBytes, toCrockford } from '#lib/vault/crypto.js';
 import { fromBase64, parseKeyHeader, toBase64, type KeyHeader } from '#lib/vault/format.js';
 import { adoptVault } from '#lib/vault/session.js';
+import { syncRunner } from '../runner.svelte.js';
+import { SyncState, type TargetConfig } from '../state.js';
 import { DocLink } from './link.js';
 import { comparisonCode, pairingKeys } from './keys.js';
 import {
@@ -24,6 +26,11 @@ import { SignalClient } from './signal.js';
  * secret and both DTLS fingerprints; only when the user confirms on the host
  * that they match does the host send the vault's key header and root over
  * the channel. The new device adopts the vault, and the two documents merge.
+ *
+ * The host also passes on where it syncs (#58) - the store on bewerby.de, or
+ * a cloud account's refresh token - so the new device keeps up while the
+ * other one is closed. A folder cannot be passed on. The new device takes
+ * the target only if it has none of its own.
  */
 
 export const PAIRING_SECRET_BYTES = 16;
@@ -53,6 +60,29 @@ export function deviceLabel(userAgent = navigator.userAgent): string {
 	if (/Windows/.test(userAgent)) return 'Windows';
 	if (/Linux/.test(userAgent)) return 'Linux';
 	return 'Browser';
+}
+
+/** What of a target can travel to another device: no folder, no access token. */
+export function shareableTarget(target: TargetConfig | null | undefined): TargetConfig | null {
+	if (!target || target.kind === 'folder') return null;
+	if (target.kind === 'relay') return { kind: 'relay' };
+	return { kind: target.kind, refreshToken: target.refreshToken };
+}
+
+/** A target received over the channel, checked field by field. */
+export function receivedTarget(value: unknown): TargetConfig | null {
+	if (typeof value !== 'object' || value === null) return null;
+	const { kind, refreshToken } = value as Record<string, unknown>;
+	if (kind === 'relay') return { kind: 'relay' };
+	if (
+		(kind === 'dropbox' || kind === 'onedrive' || kind === 'google') &&
+		typeof refreshToken === 'string' &&
+		refreshToken.length > 0 &&
+		refreshToken.length <= 4096
+	) {
+		return { kind, refreshToken };
+	}
+	return null;
 }
 
 function withTimeout<T>(promise: Promise<T>, ms: number, message: string): Promise<T> {
@@ -99,7 +129,9 @@ export class PairingHost {
 	constructor(
 		private readonly header: KeyHeader,
 		private readonly raw: Uint8Array,
-		private readonly onState: (state: HostState) => void
+		private readonly onState: (state: HostState) => void,
+		/** Where the new device should sync, asked for once it has the key. */
+		private readonly shareTarget: () => Promise<TargetConfig | null> = async () => null
 	) {}
 
 	async run(): Promise<void> {
@@ -149,6 +181,9 @@ export class PairingHost {
 		channel.send(JSON.stringify({ t: 'vault', header: this.header, root: toBase64(this.raw) }));
 		this.raw.fill(0);
 		await channelMessage(channel, 'adopted');
+		channel.send(
+			JSON.stringify({ t: 'target', target: shareableTarget(await this.shareTarget()) })
+		);
 		const runtime = await activeSync();
 		if (runtime) {
 			const link = new DocLink(runtime, channel);
@@ -226,7 +261,17 @@ export async function joinAsGuest(
 				const root = await importRoot(raw);
 				raw.fill(0);
 				await adoptVault(header, root, remember);
+				const targetMessage = channelMessage(channel, 'target');
 				channel.send(JSON.stringify({ t: 'adopted' }));
+				const shared = receivedTarget(
+					(await withTimeout(targetMessage, SETTLE_TIMEOUT_MS, 'No target.').catch(() => null))
+						?.target
+				);
+				const state = new SyncState();
+				if (shared && !(await state.target())) {
+					await state.setTarget(shared);
+					void syncRunner.start();
+				}
 				const runtime = await activeSync();
 				if (!runtime) throw new Error('Sync did not start.');
 				const link = new DocLink(runtime, channel);

@@ -21,6 +21,7 @@
 	import { syncRunner } from '#lib/sync/runner.svelte.js';
 	import { parsePath } from '#lib/sync/engine.js';
 	import { JUST_CONNECTED, SyncState } from '#lib/sync/state.js';
+	import { relayAvailable } from '#lib/sync/adapters/relay.js';
 	import { isFolderSyncSupported, pickSyncFolder } from '#lib/sync/adapters/folder.js';
 	import { dropboxAuthorizeUrl } from '#lib/sync/adapters/dropbox.js';
 	import { googleAuthorizeUrl } from '#lib/sync/adapters/gdrive.js';
@@ -30,6 +31,7 @@
 		DROPBOX_CLIENT_ID,
 		GOOGLE_CLIENT_ID,
 		ONEDRIVE_CLIENT_ID,
+		TARGET_NAMES,
 		openStore
 	} from '#lib/sync/targets.js';
 	import { liveSync } from '#lib/sync/live/live.svelte.js';
@@ -75,6 +77,8 @@
 	// this page only connects, disconnects and shows them.
 	const syncState = new SyncState();
 	let folderSyncSupported = $state(false);
+	// The store on bewerby.de (#58), when this server keeps one.
+	let relayOffered = $state(false);
 	let syncNotice = $state('');
 	let joinHeader = $state.raw<KeyHeader | null>(null);
 	let syncUnlockOpen = $state(false);
@@ -101,6 +105,7 @@
 		// navigator.share), and .bwv is not one of them. Where canShare says
 		// no, the download is the way; on iOS that lands in the Files app too.
 		folderSyncSupported = isFolderSyncSupported();
+		void relayAvailable().then((available) => (relayOffered = available));
 		// Back from Dropbox's sign-in (see /cloud/callback).
 		if (sessionStorage.getItem(JUST_CONNECTED)) {
 			sessionStorage.removeItem(JUST_CONNECTED);
@@ -262,6 +267,12 @@
 		announcer.announce(t('backup.vault.imported'));
 	}
 
+	async function connectRelay() {
+		syncNotice = '';
+		await syncState.setTarget({ kind: 'relay' });
+		await afterConnect();
+	}
+
 	async function connectFolder() {
 		syncNotice = '';
 		try {
@@ -275,12 +286,6 @@
 		}
 		await afterConnect();
 	}
-
-	const PROVIDER_NAMES: Record<Provider, string> = {
-		dropbox: 'Dropbox',
-		onedrive: 'OneDrive',
-		google: 'Google Drive'
-	};
 
 	/** Only the providers this build has a client id for (vite.config.ts). */
 	const cloudProviders = [
@@ -386,7 +391,7 @@
 
 	async function reconnectSync() {
 		const target = syncRunner.target;
-		if (target && target !== 'folder') await connectCloud(target);
+		if (target && target !== 'folder' && target !== 'relay') await connectCloud(target);
 		else await syncRunner.syncNow(true);
 	}
 
@@ -429,7 +434,7 @@
 				return t('sync.statusRekey');
 			case 'reconnect':
 				return syncRunner.target && syncRunner.target !== 'folder'
-					? t('sync.statusReconnectCloud').replace('{name}', PROVIDER_NAMES[syncRunner.target])
+					? t('sync.statusReconnectCloud').replace('{name}', TARGET_NAMES[syncRunner.target])
 					: t('sync.statusReconnectFolder');
 			default:
 				return vaultHeader ? '' : t('sync.statusOff');
@@ -709,7 +714,7 @@
 				<p class="vault-state">
 					{syncRunner.target === 'folder'
 						? t('sync.connectedFolder').replace('{name}', syncRunner.targetName ?? '')
-						: t('sync.connectedCloud').replace('{name}', PROVIDER_NAMES[syncRunner.target])}
+						: t('sync.connectedCloud').replace('{name}', TARGET_NAMES[syncRunner.target])}
 				</p>
 				{#if syncStatusText}
 					<p class="card-desc">{syncStatusText}</p>
@@ -746,8 +751,16 @@
 				{#if !vaultHeader}
 					<p class="card-desc">{t('sync.needsVault')}</p>
 				{/if}
-				{#if folderSyncSupported || cloudProviders.length > 0}
+				{#if (relayOffered && vaultHeader) || folderSyncSupported || cloudProviders.length > 0}
 					<div class="sync-options">
+						{#if relayOffered && vaultHeader}
+							<div class="sync-option">
+								<button class="btn-primary" onclick={connectRelay}>
+									{t('sync.connectRelay')}
+								</button>
+								<p class="card-desc">{t('sync.connectRelayHint')}</p>
+							</div>
+						{/if}
 						{#if folderSyncSupported}
 							<div class="sync-option">
 								<button class="btn-primary" onclick={connectFolder}>

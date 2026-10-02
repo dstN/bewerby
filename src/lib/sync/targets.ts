@@ -2,6 +2,7 @@ import { DropboxStore } from './adapters/dropbox.js';
 import { FolderStore, ensureFolderPermission } from './adapters/folder.js';
 import { GoogleDriveStore } from './adapters/gdrive.js';
 import { OneDriveStore } from './adapters/onedrive.js';
+import { RelayStore } from './adapters/relay.js';
 import { ReconnectRequiredError, type RemoteStore } from './port.js';
 import type { SyncState, TargetConfig } from './state.js';
 
@@ -9,6 +10,14 @@ import type { SyncState, TargetConfig } from './state.js';
 export const DROPBOX_CLIENT_ID = __SYNC_CLIENTS__.dropbox;
 export const ONEDRIVE_CLIENT_ID = __SYNC_CLIENTS__.onedrive;
 export const GOOGLE_CLIENT_ID = __SYNC_CLIENTS__.google;
+
+/** Display names; a folder shows its own name instead. */
+export const TARGET_NAMES: Record<Exclude<TargetConfig['kind'], 'folder'>, string> = {
+	relay: 'bewerby.de',
+	dropbox: 'Dropbox',
+	onedrive: 'OneDrive',
+	google: 'Google Drive'
+};
 
 /**
  * The store behind a saved target. A folder whose permission lapsed with the
@@ -24,6 +33,10 @@ export async function openStore(
 			throw new ReconnectRequiredError();
 		}
 		return new FolderStore(target.handle);
+	}
+	if (target.kind === 'relay') {
+		if (!target.space) throw new Error('The bewerby.de store needs the key first.');
+		return new RelayStore(target.space);
 	}
 	const persist = (next: TargetConfig) => state.updateTarget(next);
 	switch (target.kind) {

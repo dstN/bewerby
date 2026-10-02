@@ -9,6 +9,10 @@
 		pairingLink,
 		type HostState
 	} from '#lib/sync/live/pairing.js';
+	import { relayAvailable } from '#lib/sync/adapters/relay.js';
+	import { syncRunner } from '#lib/sync/runner.svelte.js';
+	import { SyncState, type TargetConfig } from '#lib/sync/state.js';
+	import { TARGET_NAMES } from '#lib/sync/targets.js';
 	import QrCode from './QrCode.svelte';
 	import VaultDialog from './VaultDialog.svelte';
 
@@ -21,17 +25,39 @@
 		$props();
 
 	let pairing = $state<HostState>({ step: 'waiting' });
+	// Without a target of its own, this device can start syncing through
+	// bewerby.de with the new one (#58): on unless the user says otherwise.
+	let relayOffered = $state(false);
+	let useRelay = $state(true);
+
+	/** Where the new device should sync; asked for once it has the key. */
+	async function shareTarget(): Promise<TargetConfig | null> {
+		const state = new SyncState();
+		const target = await state.target();
+		if (target) return target;
+		if (!relayOffered || !useRelay) return null;
+		await state.setTarget({ kind: 'relay' });
+		void syncRunner.start();
+		return { kind: 'relay' };
+	}
+
 	// The host is created once, from the props as they were when opened.
 	// svelte-ignore state_referenced_locally
-	const host = new PairingHost(header, raw, (next) => {
-		pairing = next;
-		if (next.step === 'done') announcer.announce(t('pair.done'));
-		if (next.step === 'failed') announcer.announce(t('pair.failed'));
-	});
+	const host = new PairingHost(
+		header,
+		raw,
+		(next) => {
+			pairing = next;
+			if (next.step === 'done') announcer.announce(t('pair.done'));
+			if (next.step === 'failed') announcer.announce(t('pair.failed'));
+		},
+		shareTarget
+	);
 	const link = pairingLink(host.secret);
 	const code = formatPairingCode(host.secret);
 
 	onMount(() => {
+		void relayAvailable().then((available) => (relayOffered = available));
 		void host.run();
 		return () => host.cancel();
 	});
@@ -59,6 +85,21 @@
 			</div>
 			<p>{t('pair.typeCode')}</p>
 			<p class="code" data-testid="pair-code">{code}</p>
+			{#if syncRunner.target === 'folder'}
+				<p class="hint">{t('pair.targetFolder')}</p>
+			{:else if syncRunner.target}
+				<p class="hint">
+					{t('pair.targetShared').replace('{name}', TARGET_NAMES[syncRunner.target])}
+				</p>
+			{:else if relayOffered}
+				<label class="choice">
+					<input type="checkbox" bind:checked={useRelay} aria-describedby="pair-relay-hint" />
+					<span>
+						{t('pair.relayLabel')}
+						<span class="hint" id="pair-relay-hint">{t('pair.relayHint')}</span>
+					</span>
+				</label>
+			{/if}
 			<p class="hint" role="status">{t('pair.waiting')}</p>
 		{:else if pairing.step === 'confirm'}
 			<p>{t('pair.compare').replace('{peer}', pairing.peer)}</p>

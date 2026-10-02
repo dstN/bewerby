@@ -20,6 +20,9 @@ export interface OAuthTarget<K extends 'dropbox' | 'onedrive' | 'google'> {
 
 export type TargetConfig =
 	| { kind: 'folder'; handle: FileSystemDirectoryHandle; name: string }
+	// The store on bewerby.de (#58). The space derives from the key; the sync
+	// runner fills it in and keeps it current, so erasing works while locked.
+	| { kind: 'relay'; space?: string }
 	| OAuthTarget<'dropbox'>
 	| OAuthTarget<'onedrive'>
 	| OAuthTarget<'google'>;

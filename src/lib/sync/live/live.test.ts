@@ -21,7 +21,8 @@ const { SyncRuntime } = await import('#lib/crdt/runtime.js');
 const { createVault } = await import('#lib/vault/vault.js');
 const { comparisonCode, liveKeys, pairingKeys, seal, unseal } = await import('./keys.js');
 const { DocLink } = await import('./link.js');
-const { formatPairingCode, parsePairingCode } = await import('./pairing.js');
+const { formatPairingCode, parsePairingCode, receivedTarget, shareableTarget } =
+	await import('./pairing.js');
 
 /** Two ends of a data channel, delivering messages asynchronously like the real one. */
 function channelPair() {
@@ -119,6 +120,39 @@ describe('live sync keys', () => {
 		expect(code).toMatch(/^([0-9A-Z]{4}-){6}[0-9A-Z]{2}$/);
 		expect([...parsePairingCode(code.toLowerCase().replace(/-/g, ' '))!]).toEqual([...secret]);
 		expect(parsePairingCode('ABCD')).toBeNull();
+	});
+});
+
+describe('passing the sync target on when pairing (#58)', () => {
+	it('sends the store on bewerby.de and a refresh token, never a folder or an access token', () => {
+		expect(shareableTarget({ kind: 'relay', space: 'x'.repeat(43) })).toEqual({ kind: 'relay' });
+		expect(
+			shareableTarget({ kind: 'dropbox', refreshToken: 'r', accessToken: 'a', expiresAt: 1 })
+		).toEqual({ kind: 'dropbox', refreshToken: 'r' });
+		const handle = {} as FileSystemDirectoryHandle;
+		expect(shareableTarget({ kind: 'folder', handle, name: 'Nextcloud' })).toBeNull();
+		expect(shareableTarget(null)).toBeNull();
+	});
+
+	it('takes only a well-formed target from the other side', () => {
+		expect(receivedTarget({ kind: 'relay', space: 'chosen-by-the-sender' })).toEqual({
+			kind: 'relay'
+		});
+		expect(receivedTarget({ kind: 'google', refreshToken: 'r' })).toEqual({
+			kind: 'google',
+			refreshToken: 'r'
+		});
+		for (const value of [
+			null,
+			'relay',
+			{ kind: 'folder', name: 'x' },
+			{ kind: 'dropbox' },
+			{ kind: 'dropbox', refreshToken: '' },
+			{ kind: 'dropbox', refreshToken: 'x'.repeat(5000) },
+			{ kind: 'ftp', refreshToken: 'r' }
+		]) {
+			expect(receivedTarget(value)).toBeNull();
+		}
 	});
 });
 

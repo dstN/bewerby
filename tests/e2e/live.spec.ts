@@ -95,4 +95,60 @@ test.describe('Devices connected directly', () => {
 
 		await phoneContext.close();
 	});
+
+	test('pairing sets the new device up with the store on bewerby.de, so it catches up while the laptop is closed', async ({
+		page,
+		browser
+	}, testInfo) => {
+		const laptop = page;
+		laptop.on('dialog', (dialog) => dialog.accept());
+		await setUpEncryption(laptop);
+		await addApplication(laptop, 'Fabrikam AG');
+
+		await laptop.goto('/backup');
+		await laptop.getByRole('button', { name: 'Gerät hinzufügen' }).click();
+		const unlock = laptop.getByRole('dialog', { name: 'Gerät hinzufügen: Passwort bestätigen' });
+		await unlock.locator('#vault-secret').fill(PASSPHRASE);
+		await unlock.getByRole('button', { name: 'Weiter' }).click();
+		const pairDialog = laptop.getByRole('dialog', { name: 'Gerät hinzufügen', exact: true });
+		// No target of its own yet: bewerby.de is offered, and preselected.
+		await expect(
+			pairDialog.getByLabel('Änderungen verschlüsselt auf bewerby.de bereithalten', {
+				exact: false
+			})
+		).toBeChecked();
+		const link = (await pairDialog.getByTestId('pair-link').textContent())!.trim();
+
+		const phoneContext = await browser.newContext({ baseURL: testInfo.project.use.baseURL });
+		const phone = await phoneContext.newPage();
+		await phone.goto(link);
+		await expect(pairDialog.getByTestId('pair-compare')).toBeVisible({ timeout: 45_000 });
+		await pairDialog.getByRole('button', { name: 'Ja, derselbe Code' }).click();
+		await expect(pairDialog.getByText('Das Gerät ist verbunden.')).toBeVisible({ timeout: 45_000 });
+
+		// Both sync through bewerby.de now.
+		for (const device of [laptop, phone]) {
+			await device.goto('/backup');
+			await expect(device.getByText('Verbunden mit bewerby.de.')).toBeVisible();
+		}
+
+		// A change on the laptop, pushed, and the laptop closed.
+		await addApplication(laptop, 'Contoso GmbH');
+		await laptop.goto('/backup');
+		const syncNow = laptop.getByRole('button', { name: 'Jetzt synchronisieren' });
+		for (let i = 0; i < 2; i++) {
+			await syncNow.click();
+			await expect(syncNow).toBeEnabled();
+		}
+		await laptop.close();
+
+		// The phone, opened again, has it.
+		await phone.goto('/board');
+		await expect(phone.locator('.card', { hasText: 'Contoso GmbH' })).toBeVisible({
+			timeout: 30_000
+		});
+		await expect(phone.locator('.card', { hasText: 'Fabrikam AG' })).toBeVisible();
+
+		await phoneContext.close();
+	});
 });

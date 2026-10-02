@@ -181,6 +181,20 @@ for (const theme of ['light', 'dark'] as const) {
 			await expectNoViolations(page);
 		});
 
+		test('the pairing dialog has no violations, with the bewerby.de option', async ({ page }) => {
+			await setUpEncryption(page);
+			await gotoWithTheme(page, '/backup', theme);
+			await page.getByRole('button', { name: 'Gerät hinzufügen' }).click();
+			const unlock = page.getByRole('dialog', { name: 'Gerät hinzufügen: Passwort bestätigen' });
+			await unlock.locator('#vault-secret').fill(PASSPHRASE);
+			await unlock.getByRole('button', { name: 'Weiter' }).click();
+			const dialog = page.getByRole('dialog', { name: 'Gerät hinzufügen', exact: true });
+			await expect(
+				dialog.getByLabel('Änderungen verschlüsselt auf bewerby.de bereithalten', { exact: false })
+			).toBeVisible();
+			await expectNoViolations(page);
+		});
+
 		test('the date picker popover has no violations', async ({ page }) => {
 			await gotoWithTheme(page, '/board', theme);
 			await page.getByRole('button', { name: 'Bewerbung hinzufügen' }).click();

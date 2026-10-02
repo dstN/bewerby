@@ -6,7 +6,8 @@ import { adoptVault, onVaultChange, unlockedVault } from '#lib/vault/session.js'
 import type { UnlockedVault } from '#lib/vault/vault.js';
 import { DropboxStore } from './adapters/dropbox.js';
 import { GoogleDriveStore } from './adapters/gdrive.js';
-import { SyncEngine, eraseVaultFiles, type SyncReport } from './engine.js';
+import { relaySpace } from './adapters/relay.js';
+import { SyncEngine, announceKey, eraseVaultFiles, type SyncReport } from './engine.js';
 import { ReconnectRequiredError } from './port.js';
 import { SyncState, type TargetConfig } from './state.js';
 import { openStore } from './targets.js';
@@ -84,7 +85,7 @@ class SyncRunner {
 	}
 
 	private async pass(interactive: boolean): Promise<void> {
-		const target = await this.state.target();
+		let target = await this.state.target();
 		const runtime = target ? await activeSync() : null;
 		if (!target || !runtime) {
 			this.status = 'off';
@@ -97,6 +98,14 @@ class SyncRunner {
 		}
 		this.status = 'syncing';
 		try {
+			// The bewerby.de space follows the key: a new one after a key change.
+			if (target.kind === 'relay') {
+				const space = await relaySpace(vault.root);
+				if (target.space !== space) {
+					target = { kind: 'relay', space };
+					await this.state.updateTarget(target);
+				}
+			}
 			const store = await openStore(target, this.state, interactive);
 			const report = await new SyncEngine(runtime, store, vault, this.state).run();
 			this.lastReport = report;
@@ -120,7 +129,17 @@ class SyncRunner {
 	 * devices find the new key there and ask for the new passphrase.
 	 */
 	async rotate(next: UnlockedVault, remember: boolean): Promise<void> {
-		if (this.target) await this.syncNow(true);
+		const target = await this.state.target();
+		if (target) {
+			await this.syncNow(true);
+			try {
+				await announceKey(await openStore(target, this.state, true), next);
+			} catch (err) {
+				// Devices on a folder or Dropbox still find the new key's files;
+				// only the old bewerby.de space misses the notice.
+				console.warn('Announcing the new key failed:', err);
+			}
+		}
 		await adoptVault(next.header, next.root, remember);
 	}
 

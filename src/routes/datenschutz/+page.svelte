@@ -121,6 +121,7 @@
 	<section class="legal-card" id="synchronisation">
 		<h2>{t('legal.datenschutz.syncTitle')}</h2>
 		<p>{t('legal.datenschutz.syncBody')}</p>
+		<p>{t('legal.datenschutz.syncRelayBody')}</p>
 		<p>{t('legal.datenschutz.syncFolderBody')}</p>
 		<!-- Only the providers this build offers (no client id, no button): a
 		     provider that is never contacted is not a recipient. -->

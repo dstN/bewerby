@@ -34,3 +34,4 @@ vite.config.ts.timestamp-*
 # Signaling mailbox of live sync (#55); on the server it lives in the
 # Application Root, locally it appears after an E2E run.
 /tmp
+/data

@@ -58,6 +58,26 @@ export async function eraseVaultFiles(store: RemoteStore, vaultId: string): Prom
 	return paths.length;
 }
 
+/**
+ * Leaves word of a new key (#56) where devices on the old one look: one
+ * empty update sealed under the new key, in the new epoch's directory, so it
+ * carries the new key header. Older epochs' files go. In a folder or Dropbox
+ * that is the place the new key syncs to anyway; the bewerby.de store has a
+ * space per key (#58), and the old space keeps nothing but this notice.
+ */
+export async function announceKey(store: RemoteStore, next: UnlockedVault): Promise<void> {
+	const own = vaultDir(next.header.vaultId);
+	const notice = encodeSnapshot({ update: EMPTY_UPDATE, blobs: {} });
+	await store.write(
+		`${own}/${next.header.epoch}/upd/key/${stamp()}.bwv`,
+		await sealFile(next, 'sync', notice)
+	);
+	for (const path of await store.list()) {
+		const parsed = parsePath(path);
+		if (parsed?.vault === own && parsed.epoch < next.header.epoch) await store.remove(path);
+	}
+}
+
 export interface SyncReport {
 	/** Files from other devices merged in this pass. */
 	applied: number;

@@ -18,5 +18,13 @@ export const variables = defineEnvVars({
 	SIGNAL_DIR: {
 		schema: optional,
 		description: 'Where /api/signal keeps its message files (#55). Default: tmp/signal.'
+	},
+	RELAY_DIR: {
+		schema: optional,
+		description: 'Where /api/relay keeps the encrypted sync files (#58). Default: data/relay.'
+	},
+	RELAY_MAX_MB: {
+		schema: optional,
+		description: 'Upper bound for everything /api/relay stores, in MB (#58). Default: 2048.'
 	}
 });

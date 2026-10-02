@@ -376,6 +376,8 @@ export type TranslationKeys = {
 		callbackWorking: string;
 		callbackFailed: string;
 		backToBackup: string;
+		connectRelay: string;
+		connectRelayHint: string;
 		statusRekey: string;
 		rekeyButton: string;
 		rekeyTitle: string;
@@ -418,6 +420,10 @@ export type TranslationKeys = {
 		liveLabel: string;
 		liveHint: string;
 		livePeers: string;
+		relayLabel: string;
+		relayHint: string;
+		targetShared: string;
+		targetFolder: string;
 	};
 	analytics: {
 		subtitle: string;
@@ -544,6 +550,7 @@ export type TranslationKeys = {
 			syncOneDriveBody: string;
 			syncGoogleBody: string;
 			syncReturnBody: string;
+			syncRelayBody: string;
 			liveTitle: string;
 			liveBody: string;
 			contactFormTitle: string;

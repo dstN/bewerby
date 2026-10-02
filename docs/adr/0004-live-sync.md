@@ -92,8 +92,8 @@ there is no direct path, cloud or folder sync carries the changes instead.
     lives and for as long as the access log is kept.
 - The devices learn each other's IP addresses, as any direct connection
   requires.
-- Rooms on disk do not survive a deploy (the application directory is
-  replaced), which costs at most a pairing that was in progress.
+- Rooms on disk survive a deploy, which only swaps `build/`; they expire
+  after two minutes anyway.
 - `qrcode-generator` (MIT, no dependencies) draws the QR code. It is
   rendered as an SVG path, with no `{@html}` and no `data:` URL.
 
