@@ -9,6 +9,13 @@
 	] as const;
 
 	const facts = ['landing.fact1', 'landing.fact2', 'landing.fact3', 'landing.fact4'] as const;
+
+	const devicePoints = [
+		'landing.devicesPair',
+		'landing.devicesSync',
+		'landing.devicesBackup',
+		'landing.devicesLost'
+	] as const;
 </script>
 
 <svelte:head>
@@ -46,6 +53,17 @@
 				<li>{t(fact)}</li>
 			{/each}
 		</ul>
+	</section>
+
+	<section class="data-section" aria-labelledby="landing-devices">
+		<h2 id="landing-devices">{t('landing.devicesHeading')}</h2>
+		<p>{t('landing.devicesBody')}</p>
+		<ul class="points">
+			{#each devicePoints as point (point)}
+				<li>{t(point)}</li>
+			{/each}
+		</ul>
+		<a class="cta-secondary" href="{resolve('/backup')}#sync">{t('landing.devicesLink')}</a>
 	</section>
 
 	<section class="data-section" aria-labelledby="landing-data">
@@ -191,6 +209,15 @@
 
 	.data-section p {
 		margin: 0;
+		font-size: 13px;
+		line-height: 1.7;
+		color: var(--text-secondary);
+		max-width: 66ch;
+	}
+
+	.points {
+		margin: 10px 0 12px;
+		padding-left: 20px;
 		font-size: 13px;
 		line-height: 1.7;
 		color: var(--text-secondary);

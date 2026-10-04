@@ -479,7 +479,14 @@
 		"cta": "Board öffnen",
 		"privacyLink": "Wie die Daten gespeichert werden",
 		"dataHeading": "Wo liegen meine Daten?",
-		"dataBody": "Die Einträge liegen in der IndexedDB deines Browsers, angehängte PDFs im OPFS, dein Profil im localStorage. Löschst du die Browserdaten, sind die Bewerbungen weg. Dafür gibt es unter Backup & Sync den Export als Datei."
+		"dataBody": "Die Einträge liegen in der IndexedDB deines Browsers, angehängte PDFs im OPFS, dein Profil im localStorage. Löschst du die Browserdaten, sind die Bewerbungen weg. Dafür gibt es unter Backup & Sync die verschlüsselte Sicherung und den Abgleich mit deinen anderen Geräten.",
+		"devicesHeading": "Auf mehreren Geräten",
+		"devicesBody": "Wenn du willst, nimmst du deine Bewerbungen auf Handy und Laptop mit, Ende-zu-Ende-verschlüsselt: Den Schlüssel haben nur deine Geräte. Ohne das bleibt alles auf diesem Gerät.",
+		"devicesPair": "Ein Gerät per QR-Code hinzufügen, ohne dort ein Passwort einzugeben.",
+		"devicesSync": "Abgleichen über bewerby.de oder einen Sync-Ordner, auch wenn das andere Gerät gerade zu ist, oder direkt zwischen zwei offenen Geräten.",
+		"devicesBackup": "Eine verschlüsselte Sicherung als Datei, etwa für iCloud oder einen USB-Stick.",
+		"devicesLost": "Gerät verloren? Passwort ändern, dann bekommt es nichts Neues mehr. Was auf bewerby.de liegt, siehst und löschst du selbst.",
+		"devicesLink": "Backup & Sync einrichten"
 	},
 	"coverLetter": {
 		"heading": "Anschreiben",

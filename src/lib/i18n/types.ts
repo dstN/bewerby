@@ -140,6 +140,13 @@ export type TranslationKeys = {
 		privacyLink: string;
 		dataHeading: string;
 		dataBody: string;
+		devicesHeading: string;
+		devicesBody: string;
+		devicesPair: string;
+		devicesSync: string;
+		devicesBackup: string;
+		devicesLost: string;
+		devicesLink: string;
 	};
 	application: {
 		fetch: {

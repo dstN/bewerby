@@ -479,7 +479,14 @@
 		"cta": "Open the board",
 		"privacyLink": "How your data is stored",
 		"dataHeading": "Where is my data?",
-		"dataBody": "Entries live in your browser's IndexedDB, attached PDFs in OPFS, your profile in localStorage. Clear your browser data and the applications are gone. That is what the file export under Backup & Sync is for."
+		"dataBody": "Entries live in your browser's IndexedDB, attached PDFs in OPFS, your profile in localStorage. Clear your browser data and the applications are gone. That is what the encrypted backup and syncing with your other devices under Backup & Sync are for.",
+		"devicesHeading": "On more than one device",
+		"devicesBody": "If you want, you take your applications along to phone and laptop, end-to-end encrypted: only your devices hold the key. Without that, everything stays on this device.",
+		"devicesPair": "Add a device by QR code, without typing a passphrase on it.",
+		"devicesSync": "Sync through bewerby.de or a sync folder, even while the other device is closed, or directly between two open devices.",
+		"devicesBackup": "An encrypted backup as a file, for iCloud or a USB stick, say.",
+		"devicesLost": "Lost a device? Change the passphrase, and it gets nothing new. What is on bewerby.de you see and delete yourself.",
+		"devicesLink": "Set up Backup & Sync"
 	},
 	"coverLetter": {
 		"heading": "Cover letter",
