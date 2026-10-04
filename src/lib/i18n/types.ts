@@ -152,6 +152,7 @@ export type TranslationKeys = {
 		devicesBody: string;
 		devicesPair: string;
 		devicesSync: string;
+		devicesSyncDropbox: string;
 		devicesBackup: string;
 		devicesLost: string;
 		devicesLink: string;

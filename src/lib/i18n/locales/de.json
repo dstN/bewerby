@@ -492,7 +492,8 @@
 		"devicesSync": "Live abgleichen, solange zwei Geräte offen sind, und über einen Sync-Ordner auch, wenn eines gerade zu ist.",
 		"devicesBackup": "Eine verschlüsselte Sicherung als Datei, etwa für iCloud oder einen USB-Stick.",
 		"devicesLost": "Gerät verloren? Passwort ändern, dann bekommt es nichts Neues mehr.",
-		"devicesLink": "Backup & Sync einrichten"
+		"devicesLink": "Backup & Sync einrichten",
+		"devicesSyncDropbox": "Live abgleichen, solange zwei Geräte offen sind, und über Dropbox oder einen Sync-Ordner auch, wenn eines gerade zu ist."
 	},
 	"coverLetter": {
 		"heading": "Anschreiben",

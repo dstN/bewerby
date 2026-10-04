@@ -492,7 +492,8 @@
 		"devicesSync": "Sync live while two devices are open, and through a sync folder even while one of them is closed.",
 		"devicesBackup": "An encrypted backup as a file, for iCloud or a USB stick, say.",
 		"devicesLost": "Lost a device? Change the passphrase, and it gets nothing new.",
-		"devicesLink": "Set up Backup & Sync"
+		"devicesLink": "Set up Backup & Sync",
+		"devicesSyncDropbox": "Sync live while two devices are open, and through Dropbox or a sync folder even while one of them is closed."
 	},
 	"coverLetter": {
 		"heading": "Cover letter",

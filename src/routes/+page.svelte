@@ -10,9 +10,10 @@
 
 	const facts = ['landing.fact1', 'landing.fact2', 'landing.fact3', 'landing.fact4'] as const;
 
+	// Dropbox only where this build offers it (vite.config.ts).
 	const devicePoints = [
 		'landing.devicesPair',
-		'landing.devicesSync',
+		__SYNC_CLIENTS__.dropbox ? 'landing.devicesSyncDropbox' : 'landing.devicesSync',
 		'landing.devicesBackup',
 		'landing.devicesLost'
 	] as const;
