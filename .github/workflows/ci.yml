@@ -1,8 +1,14 @@
 name: CI
 
+# Not on master: a commit gets there by fast-forward after its branch passed,
+# and deploy.yml ships that branch run's build instead of testing the same
+# commit again. For a commit that never ran here (a merge commit, a direct
+# push), deploy.yml calls this workflow itself.
 on:
   push:
+    branches-ignore: [master]
   pull_request:
+  workflow_call:
 
 permissions:
   contents: read
@@ -76,11 +82,12 @@ jobs:
 
       # This artifact IS the release - deploy.yml downloads exactly this
       # build and ships it, rather than re-running `npm run build` in the
-      # deploy job, so what gets deployed is provably what CI just tested.
-      # Master-only: feature branches and PRs never deploy, so there is
-      # nothing to gain from uploading their build output.
+      # deploy job, so what gets deployed is provably what CI tested. Every
+      # branch uploads it, because the run that tested a commit is the one
+      # whose build ships when master fast-forwards to it. Not for pull
+      # requests: those build a merge ref that never reaches master as is.
       - name: Upload build artifact
-        if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+        if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v7
         with:
           name: bewerby-build-${{ github.sha }}

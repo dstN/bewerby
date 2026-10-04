@@ -126,8 +126,18 @@ npm run build
 ## Automated deploy (CI/CD)
 
 `.github/workflows/deploy.yml` runs the steps above automatically on every
-successful `CI` run on `master`: it downloads the exact build artifact CI
-just tested, uploads it to a staging directory over SSH, activates it with
+push to `master`. It ships the exact build artifact CI tested for that
+commit, without testing it again:
+
+- CI runs on every branch except `master` and keeps the build as an
+  artifact for 7 days.
+- `master` fast-forwards to a commit its branch already passed, so the
+  deploy finds that run and takes its build.
+- For a commit CI never saw (a merge commit, a direct push, or an expired
+  artifact) the deploy runs CI first, as a reusable workflow, and ships
+  only if it passes.
+
+It uploads the build to a staging directory over SSH, activates it with
 an atomic directory rename, restarts Passenger, runs a smoke test (the root
 page returns real content, `manifest.json`/`service-worker.js`/`robots.txt`
 are reachable), verifies the Application Root itself isn't web-readable

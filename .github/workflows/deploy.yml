@@ -1,16 +1,17 @@
 name: Deploy
 
+# On every push to master. The commit's build comes from the CI run that
+# already tested it on its branch (master fast-forwards to that commit), so
+# nothing runs twice. Only a commit CI never saw - a merge commit, a direct
+# push, or one whose artifact expired after 7 days - gets a CI run here first.
 on:
-  workflow_run:
-    workflows: [CI]
+  push:
     branches: [master]
-    types: [completed]
 
 # The repo's default workflow token permission is "read", but that default
-# does not extend to the `actions` scope - actions/download-artifact below
-# needs it explicitly to pull CI's artifact by run-id from this separate,
-# workflow_run-triggered workflow (cross-workflow artifact access is gated
-# behind this specific scope, unlike same-workflow artifact up/download).
+# does not extend to the `actions` scope - looking up CI runs and
+# actions/download-artifact below need it explicitly to read another run's
+# artifact (cross-run artifact access is gated behind this specific scope).
 # Without it the download 403s ("Resource not accessible by integration"),
 # which is exactly what broke this workflow once the repo's default
 # permission tightened - see ci.yml's `permissions: contents: read` for the
@@ -20,7 +21,43 @@ permissions:
   actions: read
 
 jobs:
+  # The successful CI run for exactly this commit whose build artifact is
+  # still there; empty when there is none.
+  tested:
+    name: Find the tested build
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      run-id: ${{ steps.lookup.outputs.run-id }}
+    steps:
+      - id: lookup
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          run=''
+          for id in $(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs?head_sha=$GITHUB_SHA&status=success&per_page=20" --jq '.workflow_runs[].id'); do
+            if gh api "repos/$GITHUB_REPOSITORY/actions/runs/$id/artifacts" \
+              --jq ".artifacts[] | select(.name == \"bewerby-build-$GITHUB_SHA\" and .expired == false) | .id" | grep -q .; then
+              run="$id"
+              break
+            fi
+          done
+          if [ -n "$run" ]; then
+            echo "Shipping the build CI run $run tested."
+          else
+            echo "No tested build for $GITHUB_SHA yet - running CI first."
+          fi
+          echo "run-id=$run" >> "$GITHUB_OUTPUT"
+
+  ci:
+    name: CI (only for an untested commit)
+    needs: tested
+    if: needs.tested.outputs.run-id == ''
+    uses: ./.github/workflows/ci.yml
+
   deploy:
+    needs: [tested, ci]
     name: Deploy to Netcup
     runs-on: ubuntu-latest
     # See ci.yml's identical comment: apt-get against the runner's mirror has
@@ -29,7 +66,8 @@ jobs:
     # the whole runner VM - a hung run here would otherwise sit on GitHub's
     # default 360-minute cap while a real deploy waits on it.
     timeout-minutes: 15
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    # Runs when a tested build was found (ci skipped) or CI just passed here.
+    if: ${{ !cancelled() && needs.tested.result == 'success' && (needs.tested.outputs.run-id != '' || needs.ci.result == 'success') }}
     # The environment must exist in repo Settings → Environments for its protection
     # rules to apply. If it does not, GitHub silently auto-creates an UNPROTECTED one
     # on first run - so an absent `production` environment means no approval gate.
@@ -74,16 +112,17 @@ jobs:
       - name: Checkout the built commit
         uses: actions/checkout@v7
         with:
-          ref: ${{ github.event.workflow_run.head_sha }}
+          ref: ${{ github.sha }}
 
       - name: Download build artifact
         uses: actions/download-artifact@v8
         with:
-          name: bewerby-build-${{ github.event.workflow_run.head_sha }}
+          name: bewerby-build-${{ github.sha }}
           path: build/
-          # artifact is uploaded by the CI workflow for the same commit
+          # From the branch run that tested this commit, or from this run's
+          # own CI job when there was none.
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          run-id: ${{ github.event.workflow_run.id }}
+          run-id: ${{ needs.tested.outputs.run-id || github.run_id }}
 
       # Everything remote is done with plain ssh + sshpass rather than a
       # marketplace action: the webspace login is a password (Netcup exposes no
