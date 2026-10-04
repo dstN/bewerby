@@ -108,6 +108,7 @@ export type TranslationKeys = {
 		generating: string;
 		errorGenerate: string;
 		errorNoLetter: string;
+		errorCvMissing: string;
 		downloaded: string;
 		save: string;
 		saved: string;

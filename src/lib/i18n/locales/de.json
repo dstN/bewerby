@@ -543,7 +543,8 @@
 		"save": "Speichern",
 		"saved": "Gespeichert.",
 		"errorSave": "Speichern fehlgeschlagen. Die Änderungen sind noch da, versuch es erneut.",
-		"close": "Schließen"
+		"close": "Schließen",
+		"errorCvMissing": "Der Lebenslauf ist auf diesem Gerät nicht mehr gespeichert. Lade ihn bitte erneut hoch, damit er mitgeschickt wird."
 	},
 	"sync": {
 		"title": "Synchronisation zwischen deinen Geräten",

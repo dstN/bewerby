@@ -202,10 +202,15 @@
 		});
 	}
 
+	/** Shown as attached, but gone from this device. */
+	class MissingCvError extends Error {}
+
 	async function readCvBytes(): Promise<Uint8Array | null> {
 		if (!effectiveCvRef) return null;
 		const blob = await readPdfFromOpfs(effectiveCvRef);
-		return blob ? new Uint8Array(await blob.arrayBuffer()) : null;
+		// Sending the letter alone would look as if the CV were in it.
+		if (!blob) throw new MissingCvError();
+		return new Uint8Array(await blob.arrayBuffer());
 	}
 
 	async function withBusy(work: () => Promise<void>) {
@@ -215,6 +220,10 @@
 		try {
 			await work();
 		} catch (err) {
+			if (err instanceof MissingCvError) {
+				error = t('dispatch.errorCvMissing');
+				return;
+			}
 			console.error('Dispatch failed:', err);
 			const code = err instanceof PdfProcessingError ? err.code : undefined;
 			error = code ? t(PDF_ERROR_KEYS[code]) : t('dispatch.errorGenerate');

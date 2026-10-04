@@ -72,6 +72,29 @@ test.describe('Preparing an application for sending', () => {
 		expect(isPdf(path!)).toBe(true);
 	});
 
+	test('says so when the stored CV is gone, instead of sending the letter alone', async ({
+		page
+	}) => {
+		await storeGlobalCv(page);
+		await createApplication(page);
+		// The CV's file goes missing from the device; the profile still names it.
+		await page.evaluate(async () => {
+			const root = await navigator.storage.getDirectory();
+			await root.removeEntry('application-pdfs', { recursive: true });
+		});
+		const dialog = await openDispatch(page);
+		await expect(dialog.locator('.cv-state')).toContainText('lebenslauf.pdf');
+		await dialog.getByRole('button', { name: 'Vorlage einfügen' }).click();
+
+		const downloads: string[] = [];
+		page.on('download', (download) => downloads.push(download.suggestedFilename()));
+		await dialog.getByRole('button', { name: 'Herunterladen', exact: true }).click();
+		await expect(dialog.getByRole('alert')).toContainText(
+			'Der Lebenslauf ist auf diesem Gerät nicht mehr gespeichert'
+		);
+		expect(downloads).toEqual([]);
+	});
+
 	test('downloads the letter and the CV as two files when asked to', async ({ page }) => {
 		await storeGlobalCv(page);
 		await createApplication(page);

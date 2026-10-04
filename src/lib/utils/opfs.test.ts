@@ -14,7 +14,7 @@ const PDF_DIRECTORY = 'application-pdfs';
  * testing independently of the browser implementing it.
  */
 class FakeDirectoryHandle {
-	files = new Map<string, Blob>();
+	files = new Map<string, File>();
 	private children = new Map<string, FakeDirectoryHandle>();
 	/** Set by a test to make the next operation fail like a quota error would. */
 	failWith: Error | null = null;
@@ -33,12 +33,14 @@ class FakeDirectoryHandle {
 	async getFileHandle(name: string, options?: { create?: boolean }) {
 		if (!this.files.has(name)) {
 			if (!options?.create) throw new Error('NotFoundError');
-			this.files.set(name, new Blob([]));
+			this.files.set(name, new File([], name));
 		}
 		return {
 			getFile: async () => this.files.get(name)!,
 			createWritable: async () => ({
-				write: async (blob: Blob) => void this.files.set(name, blob),
+				// A File, as the real thing hands back: it carries when it was written.
+				write: async (blob: Blob) =>
+					void this.files.set(name, new File([blob], name, { lastModified: Date.now() })),
 				close: async () => {}
 			})
 		};
@@ -174,6 +176,19 @@ describe('deletePdfFromOpfs', () => {
 });
 
 describe('cleanupOrphanedPdfs', () => {
+	/** The sweep leaves files younger than a minute alone; most tests are about older ones. */
+	function aMinuteLater() {
+		vi.setSystemTime(Date.now() + 61_000);
+	}
+
+	beforeEach(() => {
+		vi.useFakeTimers({ toFake: ['Date'] });
+	});
+
+	afterEach(() => {
+		vi.useRealTimers();
+	});
+
 	it('deletes exactly the files no application row still references', async () => {
 		vi.spyOn(console, 'info').mockImplementation(() => {});
 		const { writePdfToOpfs, cleanupOrphanedPdfs } = await loadOpfs();
@@ -181,6 +196,7 @@ describe('cleanupOrphanedPdfs', () => {
 		const kept = await writePdfToOpfs(pdfBlob('still referenced'));
 		const orphanA = await writePdfToOpfs(pdfBlob('orphan a'));
 		const orphanB = await writePdfToOpfs(pdfBlob('orphan b'));
+		aMinuteLater();
 
 		await cleanupOrphanedPdfs(new Set([kept]));
 
@@ -188,6 +204,21 @@ describe('cleanupOrphanedPdfs', () => {
 		expect([...dir.files.keys()]).toEqual([kept]);
 		expect(dir.files.has(orphanA)).toBe(false);
 		expect(dir.files.has(orphanB)).toBe(false);
+	});
+
+	it('spares a file written in the last minute, whose reference may not be saved yet', async () => {
+		vi.spyOn(console, 'info').mockImplementation(() => {});
+		const { writePdfToOpfs, cleanupOrphanedPdfs } = await loadOpfs();
+		const old = await writePdfToOpfs(pdfBlob('long orphaned'));
+		aMinuteLater();
+		// Uploaded while the sweep runs on start: not in the set it was given.
+		const fresh = await writePdfToOpfs(pdfBlob('just uploaded'));
+
+		await cleanupOrphanedPdfs(new Set());
+
+		const dir = await pdfDir();
+		expect(dir.files.has(old)).toBe(false);
+		expect(dir.files.has(fresh)).toBe(true);
 	});
 
 	it('keeps every file when all of them are still referenced, and logs nothing', async () => {

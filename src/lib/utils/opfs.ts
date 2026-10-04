@@ -65,13 +65,23 @@ export async function deletePdfFromOpfs(ref: string): Promise<void> {
  * to run occasionally (app start, after import) to catch files orphaned by a
  * crash or an interrupted delete rather than accumulating forever.
  */
+/**
+ * A file this young may belong to an upload whose reference is not saved
+ * yet: the sweep runs while the app starts, and the user may already be
+ * uploading a CV or an ad. It is left for the next start.
+ */
+const YOUNG_FILE_MS = 60_000;
+
 export async function cleanupOrphanedPdfs(validRefs: Set<string>): Promise<void> {
 	if (!isOpfsSupported()) return;
 	try {
 		const dir = await getPdfDirectory();
 		const orphans: string[] = [];
 		for await (const name of dir.keys()) {
-			if (!validRefs.has(name)) orphans.push(name);
+			if (validRefs.has(name)) continue;
+			const file = await (await dir.getFileHandle(name)).getFile();
+			if (Date.now() - file.lastModified < YOUNG_FILE_MS) continue;
+			orphans.push(name);
 		}
 		await Promise.all(orphans.map((name) => dir.removeEntry(name)));
 		if (orphans.length > 0) {

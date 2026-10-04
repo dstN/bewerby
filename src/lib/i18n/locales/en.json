@@ -543,7 +543,8 @@
 		"save": "Save",
 		"saved": "Saved.",
 		"errorSave": "Saving failed. Your changes are still here, try again.",
-		"close": "Close"
+		"close": "Close",
+		"errorCvMissing": "The CV is no longer stored on this device. Please upload it again so that it goes along."
 	},
 	"sync": {
 		"title": "Sync between your devices",
