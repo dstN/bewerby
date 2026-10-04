@@ -96,7 +96,48 @@ export function buildApplicationCsv(
 	return `${BOM}${[labels.header.map(escapeCell).join(';'), ...rows].join('\r\n')}\r\n`;
 }
 
-/** e.g. bewerbungen-2026-09-23.pdf */
-export function exportFileName(extension: 'csv' | 'pdf' = 'csv', now = new Date()): string {
-	return `bewerbungen-${now.toISOString().slice(0, 10)}.${extension}`;
+/** A date range as the filter bar holds it: YYYY-MM-DD, either end may be empty. */
+export interface Period {
+	from: string;
+	to: string;
+}
+
+/** Midnight at the start of a YYYY-MM-DD day, local time; `days` later for the end. */
+function dayStart(day: string, days = 0): number {
+	const [year, month, date] = day.split('-').map(Number);
+	return new Date(year, month - 1, date + days).getTime();
+}
+
+/**
+ * Whether an application falls into the period by the date it was sent
+ * (as on the Nachweis), both days included, in local time.
+ */
+export function inPeriod(
+	app: Pick<Application, 'history' | 'sentAt' | 'appliedAt' | 'createdAt'>,
+	period: Period
+): boolean {
+	const at = getAppliedAt(app);
+	if (period.from && at < dayStart(period.from)) return false;
+	if (period.to && at >= dayStart(period.to, 1)) return false;
+	return true;
+}
+
+/**
+ * e.g. bewerbungen-2026-09-23.pdf, or with a period
+ * bewerbungen-2026-11-01-bis-2027-01-31.pdf.
+ */
+export function exportFileName(
+	extension: 'csv' | 'pdf' = 'csv',
+	now = new Date(),
+	period: Period = { from: '', to: '' }
+): string {
+	const span =
+		period.from && period.to
+			? `${period.from}-bis-${period.to}`
+			: period.from
+				? `ab-${period.from}`
+				: period.to
+					? `bis-${period.to}`
+					: now.toISOString().slice(0, 10);
+	return `bewerbungen-${span}.${extension}`;
 }

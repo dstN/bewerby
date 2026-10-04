@@ -62,8 +62,15 @@
 			"pdfHeading": "Record of job applications",
 			"pdfGenerated": "Generated on {date} · {count} applications",
 			"pdfPage": "Page {page} of {total}",
-			"doneAnnouncement": "Exported {count} applications."
-		}
+			"doneAnnouncement": "Exported {count} applications.",
+			"pdfPeriod": "Period: {range}",
+			"periodSince": "from {date}",
+			"periodUntil": "until {date}"
+		},
+		"period": "Period",
+		"periodFrom": "From",
+		"periodTo": "To",
+		"periodClear": "Clear the period"
 	},
 	"application": {
 		"title": "Job Title",
@@ -396,7 +403,7 @@
 			"syncRelayBody": "Through bewerby.de: bewerby uses this store only if you explicitly choose it, never automatically: with “Sync through bewerby.de” on the backup page, or by ticking a box that is not preselected when pairing a device. A device you pair afterwards takes over that choice. Without it, none of your application data is on the bewerby.de server, not even encrypted. Once you have chosen it, the server keeps the encrypted files so that a device that is not open right now can catch up later. The server receives nothing but ciphertext and never the key. Even the id of the storage space is derived from your key, so only your devices find it. Stored are the encrypted files with their names (see above) and their sizes rounded up to size classes, and the day the space was last used. Every sync (about once a minute while the application is open) appears in the access log with the IP address, as described under “Hosting”; the id and the file names are not in it, because they are not sent in the address. To keep the store from being misused, the server holds the IP address in memory for at most one hour to limit requests. The legal basis is Art. 6(1)(f) GDPR; the legitimate interest lies in providing the feature you explicitly chose and protecting it from misuse. The files are kept on netcup’s server in Germany (processing on our behalf under Art. 28 GDPR, see above); nothing is transferred to third countries. You see what is there and delete it yourself, at any time and at once: the backup page shows how many files of what size are there and when the space was last used, and “Delete my data on bewerby.de” removes all of them, as does the option when erasing all data in the settings. All that remains is a marker with no content, so that your other devices disconnect as well instead of uploading the data again; it goes with the space after 180 days without access. Storage spaces no device fetches for 180 days are deleted by the server. If you have no device and no backup with your key left, nobody can find the space, us included: we cannot link it to a person (Art. 11 GDPR), and so cannot delete it on request either; it then disappears after 180 days without access. After a key change, the old space keeps only an encrypted notice of the new key, until it too is deleted after that period.",
 			"syncSelfService": "See and delete what bewerby.de keeps, yourself",
 			"storageLegalBasis": "Everything bewerby keeps on your device - in IndexedDB, the Origin Private File System, localStorage, sessionStorage, and the cache in which the service worker stores the application for offline use - is strictly necessary for a feature you explicitly use (Section 25(2) no. 2 of the German TDDDG); none of it serves tracking. No consent is therefore required for it.",
-			"storageKeyBoardViewDesc": "Sort and filters chosen on the board (tag, priority, color), without the search text"
+			"storageKeyBoardViewDesc": "Sort and filters chosen on the board (tag, priority, color, period), without the search text"
 		},
 		"nutzungsbedingungen": {
 			"title": "Terms of Use",

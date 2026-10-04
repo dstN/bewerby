@@ -62,8 +62,15 @@
 			"pdfHeading": "Nachweis der Bewerbungsbemühungen",
 			"pdfGenerated": "Erstellt am {date} · {count} Bewerbungen",
 			"pdfPage": "Seite {page} von {total}",
-			"doneAnnouncement": "{count} Bewerbungen exportiert."
-		}
+			"doneAnnouncement": "{count} Bewerbungen exportiert.",
+			"pdfPeriod": "Zeitraum: {range}",
+			"periodSince": "ab {date}",
+			"periodUntil": "bis {date}"
+		},
+		"period": "Zeitraum",
+		"periodFrom": "Von",
+		"periodTo": "Bis",
+		"periodClear": "Zeitraum zurücksetzen"
 	},
 	"application": {
 		"title": "Jobtitel",
@@ -396,7 +403,7 @@
 			"syncRelayBody": "Über bewerby.de: Diese Ablage nutzt bewerby nur, wenn du sie ausdrücklich wählst, nie automatisch: mit „Über bewerby.de abgleichen“ auf der Backup-Seite oder mit einem Häkchen beim Koppeln eines Geräts, das nicht vorausgewählt ist. Ein Gerät, das du danach koppelst, übernimmt diese Wahl. Ohne sie liegen keine deiner Bewerbungsdaten auf dem Server von bewerby.de, auch nicht verschlüsselt. Hast du sie gewählt, speichert der Server die verschlüsselten Dateien, damit ein Gerät, das gerade nicht geöffnet ist, später aufholen kann. Der Server erhält ausschließlich Chiffretext und nie den Schlüssel. Auch die Kennung des Speicherbereichs wird aus deinem Schlüssel abgeleitet, sodass nur deine Geräte ihn finden. Gespeichert werden die verschlüsselten Dateien mit ihren Namen (siehe oben) und ihrer auf Größenklassen aufgerundeten Größe sowie der Tag der letzten Nutzung des Bereichs. Jeder Abgleich (bei geöffneter Anwendung etwa einmal pro Minute) erscheint wie unter „Hosting“ beschrieben mit IP-Adresse im Zugriffsprotokoll; Kennung und Dateinamen stehen nicht darin, weil sie nicht in der Adresse übertragen werden. Damit die Ablage nicht missbraucht wird, hält der Server die IP-Adresse zur Begrenzung der Anfragen höchstens eine Stunde im Arbeitsspeicher. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO; das berechtigte Interesse liegt darin, dir die Funktion bereitzustellen, die du ausdrücklich gewählt hast, und sie vor Missbrauch zu schützen. Die Dateien liegen auf dem Server von netcup in Deutschland (Auftragsverarbeitung nach Art. 28 DSGVO, siehe oben); in Drittländer wird nichts übermittelt. Du siehst selbst nach, was dort liegt, und löschst es selbst, jederzeit und sofort: auf der Backup-Seite steht, wie viele Dateien mit welcher Größe dort liegen und wann der Bereich zuletzt genutzt wurde, und „Meine Daten auf bewerby.de löschen“ entfernt alle, ebenso die Option beim Löschen aller Daten in den Einstellungen. Zurück bleibt nur eine Markierung ohne Inhalt, damit deine anderen Geräte die Daten nicht erneut hochladen, sondern sich ebenfalls trennen; sie verschwindet mit dem Bereich nach 180 Tagen ohne Zugriff. Speicherbereiche, die 180 Tage lang kein Gerät abruft, löscht der Server von selbst. Hast du kein Gerät und keine Sicherung mit deinem Schlüssel mehr, kann niemand den Bereich finden, auch wir nicht: Wir können ihn keiner Person zuordnen (Art. 11 DSGVO) und deshalb auch auf Anfrage nicht gezielt löschen; er verschwindet dann nach 180 Tagen ohne Zugriff. Nach einem Schlüsselwechsel bleibt im alten Bereich nur ein verschlüsselter Hinweis auf den neuen Schlüssel, bis auch er nach dieser Frist gelöscht wird.",
 			"syncSelfService": "Selbst nachsehen und löschen, was auf bewerby.de liegt",
 			"storageLegalBasis": "Alles, was bewerby auf deinem Gerät ablegt – in IndexedDB, im Origin Private File System, in localStorage, in sessionStorage und im Cache, in dem der Service Worker die Anwendung für die Nutzung ohne Internetverbindung speichert –, ist für eine Funktion unbedingt erforderlich, die du ausdrücklich nutzt (§ 25 Abs. 2 Nr. 2 TDDDG); nichts davon dient dem Tracking. Eine Einwilligung ist dafür deshalb nicht erforderlich.",
-			"storageKeyBoardViewDesc": "Gewählte Sortierung und Filter auf dem Board (Tag, Priorität, Farbe), ohne Suchtext"
+			"storageKeyBoardViewDesc": "Gewählte Sortierung und Filter auf dem Board (Tag, Priorität, Farbe, Zeitraum), ohne Suchtext"
 		},
 		"nutzungsbedingungen": {
 			"title": "Nutzungsbedingungen",

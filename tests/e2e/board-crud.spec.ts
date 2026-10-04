@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { test, expect } from '@playwright/test';
+import { makeSeedApplication, seedApplications } from './fixtures/seed.js';
 
 test('the sidebar version tag matches package.json (single source of truth)', async ({ page }) => {
 	const pkg = JSON.parse(readFileSync('package.json', 'utf-8'));
@@ -123,5 +124,48 @@ test.describe('Kanban board CRUD', () => {
 		await expect(dialog).toBeVisible();
 		await expect(page).toHaveURL(/\/board(\?.*)?$/);
 		await expect(page).not.toHaveURL(/new=1/);
+	});
+});
+
+test.describe('Limiting the board and the Nachweis to a period', () => {
+	test('keeps applications sent in the period, names it in the file, and clears again', async ({
+		page
+	}) => {
+		const sent = (company: string, y: number, m: number, d: number) => {
+			const at = new Date(y, m - 1, d, 12).getTime();
+			return makeSeedApplication({ company, status: 'sent', appliedAt: at, createdAt: at });
+		};
+		await page.goto('/board');
+		await seedApplications(page, [
+			sent('Januar AG', 2026, 1, 20),
+			sent('November GmbH', 2026, 11, 5),
+			sent('Dezember KG', 2026, 12, 10)
+		]);
+		await page.evaluate(() =>
+			localStorage.setItem(
+				'bewerby-board-view',
+				JSON.stringify({ from: '2026-11-01', to: '2027-01-31' })
+			)
+		);
+		await page.reload();
+
+		// The winter phase only, and the pickers say so.
+		await expect(page.locator('.card')).toHaveCount(2);
+		await expect(page.locator('.card', { hasText: 'Januar AG' })).toHaveCount(0);
+		await expect(page.getByRole('button', { name: /^Von: 1\. November 2026/ })).toBeVisible();
+
+		const [download] = await Promise.all([
+			page.waitForEvent('download'),
+			page.getByRole('button', { name: 'Nachweis (CSV)' }).click()
+		]);
+		expect(download.suggestedFilename()).toBe('bewerbungen-2026-11-01-bis-2027-01-31.csv');
+		const csv = readFileSync((await download.path())!, 'utf-8');
+		expect(csv).toContain('November GmbH');
+		expect(csv).toContain('Dezember KG');
+		expect(csv).not.toContain('Januar AG');
+
+		await page.getByRole('button', { name: 'Zeitraum zurücksetzen' }).click();
+		await expect(page.locator('.card')).toHaveCount(3);
+		await expect(page.getByRole('button', { name: 'Von: Kalender öffnen' })).toBeVisible();
 	});
 });

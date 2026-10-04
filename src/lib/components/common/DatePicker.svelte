@@ -6,11 +6,17 @@
 	let {
 		value = $bindable(''),
 		id = '',
-		disabled = false
+		disabled = false,
+		label = ''
 	}: {
 		value: string;
 		id?: string;
 		disabled?: boolean;
+		/**
+		 * Names the trigger ("From: 1 November 2026") where there is no
+		 * <label for> to do it, and two pickers sit side by side.
+		 */
+		label?: string;
 	} = $props();
 
 	const uid = $props.id();
@@ -353,7 +359,7 @@
 		style:anchor-name={anchorName}
 		aria-haspopup="dialog"
 		aria-expanded={isOpen}
-		aria-label={t('datepicker.selectDate')}
+		aria-label={label ? `${label}: ${formattedDisplay}` : t('datepicker.selectDate')}
 	>
 		<div class="trigger-content">
 			<svg

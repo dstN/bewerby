@@ -23,6 +23,8 @@ export interface ListPdfLabels extends ExportLabels {
 	heading: string;
 	/** Line under the heading; `{date}` and `{count}` are substituted. */
 	generated: string;
+	/** The period the list covers, when the board was limited to one. */
+	period?: string;
 	/** Footer on every page; `{page}` and `{total}` are substituted. */
 	pageLabel: string;
 }
@@ -119,6 +121,10 @@ export async function renderApplicationListPdf(
 		SMALL_SIZE,
 		regular
 	);
+	if (labels.period) {
+		y -= SMALL_SIZE * 1.6;
+		draw(labels.period, MARGIN, SMALL_SIZE, regular);
+	}
 	y -= SMALL_SIZE * 3;
 
 	drawTableHeader();

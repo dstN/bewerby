@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { buildApplicationCsv, exportFileName, type ExportRow } from './applicationExport.js';
+import {
+	buildApplicationCsv,
+	exportFileName,
+	inPeriod,
+	type ExportRow
+} from './applicationExport.js';
 import { truncateToWidth } from './applicationListPdf.js';
 
 const labels = {
@@ -190,5 +195,54 @@ describe('truncateToWidth', () => {
 
 	it('returns nothing rather than a bare ellipsis when no character fits', () => {
 		expect(truncateToWidth('Acme', measure, 1)).toBe('');
+	});
+});
+
+describe('inPeriod', () => {
+	const sentOn = (y: number, m: number, d: number, hour = 12) =>
+		row({ history: [{ status: 'sent', timestamp: new Date(y, m - 1, d, hour).getTime() }] });
+
+	it('includes both days of the period, all day long', () => {
+		const period = { from: '2026-11-01', to: '2027-01-31' };
+		expect(inPeriod(sentOn(2026, 11, 1, 0), period)).toBe(true);
+		expect(inPeriod(sentOn(2027, 1, 31, 23), period)).toBe(true);
+		expect(inPeriod(sentOn(2026, 10, 31, 23), period)).toBe(false);
+		expect(inPeriod(sentOn(2027, 2, 1, 0), period)).toBe(false);
+	});
+
+	it('leaves an end open when it is empty', () => {
+		expect(inPeriod(sentOn(2020, 1, 1), { from: '', to: '2026-01-31' })).toBe(true);
+		expect(inPeriod(sentOn(2030, 1, 1), { from: '2026-11-01', to: '' })).toBe(true);
+		expect(inPeriod(sentOn(2026, 1, 15), { from: '', to: '' })).toBe(true);
+	});
+
+	it('goes by the date the application was sent, as the Nachweis does', () => {
+		// Created in January, sent in November: it belongs to the winter phase.
+		const app = row({
+			createdAt: AT(2026, 1, 10),
+			history: [
+				{ status: 'draft', timestamp: AT(2026, 1, 10) },
+				{ status: 'sent', timestamp: AT(2026, 11, 5) }
+			]
+		});
+		expect(inPeriod(app, { from: '2026-11-01', to: '' })).toBe(true);
+		expect(inPeriod(app, { from: '', to: '2026-01-31' })).toBe(false);
+	});
+});
+
+describe('exportFileName with a period', () => {
+	const now = new Date('2026-12-01T10:00:00Z');
+
+	it('names the period instead of the day of the export', () => {
+		expect(exportFileName('pdf', now, { from: '2026-11-01', to: '2027-01-31' })).toBe(
+			'bewerbungen-2026-11-01-bis-2027-01-31.pdf'
+		);
+		expect(exportFileName('csv', now, { from: '2026-11-01', to: '' })).toBe(
+			'bewerbungen-ab-2026-11-01.csv'
+		);
+		expect(exportFileName('csv', now, { from: '', to: '2027-01-31' })).toBe(
+			'bewerbungen-bis-2027-01-31.csv'
+		);
+		expect(exportFileName('csv', now)).toBe('bewerbungen-2026-12-01.csv');
 	});
 });
