@@ -514,8 +514,17 @@ are never online at the same time. Decision and alternatives:
   option on "Erase all data" delete every file of this vault at the
   target, all epochs, before anything local goes; if that fails, nothing
   local is deleted. Disconnecting and erasing all data also revoke the
-  provider's token where the provider supports it. A device still
-  connected to an emptied target pushes its whole document again.
+  provider's token where the provider supports it.
+  - The erasure leaves `<vault>/erased.bwv`: three bytes, no content.
+    Another device still connected finds it, stops before writing,
+    revokes its token and disconnects, and the backup page says why.
+    Without it, that device would find an empty target and upload
+    everything again, undoing the erasure. Connecting a target on purpose
+    marks the progress `connected`, and only such a first pass lifts the
+    marker.
+  - For the store on bewerby.de the backup page shows what the server
+    keeps (files, size, last use; Art. 15 GDPR) next to "Delete my data
+    on bewerby.de", and the privacy policy links there.
 - **OAuth return:** `/cloud/callback` is answered by the service worker from
   its cache, so the code never reaches the server's access log, and is
   stripped from the address bar at once.

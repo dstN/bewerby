@@ -41,6 +41,11 @@ export interface Progress {
 	dirty: boolean;
 	/** The `<vault>/<epoch>/` this progress was made in; another key starts over. */
 	base?: string;
+	/**
+	 * Set when the user connects the target, until the first pass: such a
+	 * device may lift an erasure marker, an old connection must not (#56).
+	 */
+	connected?: boolean;
 }
 
 export class SyncState {
@@ -70,7 +75,17 @@ export class SyncState {
 	/** A new target starts from nothing: everything is pushed to it once. */
 	async setTarget(target: TargetConfig): Promise<void> {
 		await this.set('target', target);
-		await this.setProgress({ seen: [], dirty: true });
+		await this.setProgress({ seen: [], dirty: true, connected: true });
+		await this.database.syncState.delete('erasedAt');
+	}
+
+	/** When another device erased the target's files and this one let go of it (#56). */
+	async erasedAt(): Promise<number | undefined> {
+		return this.get<number>('erasedAt');
+	}
+
+	async markErased(): Promise<void> {
+		await this.set('erasedAt', Date.now());
 	}
 
 	/** Token refreshes, without resetting what was synced. */

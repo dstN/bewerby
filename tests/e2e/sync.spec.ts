@@ -243,7 +243,12 @@ test.describe('Sync between devices', () => {
 		await expect(phone.locator('.status-msg.success-msg')).toHaveText(
 			'Die Dateien am Speicherort sind gelöscht, die Verbindung ist getrennt.'
 		);
-		expect(await readFolder(phone)).toEqual({});
+		// Nothing left but the marker - three bytes, no content - that keeps
+		// other devices from uploading it all again.
+		const left = await readFolder(phone);
+		expect(Object.keys(left)).toHaveLength(1);
+		expect(Object.keys(left)[0]).toMatch(/^bewerby-sync\/[\w-]{22}\/erased\.bwv$/);
+		expect(Object.values(left)[0]).toEqual([0x42, 0x57, 0x56]);
 		await phone.goto('/board');
 		await expect(phone.locator('.card')).toHaveCount(2);
 

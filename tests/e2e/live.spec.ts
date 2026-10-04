@@ -155,6 +155,23 @@ test.describe('Devices connected directly', () => {
 		});
 		await expect(phone.locator('.card', { hasText: 'Fabrikam AG' })).toBeVisible();
 
+		// Self-service (Art. 15 and 17 GDPR): what bewerby.de keeps, and deleting it.
+		phone.on('dialog', (dialog) => dialog.accept());
+		await phone.goto('/backup');
+		await expect(phone.getByTestId('relay-info')).toContainText('verschlüsselte Dateien');
+		await phone.getByRole('button', { name: 'Meine Daten auf bewerby.de löschen' }).click();
+		await expect(phone.locator('.status-msg.success-msg')).toHaveText(
+			'Die Dateien am Speicherort sind gelöscht, die Verbindung ist getrennt.'
+		);
+
+		// The laptop, opened again, lets go instead of uploading it all back.
+		const reopened = await page.context().newPage();
+		await reopened.goto('/backup');
+		await expect(reopened.getByText('auf einem deiner anderen Geräte gelöscht')).toBeVisible({
+			timeout: 30_000
+		});
+		await expect(reopened.getByText('Verbunden mit bewerby.de.')).toHaveCount(0);
+
 		await phoneContext.close();
 	});
 });

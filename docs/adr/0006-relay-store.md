@@ -67,6 +67,12 @@ replaces. Passenger's workers share it through the disk, as with signaling.
   per-IP throttle.
 - Spaces unused for 180 days are swept, and the sweep touches nothing that
   does not look like a space.
+- Self-service (Art. 15 and 17 GDPR): the backup page shows what is kept
+  for the vault (an `info` operation: files, bytes, day of last use) and
+  deletes it on request, leaving only the erasure marker (ADR 0005). The
+  operator cannot link a space to a person (Art. 11 GDPR), so a space
+  whose owner has lost every device and backup cannot be deleted on
+  request; it goes after 180 days without access.
 - No backup: every device has the whole document, so the store only
   carries it.
 

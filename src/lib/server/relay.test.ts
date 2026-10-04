@@ -137,6 +137,17 @@ describe('relay storage', () => {
 		expect(await storage.list(SPACE)).toEqual([]);
 	});
 
+	it('tells the owner what it keeps, and takes the marker an erasure leaves', async () => {
+		let now = Date.UTC(2026, 9, 4, 12);
+		const storage = new RelayStorage(await freshDir(), GB, () => now);
+		expect(await storage.info(SPACE)).toEqual({ files: 0, bytes: 0, lastUsed: null });
+		await upload(storage, PATH, sealed(1000));
+		await upload(storage, `${VAULT}/erased.bwv`, sealed(3), 'upload-2');
+		now += 60_000;
+		expect(await storage.info(SPACE)).toEqual({ files: 2, bytes: 1003, lastUsed: '2026-10-04' });
+		expect(await status(storage.info('short'))).toBe(400);
+	});
+
 	it('removes the space with its last file', async () => {
 		const dir = await freshDir();
 		const storage = new RelayStorage(dir, GB);

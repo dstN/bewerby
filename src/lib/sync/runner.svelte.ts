@@ -33,6 +33,8 @@ class SyncRunner {
 	lastReport = $state.raw<SyncReport | null>(null);
 	/** With status 'rekey': the newer key another device made, to unlock (#56). */
 	newerKey = $state.raw<KeyHeader | null>(null);
+	/** Another device erased the target's files, and this one disconnected (#56). */
+	erasedAt = $state<number | null>(null);
 
 	private readonly state = new SyncState();
 	private running: Promise<void> | null = null;
@@ -62,6 +64,7 @@ class SyncRunner {
 		const target = await this.state.target();
 		this.target = target?.kind ?? null;
 		this.targetName = target?.kind === 'folder' ? target.name : null;
+		this.erasedAt = (await this.state.erasedAt()) ?? null;
 		const runtime = target ? await activeSync() : null;
 		if (!target || !runtime) {
 			this.status = 'off';
@@ -108,6 +111,14 @@ class SyncRunner {
 			}
 			const store = await openStore(target, this.state, interactive);
 			const report = await new SyncEngine(runtime, store, vault, this.state).run();
+			if (report.erased) {
+				// Erased on purpose from another device: refilling it would undo that.
+				this.stopTimers();
+				await this.forget(target);
+				await this.state.markErased();
+				this.erasedAt = Date.now();
+				return;
+			}
 			this.lastReport = report;
 			this.newerKey = report.newerKey ?? null;
 			if (report.newerKey) {
@@ -160,6 +171,11 @@ class SyncRunner {
 				await eraseVaultFiles(await openStore(target, this.state, true), stored.header.vaultId);
 			}
 		}
+		await this.forget(target);
+	}
+
+	/** Revokes the target's token where the provider allows it, and lets go of it. */
+	private async forget(target: TargetConfig | undefined): Promise<void> {
 		// OneDrive has no revocation endpoint for a single-page app; its refresh
 		// token expires within 24 hours anyway.
 		if (target?.kind === 'dropbox' || target?.kind === 'google') {

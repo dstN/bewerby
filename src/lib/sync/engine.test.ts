@@ -20,7 +20,8 @@ const { BewerbyDatabase } = await import('#lib/db/index.js');
 const { SyncRuntime } = await import('#lib/crdt/runtime.js');
 const { createVault, openFile, sealFile, unlock } = await import('#lib/vault/vault.js');
 const { encodeSnapshot } = await import('#lib/crdt/snapshot.js');
-const { SyncEngine, announceKey, eraseVaultFiles, vaultDir } = await import('./engine.js');
+const { SyncEngine, announceKey, eraseVaultFiles, erasedMarker, vaultDir } =
+	await import('./engine.js');
 const { SyncState } = await import('./state.js');
 import type { RemoteStore } from './port.js';
 
@@ -384,11 +385,24 @@ describe('changing the key (#56)', () => {
 		);
 
 		await eraseVaultFiles(store, old.header.vaultId);
-		expect([...store.files.keys()].sort()).toEqual(theirs.sort());
+		const marker = erasedMarker(old.header.vaultId);
+		expect([...store.files.keys()].sort()).toEqual([...theirs, marker].sort());
+		// The marker holds nothing: three bytes, no key header, no data.
+		expect([...store.files.get(marker)!]).toEqual([0x42, 0x57, 0x56]);
 
-		// A device still connected notices and puts its whole document back,
-		// so a newcomer does not start from half of it.
-		expect((await laptop.sync(next)).pushed).toBe(true);
+		// A device still connected stops instead of putting everything back,
+		// so the erasure holds.
+		const stopped = await laptop.sync(next);
+		expect(stopped.erased).toBe(true);
+		expect(stopped.pushed).toBe(false);
+		expect([...store.files.keys()].sort()).toEqual([...theirs, marker].sort());
+
+		// Connected again on purpose, it lifts the marker and fills the store.
+		await laptop.state.setTarget({ kind: 'relay' });
+		const refilled = await laptop.sync(next);
+		expect(refilled.erased).toBeUndefined();
+		expect(refilled.pushed).toBe(true);
+		expect(store.files.has(marker)).toBe(false);
 		const newcomer = await device(next, store);
 		await newcomer.sync();
 		expect((await rows(newcomer.db)).map((row) => row.company)).toEqual([

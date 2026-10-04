@@ -37,8 +37,9 @@ const SWEEP_EVERY_MS = 60 * 60 * 1000;
 
 const SPACE = /^[A-Za-z0-9_-]{43}$/;
 const UPLOAD = /^[A-Za-z0-9_-]{8,32}$/;
-// The sync engine's layout: <vault>/<epoch>/<upd|snap|blob>/... .bwv
-const PATH = /^[\w-]{22}\/\d{1,10}\/(upd|snap|blob)\/[\w-]+(\/[\w-]+)?\.bwv$/;
+// The sync engine's layout: <vault>/<epoch>/<upd|snap|blob>/... .bwv, and
+// the marker an erasure leaves at <vault>/erased.bwv (#56).
+const PATH = /^[\w-]{22}\/(erased|\d{1,10}\/(upd|snap|blob)\/[\w-]+(\/[\w-]+)?)\.bwv$/;
 const MAGIC = Buffer.from('BWV');
 
 export class RelayError extends Error {
@@ -145,6 +146,21 @@ export class RelayStorage {
 		const files = await this.walk(this.files(space));
 		if (files.length > 0) await this.touch(space);
 		return files.map((file) => file.path).filter(isRelayPath);
+	}
+
+	/**
+	 * What is kept for a space, for the user's own view of it (Art. 15
+	 * GDPR): how many files, how many bytes, and the day it was last used.
+	 */
+	async info(space: string): Promise<{ files: number; bytes: number; lastUsed: string | null }> {
+		if (!isSpace(space)) throw new RelayError(400);
+		const files = (await this.walk(this.files(space))).filter((file) => isRelayPath(file.path));
+		const used = await stat(join(this.dir, space, '.used')).catch(() => null);
+		return {
+			files: files.length,
+			bytes: files.reduce((sum, file) => sum + file.bytes, 0),
+			lastUsed: used ? new Date(used.mtimeMs).toISOString().slice(0, 10) : null
+		};
 	}
 
 	async read(space: string, path: string): Promise<Buffer> {

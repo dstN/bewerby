@@ -67,8 +67,11 @@ a key is remembered, and never an older one.
   files that still exist.
 - Disconnecting and erasing all data revoke the access token where the
   provider allows it (Dropbox, Google).
-- A device still connected to an emptied target notices the empty
-  directory and pushes its whole document again; the confirmation says so.
+- The erasure leaves a marker of three bytes with no content. A device
+  still connected finds it, stops and disconnects instead of uploading
+  everything again; only a target the user connects on purpose lifts it
+  (amended 2026-10-04 - before, such a device refilled the target, which
+  undid the erasure).
 
 ## Consequences
 

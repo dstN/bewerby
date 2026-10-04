@@ -53,6 +53,8 @@ export const POST: RequestHandler = async ({ request, url, getClientAddress }) =
 				return new Response(null, { status: 204, headers: NO_STORE });
 			case 'list':
 				return Response.json({ files: await storage.list(space) }, { headers: NO_STORE });
+			case 'info':
+				return Response.json(await storage.info(space), { headers: NO_STORE });
 			case 'read':
 				return new Response(new Uint8Array(await storage.read(space, path)), {
 					headers: { ...NO_STORE, 'Content-Type': 'application/octet-stream' }

@@ -46,15 +46,28 @@ export function parsePath(
 	return { vault: match[1], epoch: Number(match[2]), kind: match[3] as 'upd' | 'snap' | 'blob' };
 }
 
+/** Where an erasure leaves its marker: next to the epochs, outside them. */
+export function erasedMarker(vaultId: string): string {
+	return `${vaultDir(vaultId)}/erased.bwv`;
+}
+
+/** The marker's whole content: what a sealed file starts with, and nothing else. */
+const MARKER = new Uint8Array([0x42, 0x57, 0x56]);
+
 /**
  * Right to erasure (#56): removes every file of a vault from the store, all
  * epochs. Files of other vaults stay. Needs no key - the paths say whose
  * files they are.
+ *
+ * Leaves a marker of three bytes with no content. Devices still connected
+ * would otherwise find the store empty and put everything back; with the
+ * marker they disconnect instead. Connecting again on purpose lifts it.
  */
 export async function eraseVaultFiles(store: RemoteStore, vaultId: string): Promise<number> {
 	const own = vaultDir(vaultId);
 	const paths = (await store.list()).filter((path) => parsePath(path)?.vault === own);
 	for (const path of paths) await store.remove(path);
+	await store.write(erasedMarker(vaultId), MARKER);
 	return paths.length;
 }
 
@@ -93,6 +106,11 @@ export interface SyncReport {
 	retired: number;
 	/** PDFs no application or profile refers to any more, removed. */
 	blobsRemoved: number;
+	/**
+	 * Another device erased this vault's files here (#56). The pass stopped
+	 * before writing anything; this device should disconnect, not refill.
+	 */
+	erased?: boolean;
 	/**
 	 * Another device changed the key (#56). The pass stopped before writing
 	 * anything; this is the new key header, to unlock with the new passphrase.
@@ -184,7 +202,18 @@ export class SyncEngine {
 			return parsed !== null && parsed.vault !== own;
 		}).length;
 
-		// 0. A newer key: stop before anything is written under the old one.
+		// 0. Erased from another device: stop, unless this one was just
+		// connected on purpose - then its data goes back, and the marker.
+		const marker = erasedMarker(this.vault.header.vaultId);
+		if (listed.includes(marker)) {
+			if (!(await this.state.progress()).connected) {
+				report.erased = true;
+				return report;
+			}
+			await this.store.remove(marker);
+		}
+
+		// A newer key: stop before anything is written under the old one.
 		report.newerKey = await this.newerKey(listed);
 		if (report.newerKey) return report;
 

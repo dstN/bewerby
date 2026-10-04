@@ -83,6 +83,15 @@ export class RelayStore implements RemoteStore {
 		return files;
 	}
 
+	/** What the server keeps for this space: the user's own view of it (Art. 15 GDPR). */
+	async info(): Promise<{ files: number; bytes: number; lastUsed: string | null }> {
+		return (await this.call('info')).json() as Promise<{
+			files: number;
+			bytes: number;
+			lastUsed: string | null;
+		}>;
+	}
+
 	async read(path: string): Promise<Uint8Array> {
 		return new Uint8Array(await (await this.call('read', { 'x-relay-path': path })).arrayBuffer());
 	}

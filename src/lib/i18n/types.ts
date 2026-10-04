@@ -376,6 +376,9 @@ export type TranslationKeys = {
 		callbackWorking: string;
 		callbackFailed: string;
 		backToBackup: string;
+		eraseRelayButton: string;
+		relayInfo: string;
+		erasedElsewhere: string;
 		connectRelay: string;
 		connectRelayHint: string;
 		statusRekey: string;
@@ -551,6 +554,7 @@ export type TranslationKeys = {
 			syncGoogleBody: string;
 			syncReturnBody: string;
 			syncRelayBody: string;
+			syncSelfService: string;
 			liveTitle: string;
 			liveBody: string;
 			contactFormTitle: string;

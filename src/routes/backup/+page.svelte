@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { t } from '#lib/i18n/index.svelte.js';
+	import { i18n, t } from '#lib/i18n/index.svelte.js';
 	import { db } from '#lib/db/index.js';
 	import { importApplications } from '#lib/data/applications.js';
 	import { readPdfFromOpfs, writePdfToOpfs } from '#lib/utils/opfs.js';
@@ -21,7 +21,7 @@
 	import { syncRunner } from '#lib/sync/runner.svelte.js';
 	import { parsePath } from '#lib/sync/engine.js';
 	import { JUST_CONNECTED, SyncState } from '#lib/sync/state.js';
-	import { relayAvailable } from '#lib/sync/adapters/relay.js';
+	import { RelayStore, relayAvailable } from '#lib/sync/adapters/relay.js';
 	import { isFolderSyncSupported, pickSyncFolder } from '#lib/sync/adapters/folder.js';
 	import { dropboxAuthorizeUrl } from '#lib/sync/adapters/dropbox.js';
 	import { googleAuthorizeUrl } from '#lib/sync/adapters/gdrive.js';
@@ -79,6 +79,33 @@
 	let folderSyncSupported = $state(false);
 	// The store on bewerby.de (#58), when this server keeps one.
 	let relayOffered = $state(false);
+	// What bewerby.de keeps for this vault - the user's own view (Art. 15 GDPR).
+	let relayInfo = $state.raw<{ files: number; bytes: number; lastUsed: string | null } | null>(
+		null
+	);
+
+	$effect(() => {
+		// Read again after every pass, which may have added or removed files.
+		void syncRunner.lastSync;
+		if (syncRunner.target !== 'relay') {
+			relayInfo = null;
+			return;
+		}
+		void syncState.target().then(async (target) => {
+			relayInfo =
+				target?.kind === 'relay' && target.space
+					? await new RelayStore(target.space).info().catch(() => null)
+					: null;
+		});
+	});
+
+	function formatSize(bytes: number): string {
+		const format = (value: number) =>
+			value.toLocaleString(i18n.locale, { maximumFractionDigits: 1 });
+		return bytes < 1024 * 1024
+			? `${format(Math.max(1, Math.round(bytes / 1024)))} KB`
+			: `${format(bytes / 1024 / 1024)} MB`;
+	}
 	let syncNotice = $state('');
 	let joinHeader = $state.raw<KeyHeader | null>(null);
 	let syncUnlockOpen = $state(false);
@@ -703,7 +730,7 @@
 		<!-- Tier 3: sync between devices (#53). Deliberately no live region on
 		     the status line - it changes every minute in the background; only
 		     results the user asked for are announced. -->
-		<section class="card wide-card" aria-labelledby="sync-title">
+		<section class="card wide-card" id="sync" aria-labelledby="sync-title">
 			<div class="card-meta">
 				<span class="tier-tag">Tier 3</span>
 				<h2 class="card-title" id="sync-title">{t('sync.title')}</h2>
@@ -718,6 +745,19 @@
 				</p>
 				{#if syncStatusText}
 					<p class="card-desc">{syncStatusText}</p>
+				{/if}
+				{#if relayInfo}
+					<p class="card-desc" data-testid="relay-info">
+						{t('sync.relayInfo')
+							.replace('{files}', String(relayInfo.files))
+							.replace('{size}', formatSize(relayInfo.bytes))
+							.replace(
+								'{date}',
+								relayInfo.lastUsed
+									? new Date(relayInfo.lastUsed).toLocaleDateString(i18n.locale)
+									: '-'
+							)}
+					</p>
 				{/if}
 				{#if syncRunner.lastReport?.foreign}
 					<p class="card-desc">{t('sync.foreign')}</p>
@@ -744,10 +784,13 @@
 					{/if}
 					<button class="btn-text" onclick={() => disconnectSync()}>{t('sync.disconnect')}</button>
 					<button class="btn-text" onclick={() => disconnectSync(true)}>
-						{t('sync.eraseButton')}
+						{syncRunner.target === 'relay' ? t('sync.eraseRelayButton') : t('sync.eraseButton')}
 					</button>
 				</div>
 			{:else}
+				{#if syncRunner.erasedAt}
+					<p class="status-msg success-msg">{t('sync.erasedElsewhere')}</p>
+				{/if}
 				{#if !vaultHeader}
 					<p class="card-desc">{t('sync.needsVault')}</p>
 				{/if}
