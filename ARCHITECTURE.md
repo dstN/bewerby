@@ -589,8 +589,9 @@ alternatives: [docs/adr/0006-relay-store.md](docs/adr/0006-relay-store.md).
   (`RELAY_MAX_MB`), a per-IP throttle. Spaces unused for 180 days and
   abandoned uploads are swept; a sweep only touches directories that look
   like spaces.
-- **Pairing passes the target on:** the store on bewerby.de (preselected
-  when the existing device has no target), or a cloud account's refresh
+- **Pairing passes the target on:** the store on bewerby.de (offered when
+  the existing device has no target, but never preselected: nothing is
+  stored there unless the user asks), or a cloud account's refresh
   token, over the already encrypted and confirmed channel. A folder cannot
   be passed on. The new device takes the target only if it has none.
 

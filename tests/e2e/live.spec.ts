@@ -72,6 +72,11 @@ test.describe('Devices connected directly', () => {
 		await expect(phone.locator('.card')).toHaveCount(2);
 		await laptop.goto('/board');
 		await expect(laptop.locator('.card')).toHaveCount(2);
+		// Not asked to, so nothing went to the store on bewerby.de.
+		for (const device of [laptop, phone]) {
+			await device.goto('/backup');
+			await expect(device.getByText('Verbunden mit bewerby.de.')).toHaveCount(0);
+		}
 
 		// Live: with both switched on, an edit on one appears on the other.
 		await switchLiveOn(laptop);
@@ -111,12 +116,13 @@ test.describe('Devices connected directly', () => {
 		await unlock.locator('#vault-secret').fill(PASSPHRASE);
 		await unlock.getByRole('button', { name: 'Weiter' }).click();
 		const pairDialog = laptop.getByRole('dialog', { name: 'Gerät hinzufügen', exact: true });
-		// No target of its own yet: bewerby.de is offered, and preselected.
-		await expect(
-			pairDialog.getByLabel('Änderungen verschlüsselt auf bewerby.de bereithalten', {
-				exact: false
-			})
-		).toBeChecked();
+		// No target of its own yet: bewerby.de is offered, but only stores
+		// anything when asked to.
+		const relay = pairDialog.getByLabel('Änderungen verschlüsselt auf bewerby.de bereithalten', {
+			exact: false
+		});
+		await expect(relay).not.toBeChecked();
+		await relay.check();
 		const link = (await pairDialog.getByTestId('pair-link').textContent())!.trim();
 
 		const phoneContext = await browser.newContext({ baseURL: testInfo.project.use.baseURL });

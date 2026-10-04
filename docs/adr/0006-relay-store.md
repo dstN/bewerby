@@ -17,9 +17,11 @@ zero knowledge, not an aversion to servers: what matters is that nothing
 readable leaves the device. bewerby.de already runs on netcup in Germany,
 under a processing agreement, with no third country involved.
 
-Decided on 2026-10-02: both. The store on bewerby.de is the default when
+Decided on 2026-10-02: both. The store on bewerby.de is offered when
 pairing, and a paired device's cloud account travels along for whoever
-prefers their own provider.
+prefers their own provider. Amended on 2026-10-04: the store is opt-in.
+Nothing is stored on bewerby.de unless the user asks, on the backup page or
+by ticking it when pairing; the privacy policy says so.
 
 ## Decision
 
@@ -71,7 +73,9 @@ replaces. Passenger's workers share it through the disk, as with signaling.
 **Pairing passes the target on** over the channel that already carried the
 key, after the user compared the codes:
 
-- the store on bewerby.de, preselected when the existing device has none;
+- the store on bewerby.de, when the existing device uses it, or when the
+  user ticks it while pairing a device without a target (never
+  preselected);
 - or a cloud account's refresh token, never an access token;
 - not a folder, which another device cannot reach.
 

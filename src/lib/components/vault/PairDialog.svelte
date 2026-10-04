@@ -26,9 +26,10 @@
 
 	let pairing = $state<HostState>({ step: 'waiting' });
 	// Without a target of its own, this device can start syncing through
-	// bewerby.de with the new one (#58): on unless the user says otherwise.
+	// bewerby.de with the new one (#58) - only when the user ticks it. The
+	// privacy policy promises nothing is stored there unasked.
 	let relayOffered = $state(false);
-	let useRelay = $state(true);
+	let useRelay = $state(false);
 
 	/** Where the new device should sync; asked for once it has the key. */
 	async function shareTarget(): Promise<TargetConfig | null> {
