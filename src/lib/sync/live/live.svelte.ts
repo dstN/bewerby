@@ -20,6 +20,8 @@ import { SignalClient } from './signal.js';
  */
 
 const PRESENCE_EVERY_MS = 20_000;
+/** An offer the other device never answered (it went to sleep midway) is dropped after this. */
+const OFFER_TTL_MS = 60_000;
 const SETTING = 'live';
 
 class LiveSync {
@@ -28,7 +30,7 @@ class LiveSync {
 
 	private abort: AbortController | null = null;
 	private readonly links = new Map<string, { link: DocLink; connection: RTCPeerConnection }>();
-	private readonly pending = new Map<string, Offer>();
+	private readonly pending = new Map<string, { offer: Offer; at: number }>();
 	private listening = false;
 
 	async init(): Promise<void> {
@@ -55,7 +57,7 @@ class LiveSync {
 			connection.close();
 		}
 		this.links.clear();
-		for (const offer of this.pending.values()) offer.connection.close();
+		for (const { offer } of this.pending.values()) offer.connection.close();
 		this.pending.clear();
 		this.peers = 0;
 	}
@@ -84,12 +86,42 @@ class LiveSync {
 			const link = new DocLink(runtime, channel);
 			this.links.set(peer, { link, connection });
 			this.peers = this.links.size;
-			channel.addEventListener('close', () => {
+			const drop = () => {
+				if (this.links.get(peer)?.link !== link) return;
 				link.close();
 				this.links.delete(peer);
 				this.peers = this.links.size;
+			};
+			channel.addEventListener('close', drop);
+			connection.addEventListener('connectionstatechange', () => {
+				if (connection.connectionState === 'failed' || connection.connectionState === 'closed') {
+					drop();
+				}
 			});
+			// Both sides send what the other lacks first, so a device that was
+			// closed catches up on everything it missed, both ways.
 			link.start();
+		};
+
+		/**
+		 * Lets a peer in again: a connection that no longer stands - a laptop
+		 * closed overnight, without its channel noticing - and an offer it
+		 * never answered would otherwise keep it out for good.
+		 */
+		const clearStale = (peer: string) => {
+			const existing = this.links.get(peer);
+			const state = existing?.connection.connectionState;
+			if (existing && state !== 'connected' && state !== 'connecting') {
+				existing.link.close();
+				existing.connection.close();
+				this.links.delete(peer);
+				this.peers = this.links.size;
+			}
+			const waiting = this.pending.get(peer);
+			if (waiting && Date.now() - waiting.at > OFFER_TTL_MS) {
+				waiting.offer.connection.close();
+				this.pending.delete(peer);
+			}
 		};
 
 		while (!abort.signal.aborted) {
@@ -103,18 +135,19 @@ class LiveSync {
 				continue;
 			}
 			for (const { from, message } of inbox) {
+				clearStale(from);
 				if (this.links.has(from)) continue;
 				try {
 					if (message.t === 'here' && signal.id < from && !this.pending.has(from)) {
 						const offer = await createOffer();
-						this.pending.set(from, offer);
+						this.pending.set(from, { offer, at: Date.now() });
 						await signal.send({ t: 'offer', to: from, sdp: offer.sdp });
 					} else if (message.t === 'offer' && message.to === signal.id) {
 						const answer = await answerOffer(String(message.sdp));
 						await signal.send({ t: 'answer', to: from, sdp: answer.sdp });
 						void answer.channel.then((channel) => connect(from, channel, answer.connection));
 					} else if (message.t === 'answer' && message.to === signal.id) {
-						const offer = this.pending.get(from);
+						const offer = this.pending.get(from)?.offer;
 						if (!offer) continue;
 						this.pending.delete(from);
 						await completeOffer(offer, String(message.sdp));

@@ -25,7 +25,7 @@ async function switchLiveOn(page: Page) {
 }
 
 test.describe('Devices connected directly', () => {
-	test.setTimeout(120_000);
+	test.setTimeout(180_000);
 
 	test('a new device joins through the link, after the codes are compared, and edits then travel live', async ({
 		page,
@@ -92,6 +92,23 @@ test.describe('Devices connected directly', () => {
 		await expect(
 			phone.locator('.card', { hasText: 'Fabrikam AG' }).locator('.card-title')
 		).toHaveText('Senior Entwickler', { timeout: 60_000 });
+
+		// The evening: the laptop is closed, and the phone changes something.
+		await laptop.close();
+		const northwind = phone.locator('.card', { hasText: 'Northwind GmbH' });
+		await northwind.locator('.card-open-btn').click();
+		const phoneModal = phone.locator('dialog.modal-content');
+		await phoneModal.locator('#title').fill('Teamleitung');
+		await phoneModal.getByRole('button', { name: 'Speichern' }).click();
+		await expect(phoneModal).toBeHidden();
+
+		// The morning: the laptop opens again while the phone is open, and
+		// catches up by itself - no store in between.
+		const morning = await page.context().newPage();
+		await morning.goto('/board');
+		await expect(
+			morning.locator('.card', { hasText: 'Northwind GmbH' }).locator('.card-title')
+		).toHaveText('Teamleitung', { timeout: 60_000 });
 
 		await phoneContext.close();
 	});
