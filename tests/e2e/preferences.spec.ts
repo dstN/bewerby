@@ -54,6 +54,35 @@ test.describe('Theme preference', () => {
 	});
 });
 
+test.describe('Board view', () => {
+	test('keeps the sort and the filters across a reload, but not the search', async ({ page }) => {
+		await page.goto('/board');
+		await page.getByRole('combobox', { name: 'Sortieren nach' }).selectOption('date');
+		await page.getByRole('combobox', { name: 'Priorität' }).selectOption('high');
+		await page.getByRole('textbox', { name: 'Suchen' }).fill('Contoso');
+
+		await page.reload();
+		await expect(page.getByRole('combobox', { name: 'Sortieren nach' })).toHaveValue('date');
+		await expect(page.getByRole('combobox', { name: 'Priorität' })).toHaveValue('high');
+		await expect(page.getByRole('textbox', { name: 'Suchen' })).toHaveValue('');
+	});
+
+	test('drops a saved tag no card carries any more, instead of hiding every card', async ({
+		page
+	}) => {
+		await page.goto('/board');
+		await page.evaluate(() =>
+			localStorage.setItem(
+				'bewerby-board-view',
+				JSON.stringify({ tag: 'gibt es nicht', sortBy: 'nonsense' })
+			)
+		);
+		await page.reload();
+		await expect(page.getByRole('combobox', { name: 'Tags' })).toHaveValue('');
+		await expect(page.getByRole('combobox', { name: 'Sortieren nach' })).toHaveValue('default');
+	});
+});
+
 test.describe('Language preference', () => {
 	test('switches the whole UI and persists across a reload', async ({ page }) => {
 		await page.goto('/board');

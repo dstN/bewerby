@@ -34,12 +34,55 @@
 	// Reactive Live Query for applications
 	const applicationsStore = liveQuery(() => db.applications.toArray());
 
+	// The sort and the filter selection survive a reload: a view preference,
+	// in localStorage next to the collapsed cards. The search text does not -
+	// a forgotten search would make the board look empty on the next start.
+	const VIEW_STORAGE_KEY = 'bewerby-board-view';
+	const SORTS = ['default', 'color', 'priority', 'date'] as const;
+	type Sort = (typeof SORTS)[number];
+
+	function readView(): { tag: string; priority: string; color: string; sortBy: Sort } {
+		const view = { tag: '', priority: '', color: '', sortBy: 'default' as Sort };
+		try {
+			const parsed: unknown = JSON.parse(localStorage.getItem(VIEW_STORAGE_KEY) ?? '{}');
+			if (typeof parsed !== 'object' || parsed === null) return view;
+			const { tag, priority, color, sortBy } = parsed as Record<string, unknown>;
+			if (typeof tag === 'string') view.tag = tag.slice(0, 100);
+			if (priority === 'low' || priority === 'medium' || priority === 'high') {
+				view.priority = priority;
+			}
+			if (typeof color === 'string' && /^(colored|uncolored|#[0-9a-f]{6})$/i.test(color)) {
+				view.color = color;
+			}
+			view.sortBy = SORTS.find((sort) => sort === sortBy) ?? 'default';
+		} catch {
+			// Unreadable or blocked storage: start from the defaults.
+		}
+		return view;
+	}
+
+	const savedView = readView();
+
 	// Dashboard filter states
 	let searchFilter = $state('');
-	let selectedTag = $state('');
-	let selectedPriority = $state<string>('');
-	let selectedColor = $state<string>('');
-	let selectedSortBy = $state<'default' | 'color' | 'priority' | 'date'>('default');
+	let selectedTag = $state(savedView.tag);
+	let selectedPriority = $state<string>(savedView.priority);
+	let selectedColor = $state<string>(savedView.color);
+	let selectedSortBy = $state<Sort>(savedView.sortBy);
+
+	$effect(() => {
+		const view = {
+			tag: selectedTag,
+			priority: selectedPriority,
+			color: selectedColor,
+			sortBy: selectedSortBy
+		};
+		try {
+			localStorage.setItem(VIEW_STORAGE_KEY, JSON.stringify(view));
+		} catch {
+			// Storage full or blocked: the selection still works for this session.
+		}
+	});
 
 	// Derived lists of matching applications
 	let filteredApplications = $derived.by(() => {
@@ -138,6 +181,12 @@
 		const tagsSet = new SvelteSet<string>();
 		list.forEach((app) => app.tags.forEach((t) => tagsSet.add(t)));
 		return Array.from(tagsSet);
+	});
+
+	// A saved tag no card carries any more would hide every card, with no
+	// option in the dropdown to show why. Checked once the cards are loaded.
+	$effect(() => {
+		if ($applicationsStore && selectedTag && !allTags.includes(selectedTag)) selectedTag = '';
 	});
 
 	// Check due reminders (In-app startup check). Uses the same

@@ -536,6 +536,7 @@ export type TranslationKeys = {
 			storageKeyProfileDesc: string;
 			storageKeyNotifiedDesc: string;
 			storageKeyCollapsedDesc: string;
+			storageKeyBoardViewDesc: string;
 			noTrackingTitle: string;
 			noTrackingBody: string;
 			hostingTitle: string;

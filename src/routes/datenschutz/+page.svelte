@@ -83,6 +83,10 @@
 						<td><code>bewerby-collapsed-cards</code></td>
 						<td>{t('legal.datenschutz.storageKeyCollapsedDesc')}</td>
 					</tr>
+					<tr>
+						<td><code>bewerby-board-view</code></td>
+						<td>{t('legal.datenschutz.storageKeyBoardViewDesc')}</td>
+					</tr>
 				</tbody>
 			</table>
 		</div>
