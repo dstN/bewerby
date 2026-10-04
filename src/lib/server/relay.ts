@@ -31,8 +31,8 @@ export const MAX_SPACE_BYTES = 512 * 1024 * 1024;
 export const IDLE_MS = 180 * 24 * 60 * 60 * 1000;
 /** Parts of an upload that never finished. */
 const UPLOAD_TTL_MS = 60 * 60 * 1000;
-/** A space's last use is recorded at most this often. */
-const TOUCH_EVERY_MS = 24 * 60 * 60 * 1000;
+/** A space's last use is recorded to the day. */
+const DAY_MS = 24 * 60 * 60 * 1000;
 const SWEEP_EVERY_MS = 60 * 60 * 1000;
 
 const SPACE = /^[A-Za-z0-9_-]{43}$/;
@@ -92,15 +92,18 @@ export class RelayStorage {
 		return out;
 	}
 
-	/** Records that a space is in use, so the idle sweep leaves it. */
+	/**
+	 * Records that a space is in use, so the idle sweep leaves it - as the
+	 * day only (midnight UTC), which is all the privacy policy says is kept.
+	 */
 	private async touch(space: string): Promise<void> {
 		const marker = join(this.dir, space, '.used');
 		const info = await stat(marker).catch(() => null);
-		const now = this.now();
-		if (info && now - info.mtimeMs < TOUCH_EVERY_MS) return;
+		const day = Math.floor(this.now() / DAY_MS) * DAY_MS;
+		if (info && info.mtimeMs >= day) return;
 		await mkdir(join(this.dir, space), { recursive: true });
 		if (!info) await writeFile(marker, '');
-		await utimes(marker, now / 1000, now / 1000);
+		await utimes(marker, day / 1000, day / 1000);
 	}
 
 	/**

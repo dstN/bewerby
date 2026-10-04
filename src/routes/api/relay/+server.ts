@@ -49,8 +49,6 @@ export const POST: RequestHandler = async ({ request, url, getClientAddress }) =
 	const path = request.headers.get('x-relay-path') ?? '';
 	try {
 		switch (op) {
-			case 'status':
-				return new Response(null, { status: 204, headers: NO_STORE });
 			case 'list':
 				return Response.json({ files: await storage.list(space) }, { headers: NO_STORE });
 			case 'info':

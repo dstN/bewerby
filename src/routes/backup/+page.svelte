@@ -21,7 +21,7 @@
 	import { syncRunner } from '#lib/sync/runner.svelte.js';
 	import { parsePath } from '#lib/sync/engine.js';
 	import { JUST_CONNECTED, SyncState } from '#lib/sync/state.js';
-	import { RelayStore, relayAvailable } from '#lib/sync/adapters/relay.js';
+	import { RelayStore } from '#lib/sync/adapters/relay.js';
 	import { isFolderSyncSupported, pickSyncFolder } from '#lib/sync/adapters/folder.js';
 	import { dropboxAuthorizeUrl } from '#lib/sync/adapters/dropbox.js';
 	import { googleAuthorizeUrl } from '#lib/sync/adapters/gdrive.js';
@@ -77,8 +77,6 @@
 	// this page only connects, disconnects and shows them.
 	const syncState = new SyncState();
 	let folderSyncSupported = $state(false);
-	// The store on bewerby.de (#58), when this server keeps one.
-	let relayOffered = $state(false);
 	// What bewerby.de keeps for this vault - the user's own view (Art. 15 GDPR).
 	let relayInfo = $state.raw<{ files: number; bytes: number; lastUsed: string | null } | null>(
 		null
@@ -132,7 +130,6 @@
 		// navigator.share), and .bwv is not one of them. Where canShare says
 		// no, the download is the way; on iOS that lands in the Files app too.
 		folderSyncSupported = isFolderSyncSupported();
-		void relayAvailable().then((available) => (relayOffered = available));
 		// Back from Dropbox's sign-in (see /cloud/callback).
 		if (sessionStorage.getItem(JUST_CONNECTED)) {
 			sessionStorage.removeItem(JUST_CONNECTED);
@@ -794,9 +791,9 @@
 				{#if !vaultHeader}
 					<p class="card-desc">{t('sync.needsVault')}</p>
 				{/if}
-				{#if (relayOffered && vaultHeader) || folderSyncSupported || cloudProviders.length > 0}
+				{#if vaultHeader || folderSyncSupported || cloudProviders.length > 0}
 					<div class="sync-options">
-						{#if relayOffered && vaultHeader}
+						{#if vaultHeader}
 							<div class="sync-option">
 								<button class="btn-primary" onclick={connectRelay}>
 									{t('sync.connectRelay')}

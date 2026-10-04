@@ -527,6 +527,7 @@ export type TranslationKeys = {
 			storageKeysDesc: string;
 			storageLocalTitle: string;
 			storageLocalDesc: string;
+			storageLegalBasis: string;
 			storageTableKeyHeader: string;
 			storageTablePurposeHeader: string;
 			storageKeyThemeDesc: string;

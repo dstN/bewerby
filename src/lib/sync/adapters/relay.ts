@@ -43,19 +43,6 @@ export async function relaySpace(root: CryptoKey): Promise<string> {
 	return base64url(new Uint8Array(await crypto.subtle.sign('HMAC', key, utf8('space'))));
 }
 
-/** Whether this server keeps sync files at all. */
-export async function relayAvailable(fetcher: Fetch = fetch): Promise<boolean> {
-	try {
-		const response = await fetcher(ENDPOINT, {
-			method: 'POST',
-			headers: { ...BINARY, 'x-relay-op': 'status' }
-		});
-		return response.ok;
-	} catch {
-		return false;
-	}
-}
-
 export class RelayStore implements RemoteStore {
 	constructor(
 		private readonly space: string,

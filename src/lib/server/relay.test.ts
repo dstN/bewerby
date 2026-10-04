@@ -158,7 +158,8 @@ describe('relay storage', () => {
 	});
 
 	it('sweeps spaces nobody used for the idle period, and nothing that is not a space', async () => {
-		let now = 1_800_000_000_000;
+		// At midnight UTC: the last use is kept to the day.
+		let now = Date.UTC(2026, 9, 4);
 		const dir = await freshDir();
 		const storage = new RelayStorage(dir, GB, () => now);
 		await upload(storage, PATH, sealed(100));

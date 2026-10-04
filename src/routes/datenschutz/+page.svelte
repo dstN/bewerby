@@ -86,6 +86,7 @@
 				</tbody>
 			</table>
 		</div>
+		<p>{t('legal.datenschutz.storageLegalBasis')}</p>
 	</section>
 
 	<section class="legal-card">
@@ -98,7 +99,7 @@
 		<p>{t('legal.datenschutz.hostingBody')}</p>
 		<!-- Netcup's own registered business address - real, verbatim, not i18n'd. -->
 		<address>
-			Netcup GmbH<br />
+			netcup GmbH<br />
 			Daimlerstraße 25<br />
 			76185 Karlsruhe<br />
 			Deutschland

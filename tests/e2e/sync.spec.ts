@@ -260,12 +260,13 @@ test.describe('Sync between devices', () => {
 	}, testInfo) => {
 		const origin = testInfo.project.use.baseURL!;
 		const binary = { 'content-type': 'application/octet-stream' };
-		const status = await request.post('/api/relay', {
-			headers: { ...binary, origin, 'x-relay-op': 'status' }
+		const info = await request.post('/api/relay', {
+			headers: { ...binary, origin, 'x-relay-op': 'info', 'x-relay-space': 'a'.repeat(43) }
 		});
-		expect(status.status()).toBe(204);
+		expect(info.status()).toBe(200);
+		expect(await info.json()).toEqual({ files: 0, bytes: 0, lastUsed: null });
 		// Ciphertext is served as octet-stream; nosniff keeps a browser from guessing otherwise.
-		expect(status.headers()['x-content-type-options']).toBe('nosniff');
+		expect(info.headers()['x-content-type-options']).toBe('nosniff');
 
 		const crossSite = await request.post('/api/relay', {
 			headers: { ...binary, origin: 'https://evil.example', 'x-relay-op': 'list' }

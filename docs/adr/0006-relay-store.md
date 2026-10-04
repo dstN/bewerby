@@ -91,7 +91,8 @@ The new device takes the target only if it has none of its own.
 
 - Pairing alone is enough: a closed device catches up when opened.
 - bewerby.de now stores personal data, encrypted. The privacy policy names
-  what, why (Art. 6(1)(b) GDPR, the feature the user chose), for how long,
+  what, why (Art. 6(1)(f) GDPR: the feature the user explicitly chose; the
+  terms rule out a contract, so not (b)), for how long,
   and the processor; the user deletes it with "Disconnect and delete the
   files there" or "Erase all data".
 - The webspace quota has to hold `RELAY_MAX_MB`.

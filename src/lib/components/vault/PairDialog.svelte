@@ -9,7 +9,6 @@
 		pairingLink,
 		type HostState
 	} from '#lib/sync/live/pairing.js';
-	import { relayAvailable } from '#lib/sync/adapters/relay.js';
 	import { syncRunner } from '#lib/sync/runner.svelte.js';
 	import { SyncState, type TargetConfig } from '#lib/sync/state.js';
 	import { TARGET_NAMES } from '#lib/sync/targets.js';
@@ -28,7 +27,6 @@
 	// Without a target of its own, this device can start syncing through
 	// bewerby.de with the new one (#58) - only when the user ticks it. The
 	// privacy policy promises nothing is stored there unasked.
-	let relayOffered = $state(false);
 	let useRelay = $state(false);
 
 	/** Where the new device should sync; asked for once it has the key. */
@@ -36,7 +34,7 @@
 		const state = new SyncState();
 		const target = await state.target();
 		if (target) return target;
-		if (!relayOffered || !useRelay) return null;
+		if (!useRelay) return null;
 		await state.setTarget({ kind: 'relay' });
 		void syncRunner.start();
 		return { kind: 'relay' };
@@ -58,7 +56,6 @@
 	const code = formatPairingCode(host.secret);
 
 	onMount(() => {
-		void relayAvailable().then((available) => (relayOffered = available));
 		void host.run();
 		return () => host.cancel();
 	});
@@ -92,7 +89,7 @@
 				<p class="hint">
 					{t('pair.targetShared').replace('{name}', TARGET_NAMES[syncRunner.target])}
 				</p>
-			{:else if relayOffered}
+			{:else}
 				<label class="choice">
 					<input type="checkbox" bind:checked={useRelay} aria-describedby="pair-relay-hint" />
 					<span>

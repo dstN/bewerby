@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { describe, it, expect, afterEach } from 'vitest';
 import { RelayError, RelayStorage } from '#lib/server/relay.js';
 import { createVault } from '#lib/vault/vault.js';
-import { RelayStore, relayAvailable, relaySpace } from './relay.js';
+import { RelayStore, relaySpace } from './relay.js';
 
 const FAST_KDF = { m: 256, t: 1, p: 1 };
 const dirs: string[] = [];
@@ -27,8 +27,6 @@ async function server() {
 		requests.push({ op, bytes: body.length });
 		try {
 			switch (op) {
-				case 'status':
-					return new Response(null, { status: 204 });
 				case 'list':
 					return Response.json({ files: await storage.list(get('x-relay-space')) });
 				case 'read':
@@ -91,12 +89,5 @@ describe('the bewerby.de store, from the browser', () => {
 		await store.remove(path);
 		await store.remove(path);
 		expect(await store.list()).toEqual([]);
-	});
-
-	it('tells whether the server keeps a store at all', async () => {
-		const { fetcher } = await server();
-		expect(await relayAvailable(fetcher)).toBe(true);
-		const down = (async () => new Response(null, { status: 404 })) as unknown as typeof fetch;
-		expect(await relayAvailable(down)).toBe(false);
 	});
 });
