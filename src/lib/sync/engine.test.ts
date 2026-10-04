@@ -20,8 +20,7 @@ const { BewerbyDatabase } = await import('#lib/db/index.js');
 const { SyncRuntime } = await import('#lib/crdt/runtime.js');
 const { createVault, openFile, sealFile, unlock } = await import('#lib/vault/vault.js');
 const { encodeSnapshot } = await import('#lib/crdt/snapshot.js');
-const { SyncEngine, announceKey, eraseVaultFiles, erasedMarker, vaultDir } =
-	await import('./engine.js');
+const { SyncEngine, eraseVaultFiles, erasedMarker, vaultDir } = await import('./engine.js');
 const { SyncState } = await import('./state.js');
 import type { RemoteStore } from './port.js';
 
@@ -349,30 +348,6 @@ describe('changing the key (#56)', () => {
 		expect((await rows(laptop.db)).map((row) => row.company)).not.toContain('Eindringling AG');
 	});
 
-	it('leaves word of the new key in the old place when every key has its own (#58)', async () => {
-		const { old, next, store: oldSpace, laptop, phone } = await twoDevices();
-		const newSpace = new MemoryStore();
-		await laptop.runtime.create(fields({ company: 'Contoso GmbH' }), 3000);
-		await announceKey(oldSpace, next);
-		await laptop.sync(next, newSpace);
-
-		// The old space keeps nothing but the notice, which the old key cannot open.
-		const left = [...oldSpace.files.keys()];
-		expect(left).toHaveLength(1);
-		expect(left[0]).toMatch(new RegExp(`^${vaultDir(old.header.vaultId)}/1/upd/key/`));
-		await expect(openFile(oldSpace.files.get(left[0])!, old.root)).rejects.toThrow();
-
-		const stopped = await phone.sync(old, oldSpace);
-		expect(stopped.newerKey?.epoch).toBe(1);
-		const root = await unlock(stopped.newerKey!, { passphrase: 'ein neues passwort' });
-		await phone.sync({ header: stopped.newerKey!, root }, newSpace);
-		expect((await rows(phone.db)).map((row) => row.company)).toEqual([
-			'Contoso GmbH',
-			'Fabrikam AG',
-			'Northwind GmbH'
-		]);
-	});
-
 	it('erases every file of the vault from the store, all keys, and leaves other vaults be', async () => {
 		const { old, next, store, laptop } = await twoDevices();
 		await laptop.sync(next);
@@ -398,7 +373,7 @@ describe('changing the key (#56)', () => {
 		expect([...store.files.keys()].sort()).toEqual([...theirs, marker].sort());
 
 		// Connected again on purpose, it lifts the marker and fills the store.
-		await laptop.state.setTarget({ kind: 'relay' });
+		await laptop.state.setTarget({ kind: 'dropbox', refreshToken: 'r' });
 		const refilled = await laptop.sync(next);
 		expect(refilled.erased).toBeUndefined();
 		expect(refilled.pushed).toBe(true);
@@ -409,5 +384,22 @@ describe('changing the key (#56)', () => {
 			'Fabrikam AG',
 			'Northwind GmbH'
 		]);
+	});
+});
+
+describe('a target of the withdrawn store on bewerby.de (#58)', () => {
+	it('is let go of once, and the backup page is told; a new target clears the note', async () => {
+		const db = new BewerbyDatabase(`bewerby-withdrawn-${Math.random().toString(36).slice(2)}`);
+		const state = new SyncState(db);
+		await db.syncState.put({ key: 'target', value: { kind: 'relay', space: 'x'.repeat(43) } });
+
+		expect(await state.dropWithdrawnTarget()).toBe(true);
+		expect(await state.target()).toBeUndefined();
+		expect(await state.withdrawnAt()).toBeTypeOf('number');
+		expect(await state.dropWithdrawnTarget()).toBe(false);
+
+		await state.setTarget({ kind: 'dropbox', refreshToken: 'r' });
+		expect(await state.dropWithdrawnTarget()).toBe(false);
+		expect(await state.withdrawnAt()).toBeUndefined();
 	});
 });

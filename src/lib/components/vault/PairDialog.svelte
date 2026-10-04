@@ -24,20 +24,9 @@
 		$props();
 
 	let pairing = $state<HostState>({ step: 'waiting' });
-	// Without a target of its own, this device can start syncing through
-	// bewerby.de with the new one (#58) - only when the user ticks it. The
-	// privacy policy promises nothing is stored there unasked.
-	let useRelay = $state(false);
-
 	/** Where the new device should sync; asked for once it has the key. */
 	async function shareTarget(): Promise<TargetConfig | null> {
-		const state = new SyncState();
-		const target = await state.target();
-		if (target) return target;
-		if (!useRelay) return null;
-		await state.setTarget({ kind: 'relay' });
-		void syncRunner.start();
-		return { kind: 'relay' };
+		return (await new SyncState().target()) ?? null;
 	}
 
 	// The host is created once, from the props as they were when opened.
@@ -90,13 +79,7 @@
 					{t('pair.targetShared').replace('{name}', TARGET_NAMES[syncRunner.target])}
 				</p>
 			{:else}
-				<label class="choice">
-					<input type="checkbox" bind:checked={useRelay} aria-describedby="pair-relay-hint" />
-					<span>
-						{t('pair.relayLabel')}
-						<span class="hint" id="pair-relay-hint">{t('pair.relayHint')}</span>
-					</span>
-				</label>
+				<p class="hint">{t('pair.targetNone')}</p>
 			{/if}
 			<p class="hint" role="status">{t('pair.waiting')}</p>
 		{:else if pairing.step === 'confirm'}

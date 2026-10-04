@@ -72,11 +72,6 @@ test.describe('Devices connected directly', () => {
 		await expect(phone.locator('.card')).toHaveCount(2);
 		await laptop.goto('/board');
 		await expect(laptop.locator('.card')).toHaveCount(2);
-		// Not asked to, so nothing went to the store on bewerby.de.
-		for (const device of [laptop, phone]) {
-			await device.goto('/backup');
-			await expect(device.getByText('Verbunden mit bewerby.de.')).toHaveCount(0);
-		}
 
 		// Live: with both switched on, an edit on one appears on the other.
 		await switchLiveOn(laptop);
@@ -97,80 +92,6 @@ test.describe('Devices connected directly', () => {
 		await expect(
 			phone.locator('.card', { hasText: 'Fabrikam AG' }).locator('.card-title')
 		).toHaveText('Senior Entwickler', { timeout: 60_000 });
-
-		await phoneContext.close();
-	});
-
-	test('pairing sets the new device up with the store on bewerby.de, so it catches up while the laptop is closed', async ({
-		page,
-		browser
-	}, testInfo) => {
-		const laptop = page;
-		laptop.on('dialog', (dialog) => dialog.accept());
-		await setUpEncryption(laptop);
-		await addApplication(laptop, 'Fabrikam AG');
-
-		await laptop.goto('/backup');
-		await laptop.getByRole('button', { name: 'Gerät hinzufügen' }).click();
-		const unlock = laptop.getByRole('dialog', { name: 'Gerät hinzufügen: Passwort bestätigen' });
-		await unlock.locator('#vault-secret').fill(PASSPHRASE);
-		await unlock.getByRole('button', { name: 'Weiter' }).click();
-		const pairDialog = laptop.getByRole('dialog', { name: 'Gerät hinzufügen', exact: true });
-		// No target of its own yet: bewerby.de is offered, but only stores
-		// anything when asked to.
-		const relay = pairDialog.getByLabel('Änderungen verschlüsselt auf bewerby.de bereithalten', {
-			exact: false
-		});
-		await expect(relay).not.toBeChecked();
-		await relay.check();
-		const link = (await pairDialog.getByTestId('pair-link').textContent())!.trim();
-
-		const phoneContext = await browser.newContext({ baseURL: testInfo.project.use.baseURL });
-		const phone = await phoneContext.newPage();
-		await phone.goto(link);
-		await expect(pairDialog.getByTestId('pair-compare')).toBeVisible({ timeout: 45_000 });
-		await pairDialog.getByRole('button', { name: 'Ja, derselbe Code' }).click();
-		await expect(pairDialog.getByText('Das Gerät ist verbunden.')).toBeVisible({ timeout: 45_000 });
-
-		// Both sync through bewerby.de now.
-		for (const device of [laptop, phone]) {
-			await device.goto('/backup');
-			await expect(device.getByText('Verbunden mit bewerby.de.')).toBeVisible();
-		}
-
-		// A change on the laptop, pushed, and the laptop closed.
-		await addApplication(laptop, 'Contoso GmbH');
-		await laptop.goto('/backup');
-		const syncNow = laptop.getByRole('button', { name: 'Jetzt synchronisieren' });
-		for (let i = 0; i < 2; i++) {
-			await syncNow.click();
-			await expect(syncNow).toBeEnabled();
-		}
-		await laptop.close();
-
-		// The phone, opened again, has it.
-		await phone.goto('/board');
-		await expect(phone.locator('.card', { hasText: 'Contoso GmbH' })).toBeVisible({
-			timeout: 30_000
-		});
-		await expect(phone.locator('.card', { hasText: 'Fabrikam AG' })).toBeVisible();
-
-		// Self-service (Art. 15 and 17 GDPR): what bewerby.de keeps, and deleting it.
-		phone.on('dialog', (dialog) => dialog.accept());
-		await phone.goto('/backup');
-		await expect(phone.getByTestId('relay-info')).toContainText('verschlüsselte Dateien');
-		await phone.getByRole('button', { name: 'Meine Daten auf bewerby.de löschen' }).click();
-		await expect(phone.locator('.status-msg.success-msg')).toHaveText(
-			'Die Dateien am Speicherort sind gelöscht, die Verbindung ist getrennt.'
-		);
-
-		// The laptop, opened again, lets go instead of uploading it all back.
-		const reopened = await page.context().newPage();
-		await reopened.goto('/backup');
-		await expect(reopened.getByText('auf einem deiner anderen Geräte gelöscht')).toBeVisible({
-			timeout: 30_000
-		});
-		await expect(reopened.getByText('Verbunden mit bewerby.de.')).toHaveCount(0);
 
 		await phoneContext.close();
 	});

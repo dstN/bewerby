@@ -124,8 +124,7 @@ describe('live sync keys', () => {
 });
 
 describe('passing the sync target on when pairing (#58)', () => {
-	it('sends the store on bewerby.de and a refresh token, never a folder or an access token', () => {
-		expect(shareableTarget({ kind: 'relay', space: 'x'.repeat(43) })).toEqual({ kind: 'relay' });
+	it('sends a refresh token, never a folder or an access token', () => {
 		expect(
 			shareableTarget({ kind: 'dropbox', refreshToken: 'r', accessToken: 'a', expiresAt: 1 })
 		).toEqual({ kind: 'dropbox', refreshToken: 'r' });
@@ -135,15 +134,14 @@ describe('passing the sync target on when pairing (#58)', () => {
 	});
 
 	it('takes only a well-formed target from the other side', () => {
-		expect(receivedTarget({ kind: 'relay', space: 'chosen-by-the-sender' })).toEqual({
-			kind: 'relay'
-		});
 		expect(receivedTarget({ kind: 'google', refreshToken: 'r' })).toEqual({
 			kind: 'google',
 			refreshToken: 'r'
 		});
 		for (const value of [
 			null,
+			// The withdrawn store on bewerby.de (#58): not taken from an older device.
+			{ kind: 'relay' },
 			'relay',
 			{ kind: 'folder', name: 'x' },
 			{ kind: 'dropbox' },

@@ -20,9 +20,6 @@ export interface OAuthTarget<K extends 'dropbox' | 'onedrive' | 'google'> {
 
 export type TargetConfig =
 	| { kind: 'folder'; handle: FileSystemDirectoryHandle; name: string }
-	// The store on bewerby.de (#58). The space derives from the key; the sync
-	// runner fills it in and keeps it current, so erasing works while locked.
-	| { kind: 'relay'; space?: string }
 	| OAuthTarget<'dropbox'>
 	| OAuthTarget<'onedrive'>
 	| OAuthTarget<'google'>;
@@ -76,7 +73,7 @@ export class SyncState {
 	async setTarget(target: TargetConfig): Promise<void> {
 		await this.set('target', target);
 		await this.setProgress({ seen: [], dirty: true, connected: true });
-		await this.database.syncState.delete('erasedAt');
+		await this.database.syncState.bulkDelete(['erasedAt', 'withdrawnAt']);
 	}
 
 	/** When another device erased the target's files and this one let go of it (#56). */
@@ -86,6 +83,23 @@ export class SyncState {
 
 	async markErased(): Promise<void> {
 		await this.set('erasedAt', Date.now());
+	}
+
+	/**
+	 * A target of a kind this build no longer offers - the store on
+	 * bewerby.de (#58), withdrawn on 2026-10-04 - is let go of, and the
+	 * backup page says so once.
+	 */
+	async dropWithdrawnTarget(): Promise<boolean> {
+		const target = (await this.get<{ kind: string }>('target'))?.kind;
+		if (!target || ['folder', 'dropbox', 'onedrive', 'google'].includes(target)) return false;
+		await this.clearTarget();
+		await this.set('withdrawnAt', Date.now());
+		return true;
+	}
+
+	async withdrawnAt(): Promise<number | undefined> {
+		return this.get<number>('withdrawnAt');
 	}
 
 	/** Token refreshes, without resetting what was synced. */

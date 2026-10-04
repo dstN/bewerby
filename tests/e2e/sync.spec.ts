@@ -255,38 +255,6 @@ test.describe('Sync between devices', () => {
 		await phoneContext.close();
 	});
 
-	test('the store on bewerby.de answers only this site, and only well-formed requests', async ({
-		request
-	}, testInfo) => {
-		const origin = testInfo.project.use.baseURL!;
-		const binary = { 'content-type': 'application/octet-stream' };
-		const info = await request.post('/api/relay', {
-			headers: { ...binary, origin, 'x-relay-op': 'info', 'x-relay-space': 'a'.repeat(43) }
-		});
-		expect(info.status()).toBe(200);
-		expect(await info.json()).toEqual({ files: 0, bytes: 0, lastUsed: null });
-		// Ciphertext is served as octet-stream; nosniff keeps a browser from guessing otherwise.
-		expect(info.headers()['x-content-type-options']).toBe('nosniff');
-
-		const crossSite = await request.post('/api/relay', {
-			headers: { ...binary, origin: 'https://evil.example', 'x-relay-op': 'list' }
-		});
-		expect(crossSite.status()).toBe(403);
-
-		const space = 'a'.repeat(43);
-		const malformed: Record<string, string>[] = [
-			{ 'x-relay-op': 'list', 'x-relay-space': 'too-short' },
-			{ 'x-relay-op': 'read', 'x-relay-space': space, 'x-relay-path': '../../app.cjs' },
-			{ 'x-relay-op': 'nonsense', 'x-relay-space': space }
-		];
-		for (const headers of malformed) {
-			const refused = await request.post('/api/relay', {
-				headers: { ...binary, origin, ...headers }
-			});
-			expect(refused.status()).toBe(400);
-		}
-	});
-
 	test('the Google token broker runs on the server and refuses cleanly without a secret', async ({
 		request
 	}, testInfo) => {

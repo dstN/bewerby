@@ -390,11 +390,8 @@ export type TranslationKeys = {
 		callbackWorking: string;
 		callbackFailed: string;
 		backToBackup: string;
-		eraseRelayButton: string;
-		relayInfo: string;
+		relayWithdrawn: string;
 		erasedElsewhere: string;
-		connectRelay: string;
-		connectRelayHint: string;
 		statusRekey: string;
 		rekeyButton: string;
 		rekeyTitle: string;
@@ -437,10 +434,9 @@ export type TranslationKeys = {
 		liveLabel: string;
 		liveHint: string;
 		livePeers: string;
-		relayLabel: string;
-		relayHint: string;
 		targetShared: string;
 		targetFolder: string;
+		targetNone: string;
 	};
 	analytics: {
 		subtitle: string;
@@ -565,12 +561,11 @@ export type TranslationKeys = {
 			syncTitle: string;
 			syncBody: string;
 			syncFolderBody: string;
+			syncWithdrawnBody: string;
 			syncDropboxBody: string;
 			syncOneDriveBody: string;
 			syncGoogleBody: string;
 			syncReturnBody: string;
-			syncRelayBody: string;
-			syncSelfService: string;
 			liveTitle: string;
 			liveBody: string;
 			contactFormTitle: string;

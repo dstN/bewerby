@@ -522,9 +522,6 @@ are never online at the same time. Decision and alternatives:
     everything again, undoing the erasure. Connecting a target on purpose
     marks the progress `connected`, and only such a first pass lifts the
     marker.
-  - For the store on bewerby.de the backup page shows what the server
-    keeps (files, size, last use; Art. 15 GDPR) next to "Delete my data
-    on bewerby.de", and the privacy policy links there.
 - **OAuth return:** `/cloud/callback` is answered by the service worker from
   its cache, so the code never reaches the server's access log, and is
   stripped from the address bar at once.
@@ -571,38 +568,21 @@ WebRTC data channel (`src/lib/sync/live`). Decision and alternatives:
   There is no TURN; when no direct path exists, cloud or folder sync
   carries the changes.
 
-## The sync store on bewerby.de
+## No sync data on bewerby.de
 
-For devices that are rarely open at the same time, `/api/relay` keeps the
-same `.bwv` files a Dropbox app folder would (#58). Decision and
-alternatives: [docs/adr/0006-relay-store.md](docs/adr/0006-relay-store.md).
+bewerby.de stores none of the users' application data, not even
+encrypted. A store there (#58, [ADR 0006](docs/adr/0006-relay-store.md))
+was offered briefly on 2026-10-04 and withdrawn the same day: holding
+names and addresses for strangers, even as ciphertext, is a liability the
+operator does not take on. The deploy deletes what it kept
+(`data/relay`), and a device still set to it lets go of it on start
+(`SyncState.dropWithdrawnTarget`) and says so on the backup page.
 
-- **Zero knowledge, as everywhere else:** the server stores ciphertext. A
-  space's id is an HMAC of the vault's root key (`relaySpace`), so it is
-  also the capability: only devices with the key find the space, and a new
-  key (#56) means a new space. The old space keeps one notice sealed under
-  the new key, which is how devices on the old key learn of the change.
-- **Requests:** POST only. Operation, space and path travel in headers, so
-  none of them reaches the access log's request line. Every request carries
-  `application/octet-stream`, because SvelteKit treats a bodiless POST as a
-  form and compares its Origin with an https origin it assumes behind
-  Passenger; the route checks the Origin by host itself.
-- **Storage** (`#lib/server/relay.ts`): one directory per space under
-  `data/relay/`, shared by Passenger's workers through the disk. Uploads
-  come in 256 KB parts below adapter-node's body limit, are put together
-  when the last part is in, and appear under their name only then (written
-  to a temporary name and renamed). Paths must match the sync layout, so
-  nothing can traverse out.
-- **Limits:** 16 MB per file (new PDFs are at most 2 MB; the rest is for
-  older ones and whole documents), 512 MB per space, a total cap
-  (`RELAY_MAX_MB`), a per-IP throttle. Spaces unused for 180 days and
-  abandoned uploads are swept; a sweep only touches directories that look
-  like spaces.
-- **Pairing passes the target on:** the store on bewerby.de (offered when
-  the existing device has no target, but never preselected: nothing is
-  stored there unless the user asks), or a cloud account's refresh
-  token, over the already encrypted and confirmed channel. A folder cannot
-  be passed on. The new device takes the target only if it has none.
+Devices that are rarely open at the same time sync through a folder or a
+cloud account of the user's own. Pairing passes a cloud account's refresh
+token on, over the already encrypted and confirmed channel; a folder
+cannot be passed on, and the new device takes a target only if it has
+none.
 
 ## Security headers
 

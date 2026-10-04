@@ -10,9 +10,9 @@ The Yjs document from #52 merges any updates it is given. What was missing
 is a way for devices to hand updates to each other without being online at
 the same time. The constraints:
 
-- No server of ours in the data path. (Revisited in
-  [ADR 0006](0006-relay-store.md): what matters is that nothing readable
-  leaves the device, and bewerby.de can carry ciphertext like any provider.)
+- No server of ours in the data path. (Briefly revisited in
+  [ADR 0006](0006-relay-store.md), and confirmed when that store was
+  withdrawn.)
 - Nothing readable at the storage location.
 - No locking: Dropbox and a folder synced by Nextcloud cannot provide it.
 

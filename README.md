@@ -50,9 +50,9 @@ all running in your browser, with your application data never leaving it.
 - Add a device by QR code without typing the passphrase on it, and keep
   devices that are open at the same time in step live, over a direct
   WebRTC connection.
-- Pairing sets the new device up completely: with the encrypted store on
-  bewerby.de (or the paired device's Dropbox), a device that was closed
-  catches up when it is opened again. The server sees only ciphertext.
+- Pairing passes the paired device's cloud account along, so a device
+  that was closed catches up through it when opened again. bewerby.de
+  itself stores none of it.
 - Change the passphrase and lock a lost device out with one new key; erase
   the encrypted copy at the sync target along with everything else.
 - Backup & restore: JSON export/import (attached PDFs included), plus an

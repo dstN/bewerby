@@ -194,23 +194,10 @@ devices on different networks, set the repository variable
 `PUBLIC_STUN_URL` (for example `stun:stun.example.org:3478`) once a STUN
 operator is chosen, and name that operator in the privacy policy.
 
-**The sync store on bewerby.de** (#58) needs nothing to set up either. It
-keeps the vaults' encrypted sync files under `data/relay/` in the
-Application Root: outside the Document Root, so never reachable from the
-web, and outside `build/`, so deploys leave it alone. Created on first use.
-
-- `RELAY_DIR` in the Node app's environment moves it. Point it only at a
-  directory of its own; the sweep removes idle spaces there.
-- `RELAY_MAX_MB` caps everything stored (default 2048). The webspace quota
-  has to have room for it.
-- Limits: 16 MB per file (new PDFs are at most 2 MB), 512 MB per space,
-  uploads in 256 KB parts below
-  adapter-node's body limit, 3000 requests an hour per IP.
-- Spaces no device used for 180 days are removed, as the privacy policy
-  says.
-- No backup needed: every device holds the whole document; the store only
-  carries it between them.
-- Disk use: `du -sh data/relay` over SSH.
+**The sync store on bewerby.de** (#58) is withdrawn. The deploy step
+"Remove the withdrawn sync store" deletes `data/relay/` in the Application
+Root after every successful smoke test; once it is gone the step does
+nothing. `RELAY_DIR` and `RELAY_MAX_MB` are no longer read.
 
 Redirect URIs to register with each provider:
 `https://bewerby.de/cloud/callback` and, for local development,

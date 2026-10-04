@@ -27,10 +27,10 @@ import { SignalClient } from './signal.js';
  * that they match does the host send the vault's key header and root over
  * the channel. The new device adopts the vault, and the two documents merge.
  *
- * The host also passes on where it syncs (#58) - the store on bewerby.de, or
- * a cloud account's refresh token - so the new device keeps up while the
- * other one is closed. A folder cannot be passed on. The new device takes
- * the target only if it has none of its own.
+ * The host also passes on where it syncs: a cloud account's refresh token,
+ * so the new device keeps up while the other one is closed. A folder cannot
+ * be passed on. The new device takes the target only if it has none of its
+ * own.
  */
 
 export const PAIRING_SECRET_BYTES = 16;
@@ -65,7 +65,6 @@ export function deviceLabel(userAgent = navigator.userAgent): string {
 /** What of a target can travel to another device: no folder, no access token. */
 export function shareableTarget(target: TargetConfig | null | undefined): TargetConfig | null {
 	if (!target || target.kind === 'folder') return null;
-	if (target.kind === 'relay') return { kind: 'relay' };
 	return { kind: target.kind, refreshToken: target.refreshToken };
 }
 
@@ -73,7 +72,6 @@ export function shareableTarget(target: TargetConfig | null | undefined): Target
 export function receivedTarget(value: unknown): TargetConfig | null {
 	if (typeof value !== 'object' || value === null) return null;
 	const { kind, refreshToken } = value as Record<string, unknown>;
-	if (kind === 'relay') return { kind: 'relay' };
 	if (
 		(kind === 'dropbox' || kind === 'onedrive' || kind === 'google') &&
 		typeof refreshToken === 'string' &&

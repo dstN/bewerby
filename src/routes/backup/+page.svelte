@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { i18n, t } from '#lib/i18n/index.svelte.js';
+	import { t } from '#lib/i18n/index.svelte.js';
 	import { db } from '#lib/db/index.js';
 	import { importApplications } from '#lib/data/applications.js';
 	import { readPdfFromOpfs, writePdfToOpfs } from '#lib/utils/opfs.js';
@@ -21,7 +21,6 @@
 	import { syncRunner } from '#lib/sync/runner.svelte.js';
 	import { parsePath } from '#lib/sync/engine.js';
 	import { JUST_CONNECTED, SyncState } from '#lib/sync/state.js';
-	import { RelayStore } from '#lib/sync/adapters/relay.js';
 	import { isFolderSyncSupported, pickSyncFolder } from '#lib/sync/adapters/folder.js';
 	import { dropboxAuthorizeUrl } from '#lib/sync/adapters/dropbox.js';
 	import { googleAuthorizeUrl } from '#lib/sync/adapters/gdrive.js';
@@ -77,33 +76,6 @@
 	// this page only connects, disconnects and shows them.
 	const syncState = new SyncState();
 	let folderSyncSupported = $state(false);
-	// What bewerby.de keeps for this vault - the user's own view (Art. 15 GDPR).
-	let relayInfo = $state.raw<{ files: number; bytes: number; lastUsed: string | null } | null>(
-		null
-	);
-
-	$effect(() => {
-		// Read again after every pass, which may have added or removed files.
-		void syncRunner.lastSync;
-		if (syncRunner.target !== 'relay') {
-			relayInfo = null;
-			return;
-		}
-		void syncState.target().then(async (target) => {
-			relayInfo =
-				target?.kind === 'relay' && target.space
-					? await new RelayStore(target.space).info().catch(() => null)
-					: null;
-		});
-	});
-
-	function formatSize(bytes: number): string {
-		const format = (value: number) =>
-			value.toLocaleString(i18n.locale, { maximumFractionDigits: 1 });
-		return bytes < 1024 * 1024
-			? `${format(Math.max(1, Math.round(bytes / 1024)))} KB`
-			: `${format(bytes / 1024 / 1024)} MB`;
-	}
 	let syncNotice = $state('');
 	let joinHeader = $state.raw<KeyHeader | null>(null);
 	let syncUnlockOpen = $state(false);
@@ -291,12 +263,6 @@
 		announcer.announce(t('backup.vault.imported'));
 	}
 
-	async function connectRelay() {
-		syncNotice = '';
-		await syncState.setTarget({ kind: 'relay' });
-		await afterConnect();
-	}
-
 	async function connectFolder() {
 		syncNotice = '';
 		try {
@@ -415,7 +381,7 @@
 
 	async function reconnectSync() {
 		const target = syncRunner.target;
-		if (target && target !== 'folder' && target !== 'relay') await connectCloud(target);
+		if (target && target !== 'folder') await connectCloud(target);
 		else await syncRunner.syncNow(true);
 	}
 
@@ -743,19 +709,6 @@
 				{#if syncStatusText}
 					<p class="card-desc">{syncStatusText}</p>
 				{/if}
-				{#if relayInfo}
-					<p class="card-desc" data-testid="relay-info">
-						{t('sync.relayInfo')
-							.replace('{files}', String(relayInfo.files))
-							.replace('{size}', formatSize(relayInfo.bytes))
-							.replace(
-								'{date}',
-								relayInfo.lastUsed
-									? new Date(relayInfo.lastUsed).toLocaleDateString(i18n.locale)
-									: '-'
-							)}
-					</p>
-				{/if}
 				{#if syncRunner.lastReport?.foreign}
 					<p class="card-desc">{t('sync.foreign')}</p>
 				{/if}
@@ -781,26 +734,21 @@
 					{/if}
 					<button class="btn-text" onclick={() => disconnectSync()}>{t('sync.disconnect')}</button>
 					<button class="btn-text" onclick={() => disconnectSync(true)}>
-						{syncRunner.target === 'relay' ? t('sync.eraseRelayButton') : t('sync.eraseButton')}
+						{t('sync.eraseButton')}
 					</button>
 				</div>
 			{:else}
 				{#if syncRunner.erasedAt}
 					<p class="status-msg success-msg">{t('sync.erasedElsewhere')}</p>
 				{/if}
+				{#if syncRunner.withdrawnAt}
+					<p class="status-msg success-msg">{t('sync.relayWithdrawn')}</p>
+				{/if}
 				{#if !vaultHeader}
 					<p class="card-desc">{t('sync.needsVault')}</p>
 				{/if}
-				{#if vaultHeader || folderSyncSupported || cloudProviders.length > 0}
+				{#if folderSyncSupported || cloudProviders.length > 0}
 					<div class="sync-options">
-						{#if vaultHeader}
-							<div class="sync-option">
-								<button class="btn-primary" onclick={connectRelay}>
-									{t('sync.connectRelay')}
-								</button>
-								<p class="card-desc">{t('sync.connectRelayHint')}</p>
-							</div>
-						{/if}
 						{#if folderSyncSupported}
 							<div class="sync-option">
 								<button class="btn-primary" onclick={connectFolder}>

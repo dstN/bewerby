@@ -601,7 +601,7 @@ Setzt die beiden Backlog-Epics #36 (verschlüsselte Cloud-Ablage) und #41 (Live-
 | 54  | 🟡 OneDrive und Google Drive (Token-Broker) (Code fertig; beide vorerst ohne App-Registrierung und daher ausgeblendet, Sync über Dropbox und Ordner) | `enhancement` `security` `dsgvo`                | [#54](https://github.com/dstN/bewerby/issues/54) |
 | 55  | 🟡 Live-Sync von Gerät zu Gerät per WebRTC und QR-Pairing (Produktion wartet auf #49)                                                                | `enhancement` `security` `dsgvo` `architecture` | [#55](https://github.com/dstN/bewerby/issues/55) |
 | 56  | ✅ Schlüsselwechsel (Passwort ändern, Geräte ausschließen) und Löschrecht für Sync (v1.11.0)                                                         | `enhancement` `security` `dsgvo`                | [#56](https://github.com/dstN/bewerby/issues/56) |
-| 58  | ✅ Verschlüsselte Sync-Ablage auf bewerby.de; Koppeln gibt den Speicherort weiter (v1.12.0)                                                          | `enhancement` `security` `dsgvo` `architecture` | [#58](https://github.com/dstN/bewerby/issues/58) |
+| 58  | ↩️ Verschlüsselte Sync-Ablage auf bewerby.de: am 2026-10-04 zurückgenommen (Haftung), Daten gelöscht; Koppeln gibt Cloud-Zugang weiter               | `enhancement` `security` `dsgvo` `architecture` | [#58](https://github.com/dstN/bewerby/issues/58) |
 | 57  | Weitere Sync-Anbieter (S3-kompatibel, pCloud) und Härtung                                                                                            | `enhancement` `security` `dx`                   | [#57](https://github.com/dstN/bewerby/issues/57) |
 
 Reihenfolge der Umsetzung:
