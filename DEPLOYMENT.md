@@ -193,7 +193,8 @@ web, and outside `build/`, so deploys leave it alone. Created on first use.
   directory of its own; the sweep removes idle spaces there.
 - `RELAY_MAX_MB` caps everything stored (default 2048). The webspace quota
   has to have room for it.
-- Limits: 32 MB per file, 256 MB per space, uploads in 256 KB parts below
+- Limits: 16 MB per file (new PDFs are at most 2 MB), 512 MB per space,
+  uploads in 256 KB parts below
   adapter-node's body limit, 3000 requests an hour per IP.
 - Spaces no device used for 180 days are removed, as the privacy policy
   says.

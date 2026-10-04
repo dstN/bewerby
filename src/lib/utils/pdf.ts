@@ -25,8 +25,12 @@ interface PdfTextItem {
  *  while still bounding the main-thread text-extraction loop below against a
  *  pathological many-hundred-page file. */
 export const MAX_PDF_PAGES = 30;
-/** Generous for a text document even with embedded images/logos. */
-export const MAX_PDF_SIZE_BYTES = 15 * 1024 * 1024;
+/**
+ * A job ad or a CV is a text document; 2 MB holds one with logos and a
+ * photo. Every PDF also travels to each synced device and the sync store,
+ * so this keeps those small too.
+ */
+export const MAX_PDF_SIZE_BYTES = 2 * 1024 * 1024;
 
 export type PdfErrorCode =
 	'too-large' | 'too-many-pages' | 'not-a-pdf' | 'encrypted' | 'corrupted' | 'no-text';

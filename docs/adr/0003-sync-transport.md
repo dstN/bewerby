@@ -41,7 +41,10 @@ applying one twice.
 
 1. _Pull_ every file not yet applied, snapshots first.
 2. _Push_ one update file.
-3. _Upload_ PDFs the remote lacks, _download_ PDFs this device lacks.
+3. _Upload_ PDFs the remote lacks, _download_ PDFs this device lacks,
+   _remove_ PDFs no row refers to any more. A device writes a document
+   change before its PDFs, so a PDF in the listing always comes with a
+   change the pull has applied, and is never taken for an orphan.
 4. _Compact_ once there are more than 30 update files: write one snapshot,
    then delete every document file this pass has applied. Files that
    appeared after the listing, and files of another vault, are left alone.

@@ -470,7 +470,8 @@ are never online at the same time. Decision and alternatives:
   Each device writes only files of its own, so nothing needs locking.
 
 - **A pass** (`engine.ts`) pulls what it has not applied yet, pushes one
-  update file, moves PDFs both ways, and compacts once there are more than
+  update file, moves PDFs both ways, removes PDFs no row refers to any more
+  (a deleted application's, a replaced CV), and compacts once there are more than
   30 update files. Compaction never deletes a file it has not applied, so
   another vault's files are safe.
 - **When to push:** a persisted `dirty` flag, because deletions move no
@@ -583,7 +584,8 @@ alternatives: [docs/adr/0006-relay-store.md](docs/adr/0006-relay-store.md).
   when the last part is in, and appear under their name only then (written
   to a temporary name and renamed). Paths must match the sync layout, so
   nothing can traverse out.
-- **Limits:** 32 MB per file, 256 MB per space, a total cap
+- **Limits:** 16 MB per file (new PDFs are at most 2 MB; the rest is for
+  older ones and whole documents), 512 MB per space, a total cap
   (`RELAY_MAX_MB`), a per-IP throttle. Spaces unused for 180 days and
   abandoned uploads are swept; a sweep only touches directories that look
   like spaces.

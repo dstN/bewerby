@@ -60,7 +60,9 @@ replaces. Passenger's workers share it through the disk, as with signaling.
 
 - Writes go to a temporary name and are renamed.
 - Paths must match the sync layout.
-- Limits per file, per space and in total, plus a per-IP throttle.
+- Limits per file (16 MB: new PDFs are at most 2 MB, the rest is for
+  older ones and whole documents), per space (512 MB) and in total, plus a
+  per-IP throttle.
 - Spaces unused for 180 days are swept, and the sweep touches nothing that
   does not look like a space.
 - No backup: every device has the whole document, so the store only

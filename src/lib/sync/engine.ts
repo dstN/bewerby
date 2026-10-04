@@ -91,6 +91,8 @@ export interface SyncReport {
 	compacted: boolean;
 	/** Files of earlier keys of this vault, removed. */
 	retired: number;
+	/** PDFs no application or profile refers to any more, removed. */
+	blobsRemoved: number;
 	/**
 	 * Another device changed the key (#56). The pass stopped before writing
 	 * anything; this is the new key header, to unlock with the new passphrase.
@@ -171,7 +173,8 @@ export class SyncEngine {
 			foreign: 0,
 			unreadable: 0,
 			compacted: false,
-			retired: 0
+			retired: 0,
+			blobsRemoved: 0
 		};
 		const deviceId = await this.state.deviceId();
 		const listed = await this.store.list();
@@ -255,7 +258,8 @@ export class SyncEngine {
 
 		// 3. PDFs: upload what the remote lacks, fetch what this device lacks.
 		const downloads: Snapshot[] = [];
-		for (const blobId of this.runtime.referencedBlobIds()) {
+		const referenced = this.runtime.referencedBlobIds();
+		for (const blobId of referenced) {
 			const path = `${base}blob/${blobId}.bwv`;
 			if (present.has(path)) {
 				if (await this.runtime.hasBlob(blobId)) continue;
@@ -275,6 +279,17 @@ export class SyncEngine {
 		if (downloads.length > 0) {
 			await this.runtime.applyRemote(downloads);
 			report.blobsDown = downloads.length;
+		}
+		// PDFs of deleted applications and replaced CVs. Safe against a PDF
+		// another device just added: devices write a document change before
+		// its PDFs, so a PDF in the listing comes with a change the pull above
+		// has applied, and the document refers to it.
+		for (const path of files) {
+			if (parsePath(path)?.kind !== 'blob') continue;
+			if (referenced.has(path.slice(`${base}blob/`.length, -'.bwv'.length))) continue;
+			await this.store.remove(path);
+			present.delete(path);
+			report.blobsRemoved++;
 		}
 
 		// 4. Compact: one snapshot replaces every document file this pass has

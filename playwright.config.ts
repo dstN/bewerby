@@ -1,6 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const PORT = 4173;
+// E2E_PORT when 4173 is taken: Playwright reuses whatever answers there
+// locally, another project's preview server included.
+const PORT = Number(process.env.E2E_PORT) || 4173;
 
 export default defineConfig({
 	// tests/e2e (not e2e/) so the root tsconfig - whose include lists

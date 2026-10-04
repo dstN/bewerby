@@ -144,6 +144,44 @@ describe('sync engine', () => {
 		expect(new TextDecoder().decode(files.get(row.pdfRef!))).toBe('%PDF Anzeige');
 	});
 
+	it('removes the PDF of a replaced CV and of a deleted application from the store', async () => {
+		const { vault } = await createVault('ein langes passwort', FAST_KDF);
+		const store = new MemoryStore();
+		const laptop = await device(vault, store);
+		const blobs = () => [...store.files.keys()].filter((path) => path.includes('/blob/'));
+		files.set('ad.pdf', new TextEncoder().encode('%PDF Anzeige'));
+		files.set('cv-1.pdf', new TextEncoder().encode('%PDF Lebenslauf 1'));
+		files.set('cv-2.pdf', new TextEncoder().encode('%PDF Lebenslauf 2'));
+		const id = await laptop.runtime.create(fields({ pdfRef: 'ad.pdf', cvRef: 'cv-1.pdf' }), 1000);
+		await laptop.sync();
+		expect(blobs()).toHaveLength(2);
+
+		await laptop.runtime.update(id, { cvRef: 'cv-2.pdf' }, 2000);
+		const replaced = await laptop.sync();
+		expect(replaced.blobsUp).toBe(1);
+		expect(replaced.blobsRemoved).toBe(1);
+		expect(blobs()).toHaveLength(2);
+
+		await laptop.runtime.remove(id);
+		expect((await laptop.sync()).blobsRemoved).toBe(2);
+		expect(blobs()).toEqual([]);
+	});
+
+	it('keeps a PDF another device just added, though this one has not seen the application yet', async () => {
+		const { vault } = await createVault('ein langes passwort', FAST_KDF);
+		const store = new MemoryStore();
+		const laptop = await device(vault, store);
+		const phone = await device(vault, store);
+		files.set('new-ad.pdf', new TextEncoder().encode('%PDF neu'));
+		await laptop.runtime.create(fields({ pdfRef: 'new-ad.pdf' }), 1000);
+		await laptop.sync();
+
+		const report = await phone.sync();
+		expect(report.blobsRemoved).toBe(0);
+		expect(report.blobsDown).toBe(1);
+		expect([...store.files.keys()].filter((path) => path.includes('/blob/'))).toHaveLength(1);
+	});
+
 	it('carries deletions, including text deleted without adding anything', async () => {
 		const { vault } = await createVault('ein langes passwort', FAST_KDF);
 		const store = new MemoryStore();

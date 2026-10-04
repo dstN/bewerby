@@ -18,9 +18,15 @@ import { dirname, join } from 'node:path';
 
 /** One upload part: well under adapter-node's default 512 KB body limit. */
 export const PART_BYTES = 256 * 1024;
-/** A 15 MB PDF as a sealed sync file: base64, padded - with room to spare. */
-export const MAX_FILE_BYTES = 32 * 1024 * 1024;
-export const MAX_SPACE_BYTES = 256 * 1024 * 1024;
+/**
+ * New PDFs are at most 2 MB (pdf.ts), and a sealed file is about 3 % larger
+ * than what it holds. The bound is higher for the PDFs added before that
+ * limit (up to 15 MB) and for whole documents after a key change: a vault
+ * that holds one must still sync.
+ */
+export const MAX_FILE_BYTES = 16 * 1024 * 1024;
+/** 200 applications with a 2 MB ad and a 2 MB CV each come to 800 MB; real ones far less. */
+export const MAX_SPACE_BYTES = 512 * 1024 * 1024;
 /** Spaces nobody has used for this long are removed. */
 export const IDLE_MS = 180 * 24 * 60 * 60 * 1000;
 /** Parts of an upload that never finished. */
