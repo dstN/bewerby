@@ -65,12 +65,19 @@
 			"doneAnnouncement": "Exported {count} applications.",
 			"pdfPeriod": "Period: {range}",
 			"periodSince": "from {date}",
-			"periodUntil": "until {date}"
+			"periodUntil": "until {date}",
+			"dialogTitle": "Export the Nachweis",
+			"periodQuestion": "Which period do you want to export?",
+			"periodAll": "All applications sent",
+			"periodLast30Days": "Last 30 days",
+			"periodLast3Months": "Last 3 months",
+			"periodCustom": "Custom period",
+			"count": "{count} applications in the Nachweis",
+			"submitPdf": "Create PDF",
+			"submitCsv": "Download CSV"
 		},
-		"period": "Period",
 		"periodFrom": "From",
-		"periodTo": "To",
-		"periodClear": "Clear the period"
+		"periodTo": "To"
 	},
 	"application": {
 		"title": "Job Title",
@@ -401,7 +408,7 @@
 			"liveTitle": "Connecting devices directly (optional)",
 			"liveBody": "If you add a device by QR code or switch on live sync, your devices set up a direct, encrypted connection to each other (WebRTC). To find each other, they exchange connection data through the bewerby.de server (path “/api/signal”). That data is encrypted with a key only your devices know; the server cannot read it and keeps it for at most two minutes. The requests appear with IP address and time in the web server's access logs; to prevent abuse, the server counts requests per IP address in memory for at most one hour. Your applications themselves then go directly from device to device, not through the server. When you add a device, the existing one also passes the key and, if set up, the access to the storage location to the new device this way, and only after you have confirmed that both devices show the same comparison code. For the direct connection, your devices learn each other's IP addresses. Without further help, devices only find each other on the same network; for connections across networks a STUN server is used once one is set up. Its operator then learns the public IP address of your devices and will be named here. The legal basis is Art. 6(1)(f) GDPR; the legitimate interest lies in providing the connection between your devices you explicitly requested.",
 			"storageLegalBasis": "Everything bewerby keeps on your device - in IndexedDB, the Origin Private File System, localStorage, sessionStorage, and the cache in which the service worker stores the application for offline use - is strictly necessary for a feature you explicitly use (Section 25(2) no. 2 of the German TDDDG); none of it serves tracking. No consent is therefore required for it.",
-			"storageKeyBoardViewDesc": "Sort and filters chosen on the board (tag, priority, color, period), without the search text",
+			"storageKeyBoardViewDesc": "Sort and filters chosen on the board (tag, priority, color) and the period last chosen for the Nachweis, without the search text",
 			"syncWithdrawnBody": "A store on the bewerby.de server, offered briefly on October 4, 2026, has been withdrawn. The encrypted files kept there have been deleted, and devices that used it have disconnected from it."
 		},
 		"nutzungsbedingungen": {

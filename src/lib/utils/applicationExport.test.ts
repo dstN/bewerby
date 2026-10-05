@@ -3,6 +3,7 @@ import {
 	buildApplicationCsv,
 	exportFileName,
 	inPeriod,
+	presetPeriod,
 	type ExportRow
 } from './applicationExport.js';
 import { truncateToWidth } from './applicationListPdf.js';
@@ -244,5 +245,22 @@ describe('exportFileName with a period', () => {
 			'bewerbungen-bis-2027-01-31.csv'
 		);
 		expect(exportFileName('csv', now)).toBe('bewerbungen-2026-12-01.csv');
+	});
+});
+
+describe('presetPeriod', () => {
+	const today = new Date(2026, 9, 5, 15);
+
+	it('counts the presets back from today and leaves the end open', () => {
+		expect(presetPeriod('last30Days', today)).toEqual({ from: '2026-09-05', to: '' });
+		expect(presetPeriod('last3Months', today)).toEqual({ from: '2026-07-05', to: '' });
+		expect(presetPeriod('all', today)).toEqual({ from: '', to: '' });
+	});
+
+	it('crosses the turn of the year', () => {
+		expect(presetPeriod('last3Months', new Date(2027, 0, 20))).toEqual({
+			from: '2026-10-20',
+			to: ''
+		});
 	});
 });

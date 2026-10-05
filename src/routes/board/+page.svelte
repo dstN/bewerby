@@ -6,13 +6,20 @@
 	import { removeApplication, updateApplication } from '#lib/data/applications.js';
 	import { t, i18n } from '#lib/i18n/index.svelte.js';
 	import ApplicationModal from '#lib/components/kanban/ApplicationModal.svelte';
-	import DatePicker from '#lib/components/common/DatePicker.svelte';
+	import ExportDialog from '#lib/components/kanban/ExportDialog.svelte';
 	import ApplicationDispatchDialog from '#lib/components/application/ApplicationDispatchDialog.svelte';
 	import { colorStore } from '#lib/stores/colors.svelte.js';
 	import { deletePdfFromOpfs } from '#lib/utils/opfs.js';
 	import { announcer } from '#lib/stores/announcer.svelte.js';
 	import { getAppliedAt, getReminderDueAt, wasSent } from '#lib/utils/reminders.js';
-	import { buildApplicationCsv, exportFileName, inPeriod } from '#lib/utils/applicationExport.js';
+	import {
+		PERIOD_CHOICES,
+		buildApplicationCsv,
+		exportFileName,
+		inPeriod,
+		type Period,
+		type PeriodChoice
+	} from '#lib/utils/applicationExport.js';
 	import { renderApplicationListPdf } from '#lib/utils/applicationListPdf.js';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -49,14 +56,26 @@
 		priority: string;
 		color: string;
 		sortBy: Sort;
+		exportPeriod: PeriodChoice;
 		from: string;
 		to: string;
 	} {
-		const view = { tag: '', priority: '', color: '', sortBy: 'default' as Sort, from: '', to: '' };
+		const view = {
+			tag: '',
+			priority: '',
+			color: '',
+			sortBy: 'default' as Sort,
+			exportPeriod: 'all' as PeriodChoice,
+			from: '',
+			to: ''
+		};
 		try {
 			const parsed: unknown = JSON.parse(localStorage.getItem(VIEW_STORAGE_KEY) ?? '{}');
 			if (typeof parsed !== 'object' || parsed === null) return view;
-			const { tag, priority, color, sortBy, from, to } = parsed as Record<string, unknown>;
+			const { tag, priority, color, sortBy, exportPeriod, from, to } = parsed as Record<
+				string,
+				unknown
+			>;
 			if (typeof tag === 'string') view.tag = tag.slice(0, 100);
 			if (priority === 'low' || priority === 'medium' || priority === 'high') {
 				view.priority = priority;
@@ -65,6 +84,7 @@
 				view.color = color;
 			}
 			view.sortBy = SORTS.find((sort) => sort === sortBy) ?? 'default';
+			view.exportPeriod = PERIOD_CHOICES.find((choice) => choice === exportPeriod) ?? 'all';
 			if (typeof from === 'string' && DAY.test(from)) view.from = from;
 			if (typeof to === 'string' && DAY.test(to)) view.to = to;
 		} catch {
@@ -81,10 +101,13 @@
 	let selectedPriority = $state<string>(savedView.priority);
 	let selectedColor = $state<string>(savedView.color);
 	let selectedSortBy = $state<Sort>(savedView.sortBy);
-	// Limits the board and the Nachweis to when applications were sent, e.g.
-	// to the current application phase.
-	let periodFrom = $state(savedView.from);
-	let periodTo = $state(savedView.to);
+	// The period the last Nachweis covered, preselected in the export dialog -
+	// e.g. the current application phase.
+	let exportChoice = $state<PeriodChoice>(savedView.exportPeriod);
+	let exportFrom = $state(savedView.from);
+	let exportTo = $state(savedView.to);
+	/** Which export the dialog is open for; closed while null. */
+	let exportFormat = $state<'pdf' | 'csv' | null>(null);
 
 	$effect(() => {
 		const view = {
@@ -92,8 +115,9 @@
 			priority: selectedPriority,
 			color: selectedColor,
 			sortBy: selectedSortBy,
-			from: periodFrom,
-			to: periodTo
+			exportPeriod: exportChoice,
+			from: exportFrom,
+			to: exportTo
 		};
 		try {
 			localStorage.setItem(VIEW_STORAGE_KEY, JSON.stringify(view));
@@ -117,8 +141,7 @@
 				(selectedColor === 'colored' && !!app.cardColor && app.cardColor !== 'none') ||
 				(selectedColor === 'uncolored' && (!app.cardColor || app.cardColor === 'none')) ||
 				app.cardColor?.toLowerCase() === selectedColor.toLowerCase();
-			const matchesPeriod = inPeriod(app, { from: periodFrom, to: periodTo });
-			return matchesSearch && matchesTag && matchesPriority && matchesColor && matchesPeriod;
+			return matchesSearch && matchesTag && matchesPriority && matchesColor;
 		});
 
 		return filtered.sort((a, b) => {
@@ -306,9 +329,10 @@
 	let exportLocale = $derived(i18n.locale === 'de' ? 'de-DE' : 'en-GB');
 	// What the export will actually list: toExportRows drops everything that
 	// was never sent, so the buttons and the announcement count the same way.
-	let exportCount = $derived(filteredApplications.filter(wasSent).length);
+	let exportable = $derived(filteredApplications.filter(wasSent));
+	let exportCount = $derived(exportable.length);
 
-	function downloadBlob(blob: Blob, fileName: string) {
+	function downloadBlob(blob: Blob, fileName: string, count: number) {
 		const url = URL.createObjectURL(blob);
 		const anchor = document.createElement('a');
 		anchor.href = url;
@@ -317,57 +341,61 @@
 		anchor.click();
 		document.body.removeChild(anchor);
 		URL.revokeObjectURL(url);
-		announcer.announce(t('kanban.export.doneAnnouncement').replace('{count}', String(exportCount)));
+		announcer.announce(t('kanban.export.doneAnnouncement').replace('{count}', String(count)));
 	}
 
 	/**
 	 * Downloads the proof-of-applications list the Agentur für Arbeit asks
-	 * for. Exports what the filter bar currently shows rather than adding a
-	 * second set of controls next to it - minus anything never sent, which is
-	 * not an application and has no place on a Nachweis.
+	 * for: what the filter bar shows, in the period chosen in the export
+	 * dialog - minus anything never sent, which is not an application and has
+	 * no place on a Nachweis.
 	 */
-	function exportCsv() {
-		const csv = buildApplicationCsv(filteredApplications, exportLabels(), exportLocale);
+	function exportCsv(period: Period) {
+		const apps = exportable.filter((app) => inPeriod(app, period));
+		const csv = buildApplicationCsv(apps, exportLabels(), exportLocale);
 		downloadBlob(
 			new Blob([csv], { type: 'text/csv;charset=utf-8' }),
-			exportFileName('csv', new Date(), { from: periodFrom, to: periodTo })
+			exportFileName('csv', new Date(), period),
+			apps.length
 		);
 	}
 
-	/** "Period: 1 Nov 2026 – 31 Jan 2027" for the PDF, when the board is limited to one. */
-	function periodLine(): string | undefined {
-		if (!periodFrom && !periodTo) return undefined;
+	/** "Period: 1 Nov 2026 – 31 Jan 2027" for the PDF, when one was chosen. */
+	function periodLine({ from, to }: Period): string | undefined {
+		if (!from && !to) return undefined;
 		const format = (day: string) =>
 			new Intl.DateTimeFormat(exportLocale, { dateStyle: 'medium' }).format(
 				new Date(`${day}T12:00:00`)
 			);
 		const range =
-			periodFrom && periodTo
-				? `${format(periodFrom)} – ${format(periodTo)}`
-				: periodFrom
-					? t('kanban.export.periodSince').replace('{date}', format(periodFrom))
-					: t('kanban.export.periodUntil').replace('{date}', format(periodTo));
+			from && to
+				? `${format(from)} – ${format(to)}`
+				: from
+					? t('kanban.export.periodSince').replace('{date}', format(from))
+					: t('kanban.export.periodUntil').replace('{date}', format(to));
 		return t('kanban.export.pdfPeriod').replace('{range}', range);
 	}
 
 	/** The printable version of the same list, for handing in on paper. */
-	async function exportPdf() {
+	async function exportPdf(period: Period) {
+		const apps = exportable.filter((app) => inPeriod(app, period));
 		isExporting = true;
 		try {
 			const bytes = await renderApplicationListPdf(
-				filteredApplications,
+				apps,
 				{
 					...exportLabels(),
 					heading: t('kanban.export.pdfHeading'),
 					generated: t('kanban.export.pdfGenerated'),
-					period: periodLine(),
+					period: periodLine(period),
 					pageLabel: t('kanban.export.pdfPage')
 				},
 				exportLocale
 			);
 			downloadBlob(
 				new Blob([bytes as BlobPart], { type: 'application/pdf' }),
-				exportFileName('pdf', new Date(), { from: periodFrom, to: periodTo })
+				exportFileName('pdf', new Date(), period),
+				apps.length
 			);
 		} catch (err) {
 			console.error('Failed to render the application list PDF:', err);
@@ -507,7 +535,7 @@
 		<div class="header-actions">
 			<button
 				class="btn-secondary"
-				onclick={exportPdf}
+				onclick={() => (exportFormat = 'pdf')}
 				disabled={exportCount === 0 || isExporting}
 				title={t('kanban.export.hintPdf')}
 			>
@@ -524,7 +552,7 @@
 			</button>
 			<button
 				class="btn-secondary"
-				onclick={exportCsv}
+				onclick={() => (exportFormat = 'csv')}
 				disabled={exportCount === 0}
 				title={t('kanban.export.hintCsv')}
 			>
@@ -613,31 +641,6 @@
 				<option value="priority">🔥 {t('kanban.sortPriority')}</option>
 				<option value="date">📅 {t('kanban.sortDate')}</option>
 			</select>
-
-			<div class="period" role="group" aria-label={t('kanban.period')}>
-				<span class="period-field">
-					<span class="period-label" aria-hidden="true">{t('kanban.periodFrom')}</span>
-					<DatePicker id="period-from" label={t('kanban.periodFrom')} bind:value={periodFrom} />
-				</span>
-				<span class="period-field">
-					<span class="period-label" aria-hidden="true">{t('kanban.periodTo')}</span>
-					<DatePicker id="period-to" label={t('kanban.periodTo')} bind:value={periodTo} />
-				</span>
-				{#if periodFrom || periodTo}
-					<button
-						type="button"
-						class="btn-period-clear"
-						onclick={() => {
-							periodFrom = '';
-							periodTo = '';
-						}}
-						aria-label={t('kanban.periodClear')}
-						title={t('kanban.periodClear')}
-					>
-						×
-					</button>
-				{/if}
-			</div>
 
 			<button
 				type="button"
@@ -808,6 +811,18 @@
 			</div>
 		{/each}
 	</div>
+
+	{#if exportFormat}
+		<ExportDialog
+			format={exportFormat}
+			applications={exportable}
+			bind:choice={exportChoice}
+			bind:from={exportFrom}
+			bind:to={exportTo}
+			onexport={(period) => (exportFormat === 'pdf' ? exportPdf(period) : exportCsv(period))}
+			onclose={() => (exportFormat = null)}
+		/>
+	{/if}
 
 	{#if dispatchApp}
 		<ApplicationDispatchDialog application={dispatchApp} onclose={() => (dispatchApp = null)} />
@@ -1004,40 +1019,6 @@
 		display: flex;
 		flex-wrap: wrap;
 		gap: 8px;
-	}
-
-	.period {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		gap: 6px 10px;
-	}
-
-	.period-field {
-		display: flex;
-		align-items: center;
-		gap: 6px;
-	}
-
-	.period :global(.datepicker-wrapper) {
-		width: 170px;
-	}
-
-	.period-label {
-		font-size: 13px;
-		color: var(--text-secondary);
-	}
-
-	.btn-period-clear {
-		min-width: 32px;
-		height: 32px;
-		border: 1px solid var(--border-strong);
-		border-radius: var(--radius-md);
-		background-color: var(--surface-1);
-		color: var(--text-primary);
-		font-size: 16px;
-		line-height: 1;
-		cursor: pointer;
 	}
 
 	.filter-dropdowns select {
@@ -1451,22 +1432,6 @@
 	}
 
 	@media (max-width: 768px) {
-		/* One field per line, as wide as the bar: two 170 px pickers side by
-		   side do not fit 320 px. */
-		.period {
-			width: 100%;
-		}
-
-		.period-field {
-			flex: 1 1 100%;
-		}
-
-		.period :global(.datepicker-wrapper) {
-			flex: 1;
-			width: auto;
-			min-width: 0;
-		}
-
 		.dashboard-header {
 			flex-direction: column;
 			align-items: flex-start;

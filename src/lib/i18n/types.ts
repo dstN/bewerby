@@ -42,6 +42,15 @@ export type TranslationKeys = {
 			columnStatus: string;
 			pdfHeading: string;
 			pdfGenerated: string;
+			dialogTitle: string;
+			periodQuestion: string;
+			periodAll: string;
+			periodLast30Days: string;
+			periodLast3Months: string;
+			periodCustom: string;
+			count: string;
+			submitPdf: string;
+			submitCsv: string;
 			pdfPeriod: string;
 			periodSince: string;
 			periodUntil: string;
@@ -69,10 +78,8 @@ export type TranslationKeys = {
 		coloredOnly: string;
 		uncoloredOnly: string;
 		sortBy: string;
-		period: string;
 		periodFrom: string;
 		periodTo: string;
-		periodClear: string;
 		sortDefault: string;
 		sortColor: string;
 		sortPriority: string;

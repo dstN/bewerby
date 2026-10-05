@@ -122,6 +122,29 @@ export function inPeriod(
 	return true;
 }
 
+/** The choices the export dialog offers; 'custom' takes its own from and to. */
+export const PERIOD_CHOICES = ['all', 'last30Days', 'last3Months', 'custom'] as const;
+export type PeriodChoice = (typeof PERIOD_CHOICES)[number];
+
+/** YYYY-MM-DD of a local date, as the date pickers hold it. */
+function toDay(date: Date): string {
+	const pad = (value: number) => String(value).padStart(2, '0');
+	return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
+/** The period behind a preset, counted back from today; open towards today. */
+export function presetPeriod(choice: Exclude<PeriodChoice, 'custom'>, today = new Date()): Period {
+	const [year, month, date] = [today.getFullYear(), today.getMonth(), today.getDate()];
+	switch (choice) {
+		case 'last30Days':
+			return { from: toDay(new Date(year, month, date - 30)), to: '' };
+		case 'last3Months':
+			return { from: toDay(new Date(year, month - 3, date)), to: '' };
+		default:
+			return { from: '', to: '' };
+	}
+}
+
 /**
  * e.g. bewerbungen-2026-09-23.pdf, or with a period
  * bewerbungen-2026-11-01-bis-2027-01-31.pdf.

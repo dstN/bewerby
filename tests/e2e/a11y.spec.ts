@@ -193,6 +193,16 @@ for (const theme of ['light', 'dark'] as const) {
 			await expectNoViolations(page);
 		});
 
+		test('the export dialog has no violations, with a custom period', async ({ page }) => {
+			await gotoWithTheme(page, '/board', theme);
+			await seedApplications(page, representativeBoard());
+			await page.getByRole('button', { name: 'Nachweis (PDF)' }).click();
+			const dialog = page.getByRole('dialog', { name: 'Nachweis exportieren' });
+			await dialog.getByRole('radio', { name: 'Eigener Zeitraum' }).check();
+			await expect(dialog.getByRole('button', { name: /^Von:/ })).toBeVisible();
+			await expectNoViolations(page);
+		});
+
 		test('the date picker popover has no violations', async ({ page }) => {
 			await gotoWithTheme(page, '/board', theme);
 			await page.getByRole('button', { name: 'Bewerbung hinzufügen' }).click();

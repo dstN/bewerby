@@ -71,9 +71,12 @@ test.describe('Kanban board CRUD', () => {
 				year: 'numeric'
 			}).format(Date.now() - daysAgo * 86_400_000);
 		async function exportedLine() {
+			await page.getByRole('button', { name: 'Nachweis (CSV)' }).click();
+			const dialog = page.getByRole('dialog', { name: 'Nachweis exportieren' });
+			await dialog.getByRole('radio', { name: 'Alle versendeten Bewerbungen' }).check();
 			const [download] = await Promise.all([
 				page.waitForEvent('download'),
-				page.getByRole('button', { name: 'Nachweis (CSV)' }).click()
+				dialog.getByRole('button', { name: 'CSV herunterladen' }).click()
 			]);
 			return readFileSync((await download.path())!, 'utf-8')
 				.split('\r\n')
@@ -127,10 +130,8 @@ test.describe('Kanban board CRUD', () => {
 	});
 });
 
-test.describe('Limiting the board and the Nachweis to a period', () => {
-	test('keeps applications sent in the period, names it in the file, and clears again', async ({
-		page
-	}) => {
+test.describe('Choosing the period of the Nachweis when exporting it', () => {
+	test('asks for the period, counts what it covers, and names it in the file', async ({ page }) => {
 		const sent = (company: string, y: number, m: number, d: number) => {
 			const at = new Date(y, m - 1, d, 12).getTime();
 			return makeSeedApplication({ company, status: 'sent', appliedAt: at, createdAt: at });
@@ -141,31 +142,40 @@ test.describe('Limiting the board and the Nachweis to a period', () => {
 			sent('November GmbH', 2026, 11, 5),
 			sent('Dezember KG', 2026, 12, 10)
 		]);
+		// The period chosen last time, preselected.
 		await page.evaluate(() =>
 			localStorage.setItem(
 				'bewerby-board-view',
-				JSON.stringify({ from: '2026-11-01', to: '2027-01-31' })
+				JSON.stringify({ exportPeriod: 'custom', from: '2026-11-01', to: '2027-01-31' })
 			)
 		);
 		await page.reload();
 
-		// The winter phase only, and the pickers say so.
-		await expect(page.locator('.card')).toHaveCount(2);
-		await expect(page.locator('.card', { hasText: 'Januar AG' })).toHaveCount(0);
-		await expect(page.getByRole('button', { name: /^Von: 1\. November 2026/ })).toBeVisible();
+		// The board itself is not limited by it.
+		await expect(page.locator('.card')).toHaveCount(3);
+
+		await page.getByRole('button', { name: 'Nachweis (CSV)' }).click();
+		const dialog = page.getByRole('dialog', { name: 'Nachweis exportieren' });
+		await expect(dialog.getByRole('radio', { name: 'Eigener Zeitraum' })).toBeChecked();
+		await expect(dialog.getByRole('button', { name: /^Von: 1\. November 2026/ })).toBeVisible();
+		await expect(dialog.getByTestId('export-count')).toHaveText('2 Bewerbungen im Nachweis');
 
 		const [download] = await Promise.all([
 			page.waitForEvent('download'),
-			page.getByRole('button', { name: 'Nachweis (CSV)' }).click()
+			dialog.getByRole('button', { name: 'CSV herunterladen' }).click()
 		]);
 		expect(download.suggestedFilename()).toBe('bewerbungen-2026-11-01-bis-2027-01-31.csv');
 		const csv = readFileSync((await download.path())!, 'utf-8');
 		expect(csv).toContain('November GmbH');
 		expect(csv).toContain('Dezember KG');
 		expect(csv).not.toContain('Januar AG');
+		await expect(dialog).toBeHidden();
 
-		await page.getByRole('button', { name: 'Zeitraum zurücksetzen' }).click();
-		await expect(page.locator('.card')).toHaveCount(3);
-		await expect(page.getByRole('button', { name: 'Von: Kalender öffnen' })).toBeVisible();
+		// All of them, chosen in the dialog.
+		await page.getByRole('button', { name: 'Nachweis (CSV)' }).click();
+		await dialog.getByRole('radio', { name: 'Alle versendeten Bewerbungen' }).check();
+		await expect(dialog.getByTestId('export-count')).toHaveText('3 Bewerbungen im Nachweis');
+		await dialog.getByRole('button', { name: 'Abbrechen' }).click();
+		await expect(dialog).toBeHidden();
 	});
 });
