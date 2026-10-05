@@ -574,9 +574,10 @@ bewerby.de stores none of the users' application data, not even
 encrypted. A store there (#58, [ADR 0006](docs/adr/0006-relay-store.md))
 was offered briefly on 2026-10-04 and withdrawn the same day: holding
 names and addresses for strangers, even as ciphertext, is a liability the
-operator does not take on. The deploy deletes what it kept
-(`data/relay`), and a device still set to it lets go of it on start
-(`SyncState.dropWithdrawnTarget`) and says so on the backup page.
+operator does not take on. Its files on the server were deleted with the
+release that removed it (only the operator's own test device had used
+it), and a target of a kind the build does not offer is let go of on
+start (`SyncState.dropUnknownTarget`).
 
 Devices that are rarely open at the same time sync through a folder or a
 cloud account of the user's own. Pairing passes a cloud account's refresh

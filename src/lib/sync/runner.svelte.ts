@@ -34,8 +34,6 @@ class SyncRunner {
 	newerKey = $state.raw<KeyHeader | null>(null);
 	/** Another device erased the target's files, and this one disconnected (#56). */
 	erasedAt = $state<number | null>(null);
-	/** The target was the withdrawn store on bewerby.de; this device let go of it. */
-	withdrawnAt = $state<number | null>(null);
 
 	private readonly state = new SyncState();
 	private running: Promise<void> | null = null;
@@ -62,12 +60,11 @@ class SyncRunner {
 				if (document.visibilityState === 'visible' && this.status === 'idle') void this.syncNow();
 			});
 		}
-		await this.state.dropWithdrawnTarget();
+		await this.state.dropUnknownTarget();
 		const target = await this.state.target();
 		this.target = target?.kind ?? null;
 		this.targetName = target?.kind === 'folder' ? target.name : null;
 		this.erasedAt = (await this.state.erasedAt()) ?? null;
-		this.withdrawnAt = (await this.state.withdrawnAt()) ?? null;
 		const runtime = target ? await activeSync() : null;
 		if (!target || !runtime) {
 			this.status = 'off';

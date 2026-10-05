@@ -194,11 +194,6 @@ devices on different networks, set the repository variable
 `PUBLIC_STUN_URL` (for example `stun:stun.example.org:3478`) once a STUN
 operator is chosen, and name that operator in the privacy policy.
 
-**The sync store on bewerby.de** (#58) is withdrawn. The deploy step
-"Remove the withdrawn sync store" deletes `data/relay/` in the Application
-Root after every successful smoke test; once it is gone the step does
-nothing. `RELAY_DIR` and `RELAY_MAX_MB` are no longer read.
-
 Redirect URIs to register with each provider:
 `https://bewerby.de/cloud/callback` and, for local development,
 `http://localhost:5173/cloud/callback`.

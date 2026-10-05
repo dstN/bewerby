@@ -399,7 +399,6 @@ export type TranslationKeys = {
 		callbackWorking: string;
 		callbackFailed: string;
 		backToBackup: string;
-		relayWithdrawn: string;
 		erasedElsewhere: string;
 		statusRekey: string;
 		rekeyButton: string;
@@ -570,7 +569,6 @@ export type TranslationKeys = {
 			syncTitle: string;
 			syncBody: string;
 			syncFolderBody: string;
-			syncWithdrawnBody: string;
 			syncDropboxBody: string;
 			syncOneDriveBody: string;
 			syncGoogleBody: string;

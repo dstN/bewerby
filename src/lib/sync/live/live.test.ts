@@ -140,7 +140,7 @@ describe('passing the sync target on when pairing (#58)', () => {
 		});
 		for (const value of [
 			null,
-			// The withdrawn store on bewerby.de (#58): not taken from an older device.
+			// A kind this build does not offer.
 			{ kind: 'relay' },
 			'relay',
 			{ kind: 'folder', name: 'x' },

@@ -280,24 +280,6 @@ jobs:
 
       # The retained release only earns its keep if a bad deploy is actually
       # reverted. Runs only when the smoke test failed.
-      # The sync store on bewerby.de (#58) was withdrawn on 2026-10-04: the
-      # encrypted files it kept are deleted once the release that no longer
-      # serves it is up - not earlier, when an old worker could still write.
-      # Idempotent: nothing to do once the directory is gone.
-      - name: Remove the withdrawn sync store
-        if: steps.smoke.outcome == 'success'
-        env:
-          SSHPASS: ${{ secrets.DEPLOY_SSH_PASSWORD }}
-        run: |
-          set -euo pipefail
-          SSH_OPTS="-o UserKnownHostsFile=$HOME/.ssh/known_hosts_deploy -o StrictHostKeyChecking=yes -o PubkeyAuthentication=no"
-          sshpass -e ssh $SSH_OPTS "$REMOTE" sh -s "$REMOTE_PATH" <<'REMOTE'
-          set -eu
-          cd "$1"
-          rm -rf data/relay
-          echo "Withdrawn sync store removed (data/relay)."
-          REMOTE
-
       - name: Roll back to previous release
         if: failure() && steps.smoke.outcome == 'failure'
         env:

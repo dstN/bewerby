@@ -387,19 +387,16 @@ describe('changing the key (#56)', () => {
 	});
 });
 
-describe('a target of the withdrawn store on bewerby.de (#58)', () => {
-	it('is let go of once, and the backup page is told; a new target clears the note', async () => {
-		const db = new BewerbyDatabase(`bewerby-withdrawn-${Math.random().toString(36).slice(2)}`);
+describe('a stored target of a kind this build does not offer', () => {
+	it('is let go of, so the runner does not fail on it every minute', async () => {
+		const db = new BewerbyDatabase(`bewerby-unknown-${Math.random().toString(36).slice(2)}`);
 		const state = new SyncState(db);
 		await db.syncState.put({ key: 'target', value: { kind: 'relay', space: 'x'.repeat(43) } });
-
-		expect(await state.dropWithdrawnTarget()).toBe(true);
+		await state.dropUnknownTarget();
 		expect(await state.target()).toBeUndefined();
-		expect(await state.withdrawnAt()).toBeTypeOf('number');
-		expect(await state.dropWithdrawnTarget()).toBe(false);
 
 		await state.setTarget({ kind: 'dropbox', refreshToken: 'r' });
-		expect(await state.dropWithdrawnTarget()).toBe(false);
-		expect(await state.withdrawnAt()).toBeUndefined();
+		await state.dropUnknownTarget();
+		expect((await state.target())?.kind).toBe('dropbox');
 	});
 });

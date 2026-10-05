@@ -73,7 +73,7 @@ export class SyncState {
 	async setTarget(target: TargetConfig): Promise<void> {
 		await this.set('target', target);
 		await this.setProgress({ seen: [], dirty: true, connected: true });
-		await this.database.syncState.bulkDelete(['erasedAt', 'withdrawnAt']);
+		await this.database.syncState.delete('erasedAt');
 	}
 
 	/** When another device erased the target's files and this one let go of it (#56). */
@@ -86,20 +86,14 @@ export class SyncState {
 	}
 
 	/**
-	 * A target of a kind this build no longer offers - the store on
-	 * bewerby.de (#58), withdrawn on 2026-10-04 - is let go of, and the
-	 * backup page says so once.
+	 * Lets go of a target of a kind this build does not offer (a store tried
+	 * once and removed again), instead of failing on it every minute.
 	 */
-	async dropWithdrawnTarget(): Promise<boolean> {
+	async dropUnknownTarget(): Promise<void> {
 		const target = (await this.get<{ kind: string }>('target'))?.kind;
-		if (!target || ['folder', 'dropbox', 'onedrive', 'google'].includes(target)) return false;
-		await this.clearTarget();
-		await this.set('withdrawnAt', Date.now());
-		return true;
-	}
-
-	async withdrawnAt(): Promise<number | undefined> {
-		return this.get<number>('withdrawnAt');
+		if (target && !['folder', 'dropbox', 'onedrive', 'google'].includes(target)) {
+			await this.clearTarget();
+		}
 	}
 
 	/** Token refreshes, without resetting what was synced. */

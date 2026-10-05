@@ -741,9 +741,6 @@
 				{#if syncRunner.erasedAt}
 					<p class="status-msg success-msg">{t('sync.erasedElsewhere')}</p>
 				{/if}
-				{#if syncRunner.withdrawnAt}
-					<p class="status-msg success-msg">{t('sync.relayWithdrawn')}</p>
-				{/if}
 				{#if !vaultHeader}
 					<p class="card-desc">{t('sync.needsVault')}</p>
 				{/if}
