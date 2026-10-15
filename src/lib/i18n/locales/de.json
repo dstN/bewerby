@@ -284,7 +284,7 @@
 		"successRate": "Zusagequote",
 		"totalConversion": "Gesamtkonvertierung (Gesendet ➔ Zusage)",
 		"responseTitle": "Antwortzeiten der Arbeitgeber",
-		"responseDesc": "Berechnet aus der Dauer zwischen Versendet und Rückmeldung (Gespräch/Absage).",
+		"responseDesc": "Kalendertage zwischen Versand und erster Rückmeldung (Gespräch, Zusage oder Absage). Bewerbungen ohne Rückmeldung zählen nicht mit.",
 		"noDataAlert": "Noch nicht genügend Rückmeldungsdaten vorhanden, um Antwortzeiten zu berechnen.",
 		"bestTime": "Beste Antwortzeit",
 		"avgTime": "Durchschnittlich",

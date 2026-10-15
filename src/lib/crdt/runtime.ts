@@ -241,11 +241,11 @@ export class SyncRuntime {
 
 	async create(data: NewApplication, now: number): Promise<number> {
 		const uid = crypto.randomUUID();
-		const { history, pdfRef, cvRef, ...fields } = data;
+		const { pdfRef, cvRef, ...fields } = data;
 		const row: DocRow = {
 			...fields,
 			uid,
-			history: history ?? [{ status: data.status, timestamp: now }],
+			history: [{ status: data.status, timestamp: now }],
 			createdAt: now,
 			updatedAt: now,
 			...(await this.blobFields({ pdfRef, cvRef }))

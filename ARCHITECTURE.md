@@ -355,9 +355,19 @@ can stop short of its current status (created as a draft, set to "Absage"
 in the dialog: `[draft]`). A rejection whose history does not end in
 "rejected" is therefore counted as sent: that history proves nothing either
 way. Response times measure from the send (`getSentAt`) to the first
-interview or rejection _after_ it, so a rejection logged before the send is
-ignored. Entered dates win here as everywhere: the current rejection counts
-by `getRejectedAt` instead of its logged move.
+answer - a move into interview, offer or rejection - on or after the day of
+the send, so a rejection logged before the send is ignored. Nothing else is
+an answer: a card still waiting has no response time. Entered dates win here
+as everywhere: the current rejection counts by `getRejectedAt` instead of
+its logged move. The time is counted in calendar days, local date minus
+local date: an entered date is noon of its day while a move is the moment
+it happened, and dividing milliseconds was off by up to half a day and
+dropped an answer from the same morning (#59).
+
+History entries are always dated by the moment of the change. An entered
+application date goes into `sentAt`, never into the log: a log entry dated
+noon today sat in the future all morning, and the synced status - taken
+from the newest entry - jumped back to "Versendet" after every earlier move.
 
 ## Collapsible cards
 

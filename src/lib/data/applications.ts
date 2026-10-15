@@ -1,4 +1,4 @@
-import { db, type Application, type StatusHistory } from '#lib/db/index.js';
+import { db, type Application } from '#lib/db/index.js';
 import { activeSync } from '#lib/crdt/session.js';
 import { MissingApplicationError } from './errors.js';
 
@@ -15,13 +15,16 @@ export { MissingApplicationError };
  * the result into this table. Without one, the table is written directly.
  */
 
+/**
+ * No history: a new row gets one entry for its status, dated now. An entered
+ * application date goes into sentAt, never into the log - a log entry dated
+ * at noon today sat in the future all morning, and every move made before
+ * then counted as older than it, so the card jumped back (#59).
+ */
 export type NewApplication = Omit<
 	Application,
 	'id' | 'uid' | 'createdAt' | 'updatedAt' | 'history'
-> & {
-	/** Defaults to one entry for the initial status, dated now. */
-	history?: StatusHistory[];
-};
+>;
 
 export type ApplicationChanges = Partial<
 	Omit<Application, 'id' | 'uid' | 'createdAt' | 'updatedAt' | 'history'>
@@ -30,11 +33,10 @@ export type ApplicationChanges = Partial<
 export async function createApplication(data: NewApplication, now = Date.now()): Promise<number> {
 	const sync = await activeSync();
 	if (sync) return sync.create(data, now);
-	const { history, ...fields } = data;
 	return db.applications.add({
-		...fields,
+		...data,
 		uid: crypto.randomUUID(),
-		history: history ?? [{ status: data.status, timestamp: now }],
+		history: [{ status: data.status, timestamp: now }],
 		createdAt: now,
 		updatedAt: now
 	});

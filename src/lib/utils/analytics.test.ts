@@ -189,13 +189,51 @@ describe('computeApplicationStats', () => {
 	});
 
 	it('ignores response time when the response event precedes the sent event (bad/out-of-order data)', () => {
+		const day = 24 * 60 * 60 * 1000;
 		const stats = computeApplicationStats([
 			row('interview', [
 				{ status: 'interview', timestamp: 0 },
-				{ status: 'sent', timestamp: 1000 }
+				{ status: 'sent', timestamp: 2 * day }
 			])
 		]);
 		expect(stats.response.count).toBe(0);
+	});
+
+	it('counts in calendar days, whatever the hour (#59)', () => {
+		const at = (day: number, hour: number) => new Date(2026, 9, day, hour).getTime();
+		const stats = computeApplicationStats([
+			// Applied on 1 Oct (entered, noon), turned down on 5 Oct in the evening.
+			{
+				status: 'rejected',
+				history: [{ status: 'rejected', timestamp: at(5, 21) }],
+				sentAt: at(1, 12)
+			},
+			// Entered as sent today (noon), turned down the same morning.
+			{
+				status: 'rejected',
+				history: [
+					{ status: 'sent', timestamp: at(14, 8) },
+					{ status: 'rejected', timestamp: at(14, 10) }
+				],
+				sentAt: at(14, 12)
+			}
+		]);
+		expect(stats.response.count).toBe(2);
+		expect(stats.response.worst).toBe(4);
+		expect(stats.response.best).toBe(0);
+	});
+
+	it('times only real answers: an offer counts, waiting does not', () => {
+		const day = 24 * 60 * 60 * 1000;
+		const stats = computeApplicationStats([
+			row('accepted', [
+				{ status: 'sent', timestamp: 0 },
+				{ status: 'accepted', timestamp: 3 * day }
+			]),
+			row('sent', [{ status: 'sent', timestamp: 0 }])
+		]);
+		expect(stats.response.count).toBe(1);
+		expect(stats.response.avg).toBe(3);
 	});
 
 	it('excludes applications with no history from response-time stats without crashing', () => {

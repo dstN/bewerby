@@ -28,6 +28,12 @@ export interface ApplicationStats {
 	};
 }
 
+/** Days since 1970-01-01 of the local date: the same day counts as 0 apart, DST or not. */
+function calendarDay(timestamp: number): number {
+	const date = new Date(timestamp);
+	return Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / 86_400_000;
+}
+
 /**
  * Computes the status funnel and response-time metrics shown on the
  * analytics page. Pure function of the row list, extracted out of the
@@ -64,9 +70,11 @@ export function computeApplicationStats(list: AnalyticsRow[]): ApplicationStats 
 		if (app.status === 'rejected' && history.some((h) => h.status === 'interview')) {
 			rejectedAfterInterview++;
 		}
-		// Response time: from the send to the first interview or rejection,
-		// each by its entered date where there is one. The current rejection's
-		// logged move is left out when getRejectedAt stands in for it.
+		// Response time: from the send to the first answer - a move into
+		// interview, offer or rejection, each by its entered date where there
+		// is one. Nothing else is an answer: a card still waiting, or one put
+		// away without ever hearing back, has no response time. The current
+		// rejection's logged move is left out when getRejectedAt stands in for it.
 		const sentAt = getSentAt(app);
 		if (sentAt !== undefined) {
 			const rejectedAt = getRejectedAt(app);
@@ -74,16 +82,19 @@ export function computeApplicationStats(list: AnalyticsRow[]): ApplicationStats 
 				.filter(
 					(h, i) =>
 						h.status === 'interview' ||
+						h.status === 'accepted' ||
 						(h.status === 'rejected' && (rejectedAt === undefined || i < history.length - 1))
 				)
 				.map((h) => h.timestamp);
 			if (rejectedAt !== undefined) responses.push(rejectedAt);
-			// Only responses *after* the send: a card archived as a draft and
-			// sent later carries an earlier "rejected" entry that is no response.
-			const after = responses.filter((timestamp) => timestamp > sentAt);
-			if (after.length > 0) {
-				responseTimes.push((Math.min(...after) - sentAt) / (1000 * 60 * 60 * 24));
-			}
+			// In calendar days: an entered date is noon of its day, a move is the
+			// moment it happened, so counting milliseconds was off by up to half
+			// a day either way, and dropped an answer from the same morning.
+			// Only answers from the day of the send on: a card put into "Absage"
+			// as a draft and sent later carries an earlier entry that is none.
+			const sentDay = calendarDay(sentAt);
+			const after = responses.map(calendarDay).filter((day) => day >= sentDay);
+			if (after.length > 0) responseTimes.push(Math.min(...after) - sentDay);
 		}
 	});
 

@@ -589,7 +589,7 @@
 			: application?.appliedAt || application?.createdAt || now;
 
 		// Complete enough to create a row; as an update it is a full field set.
-		const appData: Omit<NewApplication, 'history'> = {
+		const appData: NewApplication = {
 			title: title.trim(),
 			company: company.trim(),
 			url: url.trim(),
@@ -619,18 +619,12 @@
 		};
 
 		try {
+			// The repository logs the status, dated now; the entered date is
+			// sentAt above, never a log entry (#59).
 			if (application?.id) {
-				// A changed status is logged to the history by the repository.
 				await updateApplication(application.id, $state.snapshot(appData), now);
 			} else {
-				await createApplication(
-					{
-						...$state.snapshot(appData),
-						// A new card created as "sent" is dated by the application date.
-						history: [{ status, timestamp: status === 'sent' ? parsedAppliedAt : now }]
-					},
-					now
-				);
+				await createApplication($state.snapshot(appData), now);
 			}
 		} catch (err) {
 			console.error('Failed to save application:', err);

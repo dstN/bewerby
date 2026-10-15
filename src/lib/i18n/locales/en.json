@@ -284,7 +284,7 @@
 		"successRate": "Success rate",
 		"totalConversion": "Total conversion (Sent ➔ Accepted)",
 		"responseTitle": "Employer Response Times",
-		"responseDesc": "Calculated from the duration between Sent and response (Interview/Rejection).",
+		"responseDesc": "Calendar days from sending to the first response (interview, offer or rejection). Applications without a response are not counted.",
 		"noDataAlert": "Not enough response data available yet to calculate response times.",
 		"bestTime": "Best response time",
 		"avgTime": "Average",

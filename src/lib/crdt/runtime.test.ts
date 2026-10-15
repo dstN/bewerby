@@ -90,6 +90,22 @@ describe('sync runtime', () => {
 		expect(row).toMatchObject({ status: 'interview', notes: 'Rückruf' });
 	});
 
+	it('keeps a move made the morning a card was entered as sent today (#59)', async () => {
+		const db = device();
+		const sync = await SyncRuntime.open(db);
+		const morning = new Date(2026, 9, 14, 9).getTime();
+		const noon = new Date(2026, 9, 14, 12).getTime();
+		// The edit dialog enters the application date at noon of its day.
+		const id = await sync.create(fields({ appliedAt: noon, sentAt: noon }), morning);
+		await sync.update(id, { status: 'rejected' }, morning + 60_000);
+
+		await sync.close();
+		await SyncRuntime.open(db);
+		const row = await db.applications.get(id);
+		expect(row?.status).toBe('rejected');
+		expect(row?.history.map((entry) => entry.timestamp)).toEqual([morning, morning + 60_000]);
+	});
+
 	it('adopts a row written while sync was off instead of deleting it', async () => {
 		const db = device();
 		const sync = await SyncRuntime.open(db);
