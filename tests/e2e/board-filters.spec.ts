@@ -132,7 +132,8 @@ test.describe('Search', () => {
 	test('shows an empty board rather than an error for no matches', async ({ page }) => {
 		await search(page).fill('Initech');
 		await expect(cards(page)).toHaveCount(0);
-		await expect(page.locator('.kanban-column')).toHaveCount(5);
+		// The archive column stays in the DOM, hidden (#60); five are shown.
+		await expect(page.locator('.kanban-column:visible')).toHaveCount(5);
 	});
 
 	test('clearing the field restores every card', async ({ page }) => {
