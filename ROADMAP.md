@@ -593,13 +593,13 @@ Setzt die beiden Backlog-Epics #36 (verschlüsselte Cloud-Ablage) und #41 (Live-
 
 | #   | Aufgabe                                                                                                                                              | Labels                                          | Issue                                            |
 | :-- | :--------------------------------------------------------------------------------------------------------------------------------------------------- | :---------------------------------------------- | :----------------------------------------------- |
-| 49  | Sync-Vorarbeiten: Anbieter-Prototypen, Passenger-Signaling, Argon2-Kalibrierung                                                                      | `dx` `architecture`                             | [#49](https://github.com/dstN/bewerby/issues/49) |
+| 49  | 🟡 Sync-Vorarbeiten (offen: STUN-Betreiber, Argon2 auf Handys, Messung Passenger-Signaling, Gegenproben mit echten Konten)                           | `dx` `architecture`                             | [#49](https://github.com/dstN/bewerby/issues/49) |
 | 50  | ✅ Krypto-Kern und verschlüsselte Sicherungsdatei (.bwv)                                                                                             | `enhancement` `security` `dsgvo` `a11y`         | [#50](https://github.com/dstN/bewerby/issues/50) |
 | 51  | ✅ Repository-Schicht: alle Schreibzugriffe über `src/lib/data`                                                                                      | `refactoring` `architecture`                    | [#51](https://github.com/dstN/bewerby/issues/51) |
 | 52  | ✅ CRDT-Schicht mit Yjs: verlustfreies Zusammenführen                                                                                                | `enhancement` `architecture`                    | [#52](https://github.com/dstN/bewerby/issues/52) |
-| 53  | 🟡 Cloud-Transport, Ordner-Adapter und Dropbox (Dropbox wartet auf #49)                                                                              | `enhancement` `security` `dsgvo`                | [#53](https://github.com/dstN/bewerby/issues/53) |
+| 53  | ✅ Cloud-Transport, Ordner-Adapter und Dropbox (v1.8.0; Dropbox-App-Key seit 2026-10-02 gesetzt)                                                     | `enhancement` `security` `dsgvo`                | [#53](https://github.com/dstN/bewerby/issues/53) |
 | 54  | 🟡 OneDrive und Google Drive (Token-Broker) (Code fertig; beide vorerst ohne App-Registrierung und daher ausgeblendet, Sync über Dropbox und Ordner) | `enhancement` `security` `dsgvo`                | [#54](https://github.com/dstN/bewerby/issues/54) |
-| 55  | 🟡 Live-Sync von Gerät zu Gerät per WebRTC und QR-Pairing (Produktion wartet auf #49)                                                                | `enhancement` `security` `dsgvo` `architecture` | [#55](https://github.com/dstN/bewerby/issues/55) |
+| 55  | ✅ Live-Sync von Gerät zu Gerät per WebRTC und QR-Pairing (v1.10.0; über verschiedene Netze erst mit STUN, #49)                                      | `enhancement` `security` `dsgvo` `architecture` | [#55](https://github.com/dstN/bewerby/issues/55) |
 | 56  | ✅ Schlüsselwechsel (Passwort ändern, Geräte ausschließen) und Löschrecht für Sync (v1.11.0)                                                         | `enhancement` `security` `dsgvo`                | [#56](https://github.com/dstN/bewerby/issues/56) |
 | 58  | ↩️ Verschlüsselte Sync-Ablage auf bewerby.de: am 2026-10-04 zurückgenommen (Haftung), Daten gelöscht; Koppeln gibt Cloud-Zugang weiter               | `enhancement` `security` `dsgvo` `architecture` | [#58](https://github.com/dstN/bewerby/issues/58) |
 | 57  | Weitere Sync-Anbieter (S3-kompatibel, pCloud) und Härtung                                                                                            | `enhancement` `security` `dx`                   | [#57](https://github.com/dstN/bewerby/issues/57) |
@@ -621,17 +621,19 @@ Getroffene Entscheidungen (2026-10-01):
 
 ## Nach v1 (Backlog, ohne Milestone)
 
-| #   | Aufgabe                                                      | Labels                               | Issue                                            |
-| :-- | :----------------------------------------------------------- | :----------------------------------- | :----------------------------------------------- |
-| 36  | Epic: Ende-zu-Ende-verschlüsselter Cloud-Sync                | `enhancement`                        | [#36](https://github.com/dstN/bewerby/issues/36) |
-| 38  | ✅ Open Graph / Twitter Card Meta-Tags                       | `enhancement`                        | [#38](https://github.com/dstN/bewerby/issues/38) |
-| 39  | ✅ PWA-Icons 404 live (`/icons/`-Alias-Kollision)            | `bug`                                | [#39](https://github.com/dstN/bewerby/issues/39) |
-| 40  | Epic: Opt-in Web-Push-Erinnerungen bei geschlossenem Browser | `enhancement` `architecture` `dsgvo` | [#40](https://github.com/dstN/bewerby/issues/40) |
-| 41  | Epic: Live-P2P-Sync per QR-Pairing (WebRTC + CRDT)           | `enhancement` `architecture` `dsgvo` | [#41](https://github.com/dstN/bewerby/issues/41) |
+| #   | Aufgabe                                                          | Labels                               | Issue                                            |
+| :-- | :--------------------------------------------------------------- | :----------------------------------- | :----------------------------------------------- |
+| 36  | ✅ Epic: Ende-zu-Ende-verschlüsselter Cloud-Sync                 | `enhancement`                        | [#36](https://github.com/dstN/bewerby/issues/36) |
+| 38  | ✅ Open Graph / Twitter Card Meta-Tags                           | `enhancement`                        | [#38](https://github.com/dstN/bewerby/issues/38) |
+| 39  | ✅ PWA-Icons 404 live (`/icons/`-Alias-Kollision)                | `bug`                                | [#39](https://github.com/dstN/bewerby/issues/39) |
+| 40  | Epic: Opt-in Web-Push-Erinnerungen bei geschlossenem Browser     | `enhancement` `architecture` `dsgvo` | [#40](https://github.com/dstN/bewerby/issues/40) |
+| 41  | ✅ Epic: Live-P2P-Sync per QR-Pairing (WebRTC + CRDT)            | `enhancement` `architecture` `dsgvo` | [#41](https://github.com/dstN/bewerby/issues/41) |
+| 59  | ✅ Bewerbungsdatum auf 12:00 Uhr: Status sprang zurück (v1.17.2) | `bug`                                | [#59](https://github.com/dstN/bewerby/issues/59) |
+| 60  | ✅ Archiv-Spalte für Bewerbungen ohne Ergebnis (v1.18.0)         | `enhancement`                        | [#60](https://github.com/dstN/bewerby/issues/60) |
 
 ### 36 — Epic: Ende-zu-Ende-verschlüsselter Cloud-Sync
 
-**Status:** Wird gemeinsam mit #36/#41 in Milestone 5 umgesetzt (#49–#57).
+**Status:** ✅ Umgesetzt in Milestone 5 (#50–#56): verschlüsselt über einen Sync-Ordner, Dropbox und direkt von Gerät zu Gerät. Offen bleiben dort #49 (STUN-Betreiber, Messungen), #54 (OneDrive und Google ohne App-Registrierung) und #57 (weitere Anbieter, Härtung).
 
 **Ist:** Die Tier-3-Karte auf der Backup-Seite kündigt Google-Drive- und Dropbox-Synchronisation an, ohne dass eine Implementierung existiert.
 
@@ -665,7 +667,7 @@ Ein Vorschlag aus dieser Phase, das Ganze stattdessen per QR-Code zwischen zwei 
 
 ### 41 — Epic: Live-P2P-Sync per QR-Pairing (WebRTC + CRDT)
 
-**Status:** Wird gemeinsam mit #36/#41 in Milestone 5 umgesetzt (#49–#57).
+**Status:** ✅ Umgesetzt in Milestone 5 (#50–#56): verschlüsselt über einen Sync-Ordner, Dropbox und direkt von Gerät zu Gerät. Offen bleiben dort #49 (STUN-Betreiber, Messungen), #54 (OneDrive und Google ohne App-Registrierung) und #57 (weitere Anbieter, Härtung).
 
 **Ist:** Mehrgeräte-Nutzung ist nur über den manuellen Export/Import-Umweg (`backup.ts`) möglich — kein automatischer Abgleich, kein "einfach auf zwei Geräten weiterarbeiten".
 
