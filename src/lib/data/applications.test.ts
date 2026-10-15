@@ -70,6 +70,24 @@ describe('application repository', () => {
 		expect((await db.applications.get(id))?.rejectedAt).toBe(1500);
 	});
 
+	it('drops the archive reason and end date when the card leaves the archive (#60)', async () => {
+		const id = await createApplication(fields({ status: 'sent' }), 1000);
+		await updateApplication(
+			id,
+			{ status: 'archived', archiveReason: 'withdrawn', archivedAt: 5 },
+			2000
+		);
+		expect(await db.applications.get(id)).toMatchObject({
+			archiveReason: 'withdrawn',
+			archivedAt: 5
+		});
+
+		await updateApplication(id, { status: 'sent' }, 3000);
+		const row = await db.applications.get(id);
+		expect(row).not.toHaveProperty('archiveReason');
+		expect(row).not.toHaveProperty('archivedAt');
+	});
+
 	it('removes a field the caller sets to undefined', async () => {
 		const id = await createApplication(fields({ cardColor: '#10b981' }), 1000);
 		await updateApplication(id, { cardColor: undefined }, 2000);

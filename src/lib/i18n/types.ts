@@ -26,6 +26,7 @@ export type TranslationKeys = {
 			interview: string;
 			accepted: string;
 			rejected: string;
+			archived: string;
 		};
 		actions: {
 			add: string;
@@ -56,6 +57,19 @@ export type TranslationKeys = {
 			periodUntil: string;
 			pdfPage: string;
 			doneAnnouncement: string;
+			archivedNoResponse: string;
+			archivedWithdrawn: string;
+		};
+		archive: {
+			toggle: string;
+			dialogTitle: string;
+			reasonQuestion: string;
+			reasons: {
+				'no-response': string;
+				withdrawn: string;
+				'not-sent': string;
+			};
+			submit: string;
 		};
 		confirmDelete: string;
 		dueAlerts: string;
@@ -203,6 +217,9 @@ export type TranslationKeys = {
 		appliedAt: string;
 		rejectedAt: string;
 		rejectedAtHint: string;
+		archiveReason: string;
+		archivedAt: string;
+		archivedAtHint: string;
 		confirmDiscard: string;
 		reminder: string;
 		placeholderTitle: string;
@@ -463,6 +480,10 @@ export type TranslationKeys = {
 		days: string;
 		basedOn: string;
 		stepSelection: string;
+		noResponseTitle: string;
+		noResponseDesc: string;
+		noResponseShare: string;
+		withdrawn: string;
 	};
 	settings: {
 		documentsTitle: string;

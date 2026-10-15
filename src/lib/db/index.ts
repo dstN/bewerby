@@ -1,10 +1,28 @@
 import Dexie, { type Table } from 'dexie';
 import { writePdfToOpfs } from '#lib/utils/opfs.js';
 
+export type ApplicationStatus =
+	'draft' | 'sent' | 'interview' | 'accepted' | 'rejected' | 'archived';
+
 export interface StatusHistory {
-	status: 'draft' | 'sent' | 'interview' | 'accepted' | 'rejected';
+	status: ApplicationStatus;
 	timestamp: number;
 }
+
+/**
+ * Why a card is in the archive (#60): no answer ever came, the user ended it
+ * themselves, or it never went out (the posting was gone, say).
+ */
+export const ARCHIVE_REASONS = ['no-response', 'withdrawn', 'not-sent'] as const;
+export type ArchiveReason = (typeof ARCHIVE_REASONS)[number];
+
+/**
+ * Fields that belong to the status they were entered for: a rejection's
+ * date, an archived card's reason and end date. A status change drops them
+ * unless it sets them itself (data/applications.ts, crdt/runtime.ts), so a
+ * card rejected or archived a second time never carries the first one's.
+ */
+export const STATUS_FIELDS = ['rejectedAt', 'archiveReason', 'archivedAt'] as const;
 
 export interface Application {
 	id?: number;
@@ -24,7 +42,7 @@ export interface Application {
 	contactPhone: string;
 	notes: string;
 	priority: 'low' | 'medium' | 'high';
-	status: 'draft' | 'sent' | 'interview' | 'accepted' | 'rejected';
+	status: ApplicationStatus;
 	tags: string[];
 	cardColor?: string;
 	reminderInterval: '24h' | '48h' | '7d' | '14d' | 'custom' | 'none';
@@ -52,6 +70,13 @@ export interface Application {
 	 * rejected a second time never carries the first rejection's date.
 	 */
 	rejectedAt?: number;
+	/** Set while the card is archived (#60), dropped with it like rejectedAt. */
+	archiveReason?: ArchiveReason;
+	/**
+	 * When the application was ended, if the user entered it. Unset, the move
+	 * into the archive stands in - see getArchivedAt in #lib/utils/reminders.ts.
+	 */
+	archivedAt?: number;
 	createdAt: number;
 	updatedAt: number;
 	history: StatusHistory[];
@@ -200,7 +225,7 @@ export class BewerbyDatabase extends Dexie {
 
 export const db = new BewerbyDatabase();
 
-const VALID_STATUSES = ['draft', 'sent', 'interview', 'accepted', 'rejected'] as const;
+const VALID_STATUSES = ['draft', 'sent', 'interview', 'accepted', 'rejected', 'archived'] as const;
 const VALID_PRIORITIES = ['low', 'medium', 'high'] as const;
 const VALID_REMINDER_INTERVALS = ['24h', '48h', '7d', '14d', 'custom', 'none'] as const;
 
@@ -246,6 +271,9 @@ export function isValidApplication(value: unknown): value is Application {
 		(app.appliedAt === undefined || typeof app.appliedAt === 'number') &&
 		(app.sentAt === undefined || typeof app.sentAt === 'number') &&
 		(app.rejectedAt === undefined || typeof app.rejectedAt === 'number') &&
+		(app.archiveReason === undefined ||
+			(ARCHIVE_REASONS as readonly unknown[]).includes(app.archiveReason)) &&
+		(app.archivedAt === undefined || typeof app.archivedAt === 'number') &&
 		typeof app.createdAt === 'number' &&
 		typeof app.updatedAt === 'number' &&
 		Array.isArray(app.history) &&

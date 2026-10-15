@@ -129,6 +129,26 @@ for (const theme of ['light', 'dark'] as const) {
 			// "Absage" adds the rejection date field; scan with it shown.
 			await page.locator('#status').selectOption('rejected');
 			await expectNoViolations(page);
+			// "Archiv" adds the reason, and "Selbst beendet" the end date.
+			await page.locator('#status').selectOption('archived');
+			await page.locator('#archiveReason').selectOption('withdrawn');
+			await expectNoViolations(page);
+		});
+
+		test('the archive dialog and the archive column have no violations', async ({ page }) => {
+			await gotoWithTheme(page, '/board', theme);
+			await seedApplications(page, representativeBoard());
+			await page
+				.getByRole('combobox', { name: 'Status ändern für Fabrikam AG' })
+				.selectOption('archived');
+			const dialog = page.getByRole('dialog', { name: 'Bewerbung archivieren' });
+			await expect(dialog).toBeVisible();
+			await expectNoViolations(page);
+
+			await dialog.getByRole('button', { name: 'Archivieren' }).click();
+			await page.getByRole('button', { name: 'Archiv (1)' }).click();
+			await expect(page.locator('#column-archived .card')).toBeVisible();
+			await expectNoViolations(page);
 		});
 
 		test('the dispatch dialog has no violations', async ({ page }) => {

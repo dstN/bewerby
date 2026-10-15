@@ -19,7 +19,8 @@
 			"sent": "Versendet",
 			"interview": "Vorstellung",
 			"accepted": "Zusage",
-			"rejected": "Absage"
+			"rejected": "Absage",
+			"archived": "Archiv"
 		},
 		"actions": {
 			"add": "Bewerbung hinzufügen",
@@ -54,8 +55,8 @@
 			"actionPdf": "Nachweis (PDF)",
 			"actionCsv": "Nachweis (CSV)",
 			"working": "Wird erstellt …",
-			"hintPdf": "Erstellt eine druckfertige Liste der angezeigten Bewerbungen für die Agentur für Arbeit. Entwürfe und nie versendete Absagen werden nicht aufgeführt.",
-			"hintCsv": "Lädt die angezeigten Bewerbungen als Tabelle (CSV) für Excel oder LibreOffice herunter. Entwürfe und nie versendete Absagen werden nicht aufgeführt.",
+			"hintPdf": "Erstellt eine druckfertige Liste der angezeigten Bewerbungen für die Agentur für Arbeit. Entwürfe und nie versendete Bewerbungen werden nicht aufgeführt.",
+			"hintCsv": "Lädt die angezeigten Bewerbungen als Tabelle (CSV) für Excel oder LibreOffice herunter. Entwürfe und nie versendete Bewerbungen werden nicht aufgeführt.",
 			"columnDate": "Bewerbungsdatum",
 			"columnCompany": "Firma",
 			"columnStatus": "Status",
@@ -74,7 +75,20 @@
 			"periodCustom": "Eigener Zeitraum",
 			"count": "{count} Bewerbungen im Nachweis",
 			"submitPdf": "PDF erstellen",
-			"submitCsv": "CSV herunterladen"
+			"submitCsv": "CSV herunterladen",
+			"archivedNoResponse": "Keine Rückmeldung",
+			"archivedWithdrawn": "Zurückgezogen"
+		},
+		"archive": {
+			"toggle": "Archiv ({count})",
+			"dialogTitle": "Bewerbung archivieren",
+			"reasonQuestion": "Warum endet die Bewerbung bei {company}?",
+			"reasons": {
+				"no-response": "Keine Rückmeldung",
+				"withdrawn": "Selbst beendet oder zurückgezogen",
+				"not-sent": "Nie versendet, z. B. weil die Anzeige weg war"
+			},
+			"submit": "Archivieren"
 		},
 		"periodFrom": "Von",
 		"periodTo": "Bis"
@@ -97,6 +111,9 @@
 		"appliedAt": "Bewerbungsdatum",
 		"rejectedAt": "Absage erhalten am",
 		"rejectedAtHint": "Erscheint im Nachweis für die Arbeitsagentur. Vorbelegt mit dem Tag, an dem die Karte nach „Absage“ kam.",
+		"archiveReason": "Grund",
+		"archivedAt": "Beendet am",
+		"archivedAtHint": "Erscheint im Nachweis als „Zurückgezogen (Datum)“. Vorbelegt mit dem Tag, an dem die Karte ins Archiv kam.",
 		"confirmDiscard": "Es gibt ungespeicherte Änderungen. Wirklich verwerfen?",
 		"reminder": "Erinnerung",
 		"placeholderTitle": "z.B. Frontend Entwickler",
@@ -291,7 +308,11 @@
 		"worstTime": "Schlechteste",
 		"days": "Tage",
 		"basedOn": "Basierend auf {count} Bewerbungen mit Rückmeldung.",
-		"stepSelection": "Auswahl / Gespräch"
+		"stepSelection": "Auswahl / Gespräch",
+		"noResponseTitle": "Ohne Rückmeldung",
+		"noResponseDesc": "Versendete Bewerbungen, die ohne Antwort ins Archiv kamen. Sie zählen nicht als Rückmeldung und fließen nicht in die Antwortzeiten ein.",
+		"noResponseShare": "{rate} % der versendeten Bewerbungen",
+		"withdrawn": "Selbst beendet"
 	},
 	"settings": {
 		"title": "Einstellungen",
@@ -392,7 +413,7 @@
 			"contactFormBody": "Wenn du das Kontaktformular nutzt, werden Name, E-Mail-Adresse und Nachrichtentext per E-Mail an den Verantwortlichen weitergeleitet. Diese Daten werden dabei von einem Skript auf demselben Server verarbeitet, der auch diese Seite ausliefert — nicht von einem Drittanbieter. Sie werden nicht in einer Datenbank gespeichert, sondern ausschließlich per E-Mail in ein Postfach beim selben Hosting-Anbieter zugestellt; es gilt der oben genannte Auftragsverarbeitungsvertrag mit netcup. Der Webserver protokolliert den Aufruf des Skripts wie unter „Hosting“ beschrieben (IP-Adresse, Zeitpunkt, aufgerufene Datei, nicht aber den Inhalt deiner Nachricht); auch diese Protokolle werden spätestens nach 48 Stunden gelöscht. Die E-Mail wird gelöscht, sobald deine Anfrage abschließend bearbeitet ist und keine gesetzlichen Aufbewahrungspflichten entgegenstehen. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an der Beantwortung deiner Anfrage).",
 			"contactRightsTitle": "Kontakt für Anfragen",
 			"changesTitle": "Änderungen dieser Erklärung",
-			"changesBody": "Diese Erklärung wird angepasst, sobald sich an der tatsächlichen Datenverarbeitung etwas ändert. Stand: 4. Oktober 2026.",
+			"changesBody": "Diese Erklärung wird angepasst, sobald sich an der tatsächlichen Datenverarbeitung etwas ändert. Stand: 15. Oktober 2026.",
 			"storageKeyProfileDesc": "Absenderdaten für das Anschreiben (Name, Anschrift, E-Mail, Telefon) und der Verweis auf den hinterlegten Lebenslauf",
 			"adFetchTitle": "Import von Stellenanzeigen per Link",
 			"adFetchBody": "Wenn du im Bewerbungsformular einen Link zu einer Stellenanzeige einfügst und „Anzeige laden“ auswählst, wird ausschließlich dieser Link an den Server von bewerby.de übertragen. Der Server ruft die Anzeige dort ab und gibt dir den ausgelesenen Text zurück. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO: Der Abruf erfolgt ausschließlich auf deine ausdrückliche Anforderung, und das berechtigte Interesse liegt darin, dir diese Funktion bereitzustellen.",
@@ -408,7 +429,7 @@
 			"liveTitle": "Geräte direkt verbinden (optional)",
 			"liveBody": "Fügst du ein Gerät per QR-Code hinzu oder schaltest du den Live-Abgleich ein, bauen deine Geräte eine direkte, verschlüsselte Verbindung zueinander auf (WebRTC). Um sich zu finden, tauschen sie über den Server von bewerby.de (Pfad „/api/signal“) Verbindungsdaten aus. Diese sind mit einem Schlüssel verschlüsselt, den nur deine Geräte kennen; der Server kann sie nicht lesen und speichert sie höchstens zwei Minuten. Die Aufrufe erscheinen mit IP-Adresse und Zeitpunkt in den Zugriffsprotokollen des Webservers; zum Schutz vor Missbrauch zählt der Server die Anfragen je IP-Adresse höchstens eine Stunde lang im Arbeitsspeicher. Deine Bewerbungen selbst gehen danach direkt von Gerät zu Gerät, nicht über den Server. Fügst du ein Gerät hinzu, überträgt das bisherige Gerät auf diesem Weg auch den Schlüssel und, falls eingerichtet, den Zugang zum Speicherort an das neue Gerät, und zwar erst, nachdem du bestätigt hast, dass beide Geräte denselben Vergleichscode zeigen. Für die direkte Verbindung erfahren deine Geräte gegenseitig ihre IP-Adressen. Ohne weitere Hilfe finden sich Geräte nur im selben Netzwerk; für Verbindungen über verschiedene Netze wird ein STUN-Server eingesetzt, sobald einer eingerichtet ist. Dessen Betreiber erfährt dann die öffentliche IP-Adresse deiner Geräte und wird an dieser Stelle genannt. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO; das berechtigte Interesse liegt darin, dir die Verbindung deiner Geräte bereitzustellen, die du ausdrücklich angefordert hast.",
 			"storageLegalBasis": "Alles, was bewerby auf deinem Gerät ablegt – in IndexedDB, im Origin Private File System, in localStorage, in sessionStorage und im Cache, in dem der Service Worker die Anwendung für die Nutzung ohne Internetverbindung speichert –, ist für eine Funktion unbedingt erforderlich, die du ausdrücklich nutzt (§ 25 Abs. 2 Nr. 2 TDDDG); nichts davon dient dem Tracking. Eine Einwilligung ist dafür deshalb nicht erforderlich.",
-			"storageKeyBoardViewDesc": "Gewählte Sortierung und Filter auf dem Board (Tag, Priorität, Farbe) und der zuletzt gewählte Zeitraum für den Nachweis, ohne Suchtext"
+			"storageKeyBoardViewDesc": "Gewählte Sortierung und Filter auf dem Board (Tag, Priorität, Farbe), der zuletzt gewählte Zeitraum für den Nachweis und ob das Archiv eingeblendet ist, ohne Suchtext"
 		},
 		"nutzungsbedingungen": {
 			"title": "Nutzungsbedingungen",

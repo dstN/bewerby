@@ -334,18 +334,19 @@ the user saying it went out outweighs what the board saw.
 
 `computeApplicationStats` (`src/lib/utils/analytics.ts`) sorts every row into
 three nested stages - sent, selection, offer - and the column a card sits
-in is not enough to place it, because "Absage" is where both a rejection
-and an abandoned draft end up:
+in is not enough to place it, because before the archive (#60) "Absage" was
+where both a rejection and an abandoned draft ended up:
 
 - **Sent** (`wasSent` in `reminders.ts`, shared with the export): every
-  status past draft, except a rejection whose history shows it came straight
-  from draft without ever being sent. A rejection with no
+  status past draft, except an archived card whose reason is "never sent",
+  and a rejection whose history shows it came straight from draft without
+  ever being sent. A rejection with no
   draft entry at all (logged after the fact directly in that column, or a
   legacy row without history) records a real rejection and counts, and so
   does one with an entered application date.
-- **Selection:** interviews, offers, and only those rejections whose history
-  contains an interview. Offers count unconditionally - leaving one out
-  would push the success rate past 100 %.
+- **Selection:** interviews, offers, and only those rejected or archived
+  cards whose history contains an interview. Offers count unconditionally -
+  leaving one out would push the success rate past 100 %.
 
 Each stage is a subset of the one before, so no rate can exceed 100 %. Both
 the board and the edit dialog append every status change to `history`,
@@ -368,6 +369,37 @@ History entries are always dated by the moment of the change. An entered
 application date goes into `sentAt`, never into the log: a log entry dated
 noon today sat in the future all morning, and the synced status - taken
 from the newest entry - jumped back to "Versendet" after every earlier move.
+
+## The archive
+
+Many applications end without an answer, and some are ended by the user.
+Before the archive (#60) they stayed in "Versendet" forever or went into
+"Absage", which gave them a rejection date nobody sent: on the Nachweis,
+and in the statistics as a response after months. `archived` is a status
+of its own, with `archiveReason` (`no-response`, `withdrawn`, `not-sent`)
+and an optional `archivedAt`, the day a withdrawn application ended -
+unset, the move into the archive stands in (`getArchivedAt`), as for
+`rejectedAt`. All three are `STATUS_FIELDS` (`src/lib/db/index.ts`): every
+status change drops them unless it sets them itself.
+
+- **Board:** a sixth column, hidden unless the "Archiv (n)" button in the
+  board header switches it on (`aria-expanded`, `aria-controls`; kept in
+  `bewerby-board-view`). The column stays in the DOM with `hidden`, so the
+  button's `aria-controls` always points at something. Six columns do not
+  fit beside the sidebar on most screens, so switching it on scrolls it
+  into view - otherwise it would open out of sight. A card goes in by
+  drag and drop, the card's status select or the edit dialog; the first
+  two ask for the reason in `ArchiveDialog`, preselecting "never sent" for
+  a draft.
+- **Statistics:** an archived card is no answer, so it has no response
+  time. "No response" counts the sent ones archived with that reason and
+  their share of all sent; "never sent" ones are not sent at all.
+- **Nachweis:** "Keine Rückmeldung" without a date, "Zurückgezogen (date)",
+  and nothing for one never sent.
+- **Older devices:** a synced device on an older build knows no `archived`.
+  `readRow` skips a log entry and a stored status it does not know, so the
+  card shows in its column before the archive there, with nothing lost. A
+  backup holding archived cards does not import into an older version.
 
 ## Collapsible cards
 

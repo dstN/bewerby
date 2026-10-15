@@ -53,6 +53,35 @@ describe('crdt schema', () => {
 		expect(row(doc)).toEqual({ ...base, cardColor: '#10b981', rejectedAt: 7 });
 	});
 
+	it('reads back an archived row with its reason and end date (#60)', () => {
+		const doc = new Y.Doc();
+		const archived: DocRow = {
+			...base,
+			status: 'archived',
+			archiveReason: 'withdrawn',
+			archivedAt: 9,
+			history: [...base.history, { status: 'archived', timestamp: 2 }]
+		};
+		apps(doc).set(base.uid, newRowMap(archived, 2));
+		expect(row(doc)).toEqual(archived);
+	});
+
+	it('shows a status it does not know in the column before it', () => {
+		// What a device on an older build sees of a card archived elsewhere:
+		// the move and the stored status are skipped, nothing is lost.
+		const doc = new Y.Doc();
+		apps(doc).set(base.uid, newRowMap(base, 1));
+		const map = apps(doc).get(base.uid)!;
+		(map.get('history') as Y.Array<unknown>).push([{ status: 'ghosted', timestamp: 2 }]);
+		map.set('status', { s: 'ghosted', t: 2 });
+		map.set('archiveReason', 'bored');
+		expect(row(doc)).toMatchObject({
+			status: 'sent',
+			history: base.history,
+			archiveReason: 'no-response'
+		});
+	});
+
 	it('keeps both edits when two devices change the notes at the same time', () => {
 		const [a, b] = pair(1, 2);
 		setText(apps(a).get('u1')!.get('notes') as Y.Text, 'Hallo schöne Welt');
@@ -125,7 +154,7 @@ describe('crdt schema', () => {
 		apps(doc).set('x', map);
 		map.set('title', 42);
 		map.set('priority', 'urgent');
-		map.set('status', { s: 'archived', t: 'soon' });
+		map.set('status', { s: 'parked', t: 'soon' });
 		map.set('history', Y.Array.from([{ status: 'nope', timestamp: 1 }, 'junk']));
 		map.set('tags', 'not-an-array');
 		const read = readRow('x', map);

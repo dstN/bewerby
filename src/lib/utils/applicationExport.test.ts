@@ -15,8 +15,10 @@ const labels = {
 		sent: 'Versendet',
 		interview: 'Vorstellung',
 		accepted: 'Zusage',
-		rejected: 'Absage'
-	}
+		rejected: 'Absage',
+		archived: 'Archiv'
+	},
+	archived: { noResponse: 'Keine Rückmeldung', withdrawn: 'Zurückgezogen' }
 };
 
 const AT = (y: number, m: number, d: number) => new Date(y, m - 1, d, 12).getTime();
@@ -44,6 +46,48 @@ describe('buildApplicationCsv', () => {
 	it('writes date, company and translated status for each row', () => {
 		const csv = buildApplicationCsv([row()], labels, 'de-DE');
 		expect(bodyLines(csv)).toEqual(['05.03.2026;Acme GmbH;Versendet']);
+	});
+
+	it('names what became of an archived application, and leaves out one never sent (#60)', () => {
+		const sent = { status: 'sent' as const, timestamp: AT(2026, 1, 30) };
+		const archived = { status: 'archived' as const, timestamp: AT(2026, 8, 17) };
+		const csv = buildApplicationCsv(
+			[
+				row({
+					company: 'Still AG',
+					status: 'archived',
+					archiveReason: 'no-response',
+					history: [sent, archived]
+				}),
+				row({
+					company: 'Ende AG',
+					status: 'archived',
+					archiveReason: 'withdrawn',
+					history: [sent, archived]
+				}),
+				// Ended on a date entered in the edit dialog.
+				row({
+					company: 'Datum AG',
+					status: 'archived',
+					archiveReason: 'withdrawn',
+					archivedAt: AT(2026, 8, 20),
+					history: [sent, archived]
+				}),
+				row({
+					company: 'Nie AG',
+					status: 'archived',
+					archiveReason: 'not-sent',
+					history: [{ status: 'draft', timestamp: AT(2026, 1, 30) }, archived]
+				})
+			],
+			labels,
+			'de-DE'
+		);
+		expect(bodyLines(csv)).toEqual([
+			'30.01.2026;Still AG;Keine Rückmeldung',
+			'30.01.2026;Ende AG;Zurückgezogen (17.08.2026)',
+			'30.01.2026;Datum AG;Zurückgezogen (20.08.2026)'
+		]);
 	});
 
 	it('leads with a BOM and a header row so a German Excel opens it correctly', () => {

@@ -19,7 +19,8 @@
 			"sent": "Sent",
 			"interview": "Interview",
 			"accepted": "Accepted",
-			"rejected": "Rejected"
+			"rejected": "Rejected",
+			"archived": "Archive"
 		},
 		"actions": {
 			"add": "Add application",
@@ -54,8 +55,8 @@
 			"actionPdf": "Proof (PDF)",
 			"actionCsv": "Proof (CSV)",
 			"working": "Generating …",
-			"hintPdf": "Creates a print-ready list of the applications shown here for the employment agency. Drafts and rejections that were never sent are left out.",
-			"hintCsv": "Downloads the applications shown here as a spreadsheet (CSV) for Excel or LibreOffice. Drafts and rejections that were never sent are left out.",
+			"hintPdf": "Creates a print-ready list of the applications shown here for the employment agency. Drafts and applications that were never sent are left out.",
+			"hintCsv": "Downloads the applications shown here as a spreadsheet (CSV) for Excel or LibreOffice. Drafts and applications that were never sent are left out.",
 			"columnDate": "Date applied",
 			"columnCompany": "Company",
 			"columnStatus": "Status",
@@ -74,7 +75,20 @@
 			"periodCustom": "Custom period",
 			"count": "{count} applications in the Nachweis",
 			"submitPdf": "Create PDF",
-			"submitCsv": "Download CSV"
+			"submitCsv": "Download CSV",
+			"archivedNoResponse": "No response",
+			"archivedWithdrawn": "Withdrawn"
+		},
+		"archive": {
+			"toggle": "Archive ({count})",
+			"dialogTitle": "Archive application",
+			"reasonQuestion": "Why does the application to {company} end?",
+			"reasons": {
+				"no-response": "No response",
+				"withdrawn": "Ended or withdrawn by you",
+				"not-sent": "Never sent, e.g. because the posting was gone"
+			},
+			"submit": "Archive"
 		},
 		"periodFrom": "From",
 		"periodTo": "To"
@@ -97,6 +111,9 @@
 		"appliedAt": "Application date",
 		"rejectedAt": "Rejection received on",
 		"rejectedAtHint": "Printed on the proof of applications. Defaults to the day the card moved to “Rejected”.",
+		"archiveReason": "Reason",
+		"archivedAt": "Ended on",
+		"archivedAtHint": "Shown on the proof of applications as \"Withdrawn (date)\". Pre-filled with the day the card went into the archive.",
 		"confirmDiscard": "You have unsaved changes. Discard them?",
 		"reminder": "Reminder",
 		"placeholderTitle": "e.g. Frontend Developer",
@@ -291,7 +308,11 @@
 		"worstTime": "Worst",
 		"days": "days",
 		"basedOn": "Based on {count} applications with responses.",
-		"stepSelection": "Selection / Interview"
+		"stepSelection": "Selection / Interview",
+		"noResponseTitle": "No response",
+		"noResponseDesc": "Applications sent that went into the archive without an answer. They are not counted as responses and do not enter the response times.",
+		"noResponseShare": "{rate}% of applications sent",
+		"withdrawn": "Ended by you"
 	},
 	"settings": {
 		"title": "Settings",
@@ -392,7 +413,7 @@
 			"contactFormBody": "If you use the contact form, your name, email address, and message are forwarded by email to the controller. This is processed by a script on the same server that serves this page - not by a third party. It is not stored in a database, only delivered by email to a mailbox with the same hosting provider; the data processing agreement with netcup stated above applies. The web server logs the call to the script as described under “Hosting” (IP address, time, requested file, but not the content of your message); these logs, too, are deleted after 48 hours at the latest. The email is deleted once your inquiry has been dealt with, unless statutory retention obligations require otherwise. The legal basis is Art. 6(1)(f) GDPR (legitimate interest in responding to your inquiry).",
 			"contactRightsTitle": "Contact for inquiries",
 			"changesTitle": "Changes to this policy",
-			"changesBody": "This policy will be updated whenever the actual data processing changes. As of October 4, 2026.",
+			"changesBody": "This policy will be updated whenever the actual data processing changes. As of October 15, 2026.",
 			"storageKeyProfileDesc": "Sender details for the cover letter (name, address, email, phone) and the reference to the stored CV",
 			"adFetchTitle": "Importing job postings by link",
 			"adFetchBody": "If you paste a link to a job posting into the application form and choose “Load posting”, that link alone is sent to the bewerby.de server. The server retrieves the posting and returns the extracted text to you. The legal basis is Art. 6(1)(f) GDPR: the retrieval happens solely on your explicit request, and the legitimate interest lies in providing you with this feature.",
@@ -408,7 +429,7 @@
 			"liveTitle": "Connecting devices directly (optional)",
 			"liveBody": "If you add a device by QR code or switch on live sync, your devices set up a direct, encrypted connection to each other (WebRTC). To find each other, they exchange connection data through the bewerby.de server (path “/api/signal”). That data is encrypted with a key only your devices know; the server cannot read it and keeps it for at most two minutes. The requests appear with IP address and time in the web server's access logs; to prevent abuse, the server counts requests per IP address in memory for at most one hour. Your applications themselves then go directly from device to device, not through the server. When you add a device, the existing one also passes the key and, if set up, the access to the storage location to the new device this way, and only after you have confirmed that both devices show the same comparison code. For the direct connection, your devices learn each other's IP addresses. Without further help, devices only find each other on the same network; for connections across networks a STUN server is used once one is set up. Its operator then learns the public IP address of your devices and will be named here. The legal basis is Art. 6(1)(f) GDPR; the legitimate interest lies in providing the connection between your devices you explicitly requested.",
 			"storageLegalBasis": "Everything bewerby keeps on your device - in IndexedDB, the Origin Private File System, localStorage, sessionStorage, and the cache in which the service worker stores the application for offline use - is strictly necessary for a feature you explicitly use (Section 25(2) no. 2 of the German TDDDG); none of it serves tracking. No consent is therefore required for it.",
-			"storageKeyBoardViewDesc": "Sort and filters chosen on the board (tag, priority, color) and the period last chosen for the Nachweis, without the search text"
+			"storageKeyBoardViewDesc": "Sort and filters chosen on the board (tag, priority, color), the period last chosen for the Nachweis and whether the archive is shown, without the search text"
 		},
 		"nutzungsbedingungen": {
 			"title": "Terms of Use",

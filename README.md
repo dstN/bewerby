@@ -24,17 +24,23 @@ all running in your browser, with your application data never leaving it.
   Cards collapse to company, priority, date and their mail/delete buttons -
   one at a time via the dot in front of the company, or all at once from the
   filter bar - and stay that way across reloads.
+- An archive for applications that ended without a result - no response,
+  ended by you, never sent: a column of its own, hidden unless switched on,
+  that asks for the reason on the way in.
 - Three ways to fill in a posting, all feeding the same review panel so
   nothing is written without being shown first: upload the **PDF**, **paste
   the ad's text**, or **give it a link** - the last one fetched server-side
   through `/api/fetch-ad`, which reads schema.org `JobPosting` data when the
   page has it. That endpoint receives one public URL and nothing else; see
   [ARCHITECTURE.md](ARCHITECTURE.md) for what it does and does not give away.
-- Analytics: funnel/conversion rates and response-time stats.
+- Analytics: funnel/conversion rates, response times in calendar days from
+  real answers only (interview, offer, rejection), and how many of the
+  applications sent were archived without a response.
 - Proof of applications for the Agentur für Arbeit: date, company and status
   of every application on the board that was actually sent - no drafts - as
   a print-ready **PDF** or a **CSV** a German Excel opens correctly. A
-  rejection is listed with its date.
+  rejection is listed with its date, an archived application as "no
+  response" or as "withdrawn" with the day it ended.
 - Application and rejection dates follow the card's moves into "Versendet"
   and "Absage" unless you enter the real date in the edit dialog - then the
   entered date counts everywhere: card, export, statistics, reminders.

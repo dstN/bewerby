@@ -1,5 +1,10 @@
 import * as Y from 'yjs';
-import { isValidApplication, type Application, type BewerbyDatabase } from '#lib/db/index.js';
+import {
+	STATUS_FIELDS,
+	isValidApplication,
+	type Application,
+	type BewerbyDatabase
+} from '#lib/db/index.js';
 import type { ApplicationChanges, NewApplication } from '#lib/data/applications.js';
 import { MissingApplicationError } from '#lib/data/errors.js';
 import { readPdfFromOpfs, writePdfToOpfs } from '#lib/utils/opfs.js';
@@ -275,7 +280,9 @@ export class SyncRuntime {
 			applyChanges(map, { ...fields, ...blobs, updatedAt: now });
 			if (status !== undefined && status !== current.status) {
 				moveTo(map, status, now);
-				if (!('rejectedAt' in changes) && map.has('rejectedAt')) map.delete('rejectedAt');
+				for (const key of STATUS_FIELDS) {
+					if (!(key in changes) && map.has(key)) map.delete(key);
+				}
 			}
 		}, ORIGIN.local);
 		await this.materialize([uid]);

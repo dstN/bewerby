@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount, untrack } from 'svelte';
 	import { t } from '#lib/i18n/index.svelte.js';
-	import type { Application } from '#lib/db/index.js';
+	import { ARCHIVE_REASONS, type Application, type ArchiveReason } from '#lib/db/index.js';
 	import {
 		createApplication,
 		updateApplication,
@@ -18,7 +18,7 @@
 	} from '#lib/utils/pdf.js';
 	import { writePdfToOpfs, readPdfFromOpfs, deletePdfFromOpfs } from '#lib/utils/opfs.js';
 	import DatePicker from '#lib/components/common/DatePicker.svelte';
-	import { INTERVAL_MS, getAppliedAt, getRejectedAt } from '#lib/utils/reminders.js';
+	import { INTERVAL_MS, getAppliedAt, getArchivedAt, getRejectedAt } from '#lib/utils/reminders.js';
 	import { colorStore } from '#lib/stores/colors.svelte.js';
 	import { announcer } from '#lib/stores/announcer.svelte.js';
 
@@ -29,7 +29,7 @@
 		onsave
 	}: {
 		application?: Application | null;
-		initialStatus?: 'draft' | 'sent' | 'interview' | 'accepted' | 'rejected';
+		initialStatus?: Application['status'];
 		onclose: () => void;
 		onsave: () => void;
 	} = $props();
@@ -136,6 +136,19 @@
 	const initialRejectedDateStr =
 		shownRejectedAt === undefined ? '' : formatDateForInput(shownRejectedAt);
 	let rejectedDateStr = $state(initialRejectedDateStr);
+	// Only shown while the status is "Archiv" (#60). Preselected like the
+	// board's archive dialog: never sent for a draft, no response otherwise.
+	let archiveReason = $state<ArchiveReason>(
+		initialApp?.archiveReason ??
+			((initialApp?.status ?? initialStat) === 'draft' ? 'not-sent' : 'no-response')
+	);
+	// The end date, only asked for when the user ended it: it is what the
+	// Nachweis prints after "Zurückgezogen". Pre-filled like the rejection's.
+	const shownArchivedAt =
+		initialApp?.status === 'archived' ? getArchivedAt(initialApp) : Date.now();
+	const initialArchivedDateStr =
+		shownArchivedAt === undefined ? '' : formatDateForInput(shownArchivedAt);
+	let archivedDateStr = $state(initialArchivedDateStr);
 	let dialogEl: HTMLDialogElement;
 
 	function snapshotFields(): string {
@@ -158,6 +171,8 @@
 			tags,
 			appliedDateStr,
 			rejectedDateStr,
+			archiveReason,
+			archivedDateStr,
 			pdfRef
 		});
 	}
@@ -572,6 +587,15 @@
 		return application?.status === 'rejected' ? application.rejectedAt : undefined;
 	}
 
+	/** Same rule as computeRejectedAt, for the day a withdrawn application ended. */
+	function computeArchivedAt(): number | undefined {
+		if (status !== 'archived' || archiveReason !== 'withdrawn' || !archivedDateStr) {
+			return undefined;
+		}
+		if (archivedDateStr !== initialArchivedDateStr) return parseDateInput(archivedDateStr);
+		return application?.status === 'archived' ? application.archivedAt : undefined;
+	}
+
 	async function handleSubmit(event: SubmitEvent) {
 		event.preventDefault();
 		await save();
@@ -615,7 +639,9 @@
 				appliedDateStr && appliedDateStr !== initialAppliedDateStr
 					? parsedAppliedAt
 					: application?.sentAt,
-			rejectedAt: computeRejectedAt()
+			rejectedAt: computeRejectedAt(),
+			archiveReason: status === 'archived' ? archiveReason : undefined,
+			archivedAt: computeArchivedAt()
 		};
 
 		try {
@@ -890,6 +916,7 @@
 						<option value="interview">{t('kanban.columns.interview')}</option>
 						<option value="accepted">{t('kanban.columns.accepted')}</option>
 						<option value="rejected">{t('kanban.columns.rejected')}</option>
+						<option value="archived">{t('kanban.columns.archived')}</option>
 					</select>
 				</div>
 
@@ -899,6 +926,24 @@
 						<DatePicker id="rejectedAt" bind:value={rejectedDateStr} />
 						<p class="field-hint">{t('application.rejectedAtHint')}</p>
 					</div>
+				{/if}
+
+				{#if status === 'archived'}
+					<div class="form-group col-span-2">
+						<label for="archiveReason">{t('application.archiveReason')}</label>
+						<select id="archiveReason" bind:value={archiveReason}>
+							{#each ARCHIVE_REASONS as reason (reason)}
+								<option value={reason}>{t(`kanban.archive.reasons.${reason}`)}</option>
+							{/each}
+						</select>
+					</div>
+					{#if archiveReason === 'withdrawn'}
+						<div class="form-group col-span-2">
+							<label for="archivedAt">{t('application.archivedAt')}</label>
+							<DatePicker id="archivedAt" bind:value={archivedDateStr} />
+							<p class="field-hint">{t('application.archivedAtHint')}</p>
+						</div>
+					{/if}
 				{/if}
 
 				<div class="form-group col-span-2">

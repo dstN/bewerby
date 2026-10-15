@@ -4,16 +4,20 @@
 	import { t } from '#lib/i18n/index.svelte.js';
 	import { computeApplicationStats, type AnalyticsRow } from '#lib/utils/analytics.js';
 
-	// Analytics only ever reads status, history and the entered dates - project down to that instead
+	// Analytics only ever reads status, history, the entered dates and the
+	// archive reason - project down to that instead
 	// of holding every field (title, notes, contact info, pdfRef, ...) of
 	// every application in the reactive store.
 	const applicationsStore = liveQuery(async (): Promise<AnalyticsRow[]> =>
-		(await db.applications.toArray()).map(({ status, history, sentAt, rejectedAt }) => ({
-			status,
-			history,
-			sentAt,
-			rejectedAt
-		}))
+		(await db.applications.toArray()).map(
+			({ status, history, sentAt, rejectedAt, archiveReason }) => ({
+				status,
+				history,
+				sentAt,
+				rejectedAt,
+				archiveReason
+			})
+		)
 	);
 
 	// Funnel and Response Time metrics; the actual computation is a plain,
@@ -81,6 +85,10 @@
 					<div class="metric-box">
 						<span class="metric-val text-danger">{stats.counts.rejected}</span>
 						<span class="metric-label">{t('kanban.columns.rejected')}</span>
+					</div>
+					<div class="metric-box">
+						<span class="metric-val">{stats.counts.archived}</span>
+						<span class="metric-label">{t('kanban.columns.archived')}</span>
 					</div>
 				</div>
 			</section>
@@ -209,6 +217,28 @@
 					</div>
 				{/if}
 			</section>
+
+			<!-- Archived without an answer (#60): no response, so no response time -->
+			<section class="card">
+				<h2 class="section-title">{t('analytics.noResponseTitle')}</h2>
+				<p class="card-desc">{t('analytics.noResponseDesc')}</p>
+				<div class="times-grid">
+					<div class="time-box">
+						<span class="time-label">{t('analytics.noResponseTitle')}</span>
+						<span class="time-val">{stats.archive.noResponse}</span>
+						<span class="time-unit">
+							{t('analytics.noResponseShare').replace(
+								'{rate}',
+								String(stats.archive.noResponseRate)
+							)}
+						</span>
+					</div>
+					<div class="time-box">
+						<span class="time-label">{t('analytics.withdrawn')}</span>
+						<span class="time-val">{stats.archive.withdrawn}</span>
+					</div>
+				</div>
+			</section>
 		</div>
 	{/if}
 </div>
@@ -266,7 +296,7 @@
 
 	.metrics-row {
 		display: grid;
-		grid-template-columns: repeat(5, 1fr);
+		grid-template-columns: repeat(6, 1fr);
 		gap: 12px;
 	}
 

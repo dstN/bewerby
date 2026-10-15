@@ -84,17 +84,33 @@ export function getRejectedAt(
 }
 
 /**
+ * When an archived application was ended: the date the user entered,
+ * otherwise the move into the archive. Undefined for anything not archived.
+ */
+export function getArchivedAt(
+	app: Pick<Application, 'status' | 'history' | 'archivedAt'>
+): number | undefined {
+	if (app.status !== 'archived') return undefined;
+	const last = (app.history ?? []).at(-1);
+	return app.archivedAt ?? (last?.status === 'archived' ? last.timestamp : undefined);
+}
+
+/**
  * Whether an application actually went out - the rule both the statistics
  * funnel and the proof-of-applications export count by. Every status past
- * draft implies it except a rejection: a card dragged from draft straight to
- * "Absage" (the posting was gone, say) was never sent, and only its history
- * shows that. A rejection with no draft entry at all - logged after the fact
+ * draft implies it except an archived card whose reason says it never went
+ * out, and a rejection: before the archive (#60) a card dragged from draft
+ * straight to "Absage" (the posting was gone, say) was never sent, and only
+ * its history shows that. A rejection with no draft entry at all - logged after the fact
  * directly in the rejected column, or a legacy row without history - records
  * a real rejection and counts. So does one with an entered application date:
  * that is the user saying it went out, whatever the board saw.
  */
-export function wasSent(app: Pick<Application, 'status' | 'history' | 'sentAt'>): boolean {
+export function wasSent(
+	app: Pick<Application, 'status' | 'history' | 'sentAt' | 'archiveReason'>
+): boolean {
 	if (app.status === 'draft') return false;
+	if (app.status === 'archived') return app.archiveReason !== 'not-sent';
 	if (app.status !== 'rejected') return true;
 	const history = app.history ?? [];
 	// Before 2026-08-18 the edit dialog changed a status without logging it,
@@ -123,7 +139,12 @@ export function wasSent(app: Pick<Application, 'status' | 'history' | 'sentAt'>)
  * date back either way.
  */
 export function getReminderDueAt(app: Application): number | null {
-	if (app.reminderInterval === 'none' || app.status === 'accepted' || app.status === 'rejected') {
+	if (
+		app.reminderInterval === 'none' ||
+		app.status === 'accepted' ||
+		app.status === 'rejected' ||
+		app.status === 'archived'
+	) {
 		return null;
 	}
 	// An explicit due date always wins: it is what the user last chose, either

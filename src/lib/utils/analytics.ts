@@ -1,8 +1,11 @@
 import type { Application } from '#lib/db/index.js';
 import { getRejectedAt, getSentAt, wasSent } from '#lib/utils/reminders.js';
 
-/** Analytics only ever needs status, history and the entered dates. */
-export type AnalyticsRow = Pick<Application, 'status' | 'history' | 'sentAt' | 'rejectedAt'>;
+/** Analytics only ever needs status, history, the entered dates and the archive reason. */
+export type AnalyticsRow = Pick<
+	Application,
+	'status' | 'history' | 'sentAt' | 'rejectedAt' | 'archiveReason'
+>;
 
 export interface ApplicationStats {
 	counts: {
@@ -11,6 +14,7 @@ export interface ApplicationStats {
 		interview: number;
 		accepted: number;
 		rejected: number;
+		archived: number;
 	};
 	funnel: {
 		sent: number;
@@ -25,6 +29,16 @@ export interface ApplicationStats {
 		best: number;
 		worst: number;
 		count: number;
+	};
+	/**
+	 * Sent applications put into the archive without an answer (#60), and the
+	 * share of all sent ones they make up; plus those the user ended.
+	 * Neither is a response, so neither has a response time.
+	 */
+	archive: {
+		noResponse: number;
+		noResponseRate: number;
+		withdrawn: number;
 	};
 }
 
@@ -46,9 +60,13 @@ export function computeApplicationStats(list: AnalyticsRow[]): ApplicationStats 
 	let interview = 0;
 	let accepted = 0;
 	let rejected = 0;
-	// Rejections that came after an interview. Only those belong in the
-	// selection stage: a rejection straight after sending was never selected.
-	let rejectedAfterInterview = 0;
+	let archived = 0;
+	// Rejected or archived after an interview. Only those belong in the
+	// selection stage: a card turned down or gone quiet straight after
+	// sending was never selected.
+	let endedAfterInterview = 0;
+	let noResponse = 0;
+	let withdrawn = 0;
 	let totalSent = 0;
 
 	const responseTimes: number[] = [];
@@ -60,6 +78,7 @@ export function computeApplicationStats(list: AnalyticsRow[]): ApplicationStats 
 		else if (app.status === 'interview') interview++;
 		else if (app.status === 'accepted') accepted++;
 		else if (app.status === 'rejected') rejected++;
+		else if (app.status === 'archived') archived++;
 
 		// `history` is required on the type, but a row written past TypeScript
 		// (a hand-edited record, a put() with a partial object) can arrive
@@ -67,9 +86,14 @@ export function computeApplicationStats(list: AnalyticsRow[]): ApplicationStats 
 		// statistics page down rather than just counting as having no events.
 		const history = app.history ?? [];
 		if (wasSent(app)) totalSent++;
-		if (app.status === 'rejected' && history.some((h) => h.status === 'interview')) {
-			rejectedAfterInterview++;
+		if (
+			(app.status === 'rejected' || app.status === 'archived') &&
+			history.some((h) => h.status === 'interview')
+		) {
+			endedAfterInterview++;
 		}
+		if (app.status === 'archived' && app.archiveReason === 'no-response') noResponse++;
+		if (app.status === 'archived' && app.archiveReason === 'withdrawn') withdrawn++;
 		// Response time: from the send to the first answer - a move into
 		// interview, offer or rejection, each by its entered date where there
 		// is one. Nothing else is an answer: a card still waiting, or one put
@@ -103,7 +127,7 @@ export function computeApplicationStats(list: AnalyticsRow[]): ApplicationStats 
 	// counts as sent too.
 	// Accepted stays in unconditionally: an offer implies selection, and
 	// leaving it out would push the success rate past 100 %.
-	const totalSelection = interview + accepted + rejectedAfterInterview;
+	const totalSelection = interview + accepted + endedAfterInterview;
 	const totalSuccess = accepted;
 
 	// Percentages
@@ -119,7 +143,7 @@ export function computeApplicationStats(list: AnalyticsRow[]): ApplicationStats 
 	const worst = count > 0 ? Math.round(Math.max(...responseTimes) * 10) / 10 : 0;
 
 	return {
-		counts: { draft, sent, interview, accepted, rejected },
+		counts: { draft, sent, interview, accepted, rejected, archived },
 		funnel: {
 			sent: totalSent,
 			selection: totalSelection,
@@ -133,6 +157,11 @@ export function computeApplicationStats(list: AnalyticsRow[]): ApplicationStats 
 			best,
 			worst,
 			count
+		},
+		archive: {
+			noResponse,
+			noResponseRate: totalSent > 0 ? Math.round((noResponse / totalSent) * 100) : 0,
+			withdrawn
 		}
 	};
 }

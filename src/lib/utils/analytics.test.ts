@@ -8,7 +8,14 @@ function row(status: AnalyticsRow['status'], history: AnalyticsRow['history'] = 
 describe('computeApplicationStats', () => {
 	it('returns all-zero stats for an empty list', () => {
 		const stats = computeApplicationStats([]);
-		expect(stats.counts).toEqual({ draft: 0, sent: 0, interview: 0, accepted: 0, rejected: 0 });
+		expect(stats.counts).toEqual({
+			draft: 0,
+			sent: 0,
+			interview: 0,
+			accepted: 0,
+			rejected: 0,
+			archived: 0
+		});
 		expect(stats.funnel).toEqual({
 			sent: 0,
 			selection: 0,
@@ -41,7 +48,14 @@ describe('computeApplicationStats', () => {
 			row('accepted'),
 			row('rejected')
 		]);
-		expect(stats.counts).toEqual({ draft: 2, sent: 1, interview: 1, accepted: 1, rejected: 1 });
+		expect(stats.counts).toEqual({
+			draft: 2,
+			sent: 1,
+			interview: 1,
+			accepted: 1,
+			rejected: 1,
+			archived: 0
+		});
 	});
 
 	it('computes the funnel as a cumulative pipeline (sent includes everything past it)', () => {
@@ -240,5 +254,53 @@ describe('computeApplicationStats', () => {
 		const stats = computeApplicationStats([row('draft', []), row('sent', [])]);
 		expect(stats.response.count).toBe(0);
 		expect(stats.response.avg).toBe(0);
+	});
+	it('keeps the archive out of the response times and counts it on its own (#60)', () => {
+		const at = (month: number, day: number) => new Date(2026, month - 1, day, 12).getTime();
+		const stats = computeApplicationStats([
+			// Applied on 30 Jan, ended by the user on 17 Aug: no response after 199 days.
+			{
+				status: 'archived',
+				archiveReason: 'withdrawn',
+				history: [
+					{ status: 'sent', timestamp: at(1, 30) },
+					{ status: 'archived', timestamp: at(8, 17) }
+				]
+			},
+			// Never heard back.
+			{
+				status: 'archived',
+				archiveReason: 'no-response',
+				history: [
+					{ status: 'sent', timestamp: at(3, 1) },
+					{ status: 'archived', timestamp: at(5, 1) }
+				]
+			},
+			// Gone quiet after the interview: selected, and that answer still counts.
+			{
+				status: 'archived',
+				archiveReason: 'no-response',
+				history: [
+					{ status: 'sent', timestamp: at(3, 1) },
+					{ status: 'interview', timestamp: at(3, 4) },
+					{ status: 'archived', timestamp: at(6, 1) }
+				]
+			},
+			// The posting was gone before it went out.
+			{
+				status: 'archived',
+				archiveReason: 'not-sent',
+				history: [
+					{ status: 'draft', timestamp: at(3, 1) },
+					{ status: 'archived', timestamp: at(3, 2) }
+				]
+			},
+			row('sent', [{ status: 'sent', timestamp: at(9, 1) }])
+		]);
+		expect(stats.counts.archived).toBe(4);
+		expect(stats.funnel.sent).toBe(4);
+		expect(stats.funnel.selection).toBe(1);
+		expect(stats.response).toEqual({ avg: 3, best: 3, worst: 3, count: 1 });
+		expect(stats.archive).toEqual({ noResponse: 2, noResponseRate: 50, withdrawn: 1 });
 	});
 });

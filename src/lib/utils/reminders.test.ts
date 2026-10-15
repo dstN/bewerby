@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getReminderDueAt } from './reminders.js';
+import { getArchivedAt, getReminderDueAt, wasSent } from './reminders.js';
 import type { Application, StatusHistory } from '#lib/db/index.js';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -107,6 +107,11 @@ describe('getReminderDueAt', () => {
 				makeApp({ status: 'accepted', reminderInterval: 'custom', reminderAt: 5_000 })
 			)
 		).toBeNull();
+		expect(
+			getReminderDueAt(
+				makeApp({ status: 'archived', reminderInterval: 'custom', reminderAt: 5_000 })
+			)
+		).toBeNull();
 	});
 
 	it('returns null for "custom" without a date rather than guessing one', () => {
@@ -134,5 +139,36 @@ describe('getReminderDueAt', () => {
 			cardColor: '#ff00ff'
 		});
 		expect(getReminderDueAt(editedLater)).toBe(getReminderDueAt(original));
+	});
+});
+
+describe('the archive (#60)', () => {
+	const moves = (...statuses: StatusHistory['status'][]) =>
+		statuses.map((status, i) => ({ status, timestamp: (i + 1) * DAY_MS }));
+
+	it('counts an archived card as sent unless it never went out', () => {
+		const history = moves('sent', 'archived');
+		expect(wasSent(makeApp({ status: 'archived', archiveReason: 'no-response', history }))).toBe(
+			true
+		);
+		expect(wasSent(makeApp({ status: 'archived', archiveReason: 'withdrawn', history }))).toBe(
+			true
+		);
+		expect(
+			wasSent(
+				makeApp({
+					status: 'archived',
+					archiveReason: 'not-sent',
+					history: moves('draft', 'archived')
+				})
+			)
+		).toBe(false);
+	});
+
+	it('dates the end by the entered day, else by the move into the archive', () => {
+		const history = moves('sent', 'archived');
+		expect(getArchivedAt(makeApp({ status: 'archived', history }))).toBe(2 * DAY_MS);
+		expect(getArchivedAt(makeApp({ status: 'archived', history, archivedAt: 7 }))).toBe(7);
+		expect(getArchivedAt(makeApp({ status: 'sent', history: moves('sent') }))).toBeUndefined();
 	});
 });

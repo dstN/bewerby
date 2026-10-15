@@ -1,12 +1,13 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, tick } from 'svelte';
 	import { liveQuery } from 'dexie';
 	import { SvelteSet } from 'svelte/reactivity';
-	import { db, type Application } from '#lib/db/index.js';
+	import { db, type Application, type ArchiveReason } from '#lib/db/index.js';
 	import { removeApplication, updateApplication } from '#lib/data/applications.js';
 	import { t, i18n } from '#lib/i18n/index.svelte.js';
 	import ApplicationModal from '#lib/components/kanban/ApplicationModal.svelte';
 	import ExportDialog from '#lib/components/kanban/ExportDialog.svelte';
+	import ArchiveDialog from '#lib/components/kanban/ArchiveDialog.svelte';
 	import ApplicationDispatchDialog from '#lib/components/application/ApplicationDispatchDialog.svelte';
 	import { colorStore } from '#lib/stores/colors.svelte.js';
 	import { deletePdfFromOpfs } from '#lib/utils/opfs.js';
@@ -34,7 +35,10 @@
 			color: 'var(--color-kanban-interview)'
 		},
 		{ id: 'accepted', labelKey: 'kanban.columns.accepted', color: 'var(--color-kanban-accepted)' },
-		{ id: 'rejected', labelKey: 'kanban.columns.rejected', color: 'var(--color-kanban-rejected)' }
+		{ id: 'rejected', labelKey: 'kanban.columns.rejected', color: 'var(--color-kanban-rejected)' },
+		// Hidden unless switched on (#60): applications that ended without a
+		// result, kept out of the way like "Done" in Jira.
+		{ id: 'archived', labelKey: 'kanban.columns.archived', color: 'var(--color-kanban-archived)' }
 	] as const;
 
 	type Status = (typeof columns)[number]['id'];
@@ -59,6 +63,7 @@
 		exportPeriod: PeriodChoice;
 		from: string;
 		to: string;
+		showArchive: boolean;
 	} {
 		const view = {
 			tag: '',
@@ -67,15 +72,14 @@
 			sortBy: 'default' as Sort,
 			exportPeriod: 'all' as PeriodChoice,
 			from: '',
-			to: ''
+			to: '',
+			showArchive: false
 		};
 		try {
 			const parsed: unknown = JSON.parse(localStorage.getItem(VIEW_STORAGE_KEY) ?? '{}');
 			if (typeof parsed !== 'object' || parsed === null) return view;
-			const { tag, priority, color, sortBy, exportPeriod, from, to } = parsed as Record<
-				string,
-				unknown
-			>;
+			const { tag, priority, color, sortBy, exportPeriod, from, to, showArchive } =
+				parsed as Record<string, unknown>;
 			if (typeof tag === 'string') view.tag = tag.slice(0, 100);
 			if (priority === 'low' || priority === 'medium' || priority === 'high') {
 				view.priority = priority;
@@ -87,6 +91,7 @@
 			view.exportPeriod = PERIOD_CHOICES.find((choice) => choice === exportPeriod) ?? 'all';
 			if (typeof from === 'string' && DAY.test(from)) view.from = from;
 			if (typeof to === 'string' && DAY.test(to)) view.to = to;
+			view.showArchive = showArchive === true;
 		} catch {
 			// Unreadable or blocked storage: start from the defaults.
 		}
@@ -106,6 +111,7 @@
 	let exportChoice = $state<PeriodChoice>(savedView.exportPeriod);
 	let exportFrom = $state(savedView.from);
 	let exportTo = $state(savedView.to);
+	let showArchive = $state(savedView.showArchive);
 	/** Which export the dialog is open for; closed while null. */
 	let exportFormat = $state<'pdf' | 'csv' | null>(null);
 
@@ -117,7 +123,8 @@
 			sortBy: selectedSortBy,
 			exportPeriod: exportChoice,
 			from: exportFrom,
-			to: exportTo
+			to: exportTo,
+			showArchive
 		};
 		try {
 			localStorage.setItem(VIEW_STORAGE_KEY, JSON.stringify(view));
@@ -170,7 +177,8 @@
 			sent: [],
 			interview: [],
 			accepted: [],
-			rejected: []
+			rejected: [],
+			archived: []
 		};
 		for (const app of filteredApplications) {
 			grouped[app.status].push(app);
@@ -203,14 +211,19 @@
 			// Storage full or blocked: the toggle still works for this session.
 		}
 	});
+	// What the board shows: a hidden archive is no part of "collapse all".
+	let shownApplications = $derived(
+		showArchive
+			? filteredApplications
+			: filteredApplications.filter((app) => app.status !== 'archived')
+	);
 	let allCollapsed = $derived(
-		filteredApplications.length > 0 &&
-			filteredApplications.every((app) => collapsedIds.has(app.id!))
+		shownApplications.length > 0 && shownApplications.every((app) => collapsedIds.has(app.id!))
 	);
 
 	function toggleAllCollapsed() {
 		if (allCollapsed) collapsedIds.clear();
-		else for (const app of filteredApplications) collapsedIds.add(app.id!);
+		else for (const app of shownApplications) collapsedIds.add(app.id!);
 	}
 
 	function toggleCollapsed(id: number) {
@@ -321,7 +334,12 @@
 				sent: t('kanban.columns.sent'),
 				interview: t('kanban.columns.interview'),
 				accepted: t('kanban.columns.accepted'),
-				rejected: t('kanban.columns.rejected')
+				rejected: t('kanban.columns.rejected'),
+				archived: t('kanban.columns.archived')
+			},
+			archived: {
+				noResponse: t('kanban.export.archivedNoResponse'),
+				withdrawn: t('kanban.export.archivedWithdrawn')
 			}
 		};
 	}
@@ -426,7 +444,9 @@
 
 	// Shared by drag-and-drop and the card's keyboard/touch-friendly status
 	// select, so both mausfreie and mouse paths move a card identically.
-	async function moveApp(id: number, targetStatus: Status) {
+	// Into the archive only once the reason is given (#60); the select that
+	// asked is put back if that is cancelled.
+	async function moveApp(id: number, targetStatus: Status, select?: HTMLSelectElement) {
 		const app = ($applicationsStore ?? []).find((a) => a.id === id);
 		if (!app) {
 			// A move that does nothing and says nothing looks exactly like a
@@ -435,20 +455,52 @@
 			return;
 		}
 		if (app.status === targetStatus) return;
+		if (targetStatus === 'archived') {
+			archiving = { app, select };
+			return;
+		}
+		await changeStatus(app, targetStatus);
+	}
 
+	async function changeStatus(app: Application, status: Status, archiveReason?: ArchiveReason) {
 		try {
 			// The repository logs the move to the history and drops an entered
-			// rejection date with it.
-			await updateApplication(id, { status: targetStatus });
+			// rejection date, archive reason and end date with it.
+			await updateApplication(app.id!, archiveReason ? { status, archiveReason } : { status });
 			announcer.announce(
 				t('kanban.statusChangedAnnouncement')
 					.replace('{company}', app.company)
-					.replace('{status}', t(`kanban.columns.${targetStatus}`))
+					.replace('{status}', t(`kanban.columns.${status}`))
 			);
 		} catch (err) {
 			console.error('Failed to move application:', err);
 			alert(t('errors.moveFailed'));
 		}
+	}
+
+	// Six columns do not fit beside the sidebar on most screens, so the board
+	// scrolls sideways - and the archive, switched on, would appear out of
+	// view with nothing visibly changed. It is brought into view instead.
+	async function toggleArchive() {
+		showArchive = !showArchive;
+		if (!showArchive) return;
+		await tick();
+		document
+			.getElementById('column-archived')
+			?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+	}
+
+	let archiving = $state<{ app: Application; select?: HTMLSelectElement } | null>(null);
+
+	function cancelArchiving() {
+		if (archiving?.select) archiving.select.value = archiving.app.status;
+		archiving = null;
+	}
+
+	async function archive(reason: ArchiveReason) {
+		const app = archiving!.app;
+		archiving = null;
+		await changeStatus(app, 'archived', reason);
 	}
 
 	async function handleDrop(event: DragEvent, targetStatus: Status) {
@@ -470,7 +522,7 @@
 
 	async function handleStatusSelect(event: Event, id: number) {
 		const target = event.target as HTMLSelectElement;
-		await moveApp(id, target.value as Status);
+		await moveApp(id, target.value as Status, target);
 	}
 
 	function handleDragOver(event: DragEvent, status: Status) {
@@ -533,6 +585,27 @@
 			<p class="subtitle">{t('kanban.subtitle')}</p>
 		</div>
 		<div class="header-actions">
+			<button
+				type="button"
+				class="btn-secondary btn-archive"
+				aria-expanded={showArchive}
+				aria-controls="column-archived"
+				onclick={toggleArchive}
+			>
+				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+					<path
+						d="M4 7h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V7zM3 4h18v3H3zM10 11h4"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					/>
+				</svg>
+				{t('kanban.archive.toggle').replace(
+					'{count}',
+					String(applicationsByColumn.archived.length)
+				)}
+			</button>
 			<button
 				class="btn-secondary"
 				onclick={() => (exportFormat = 'pdf')}
@@ -646,7 +719,7 @@
 				type="button"
 				class="btn-collapse-all"
 				onclick={toggleAllCollapsed}
-				disabled={filteredApplications.length === 0}
+				disabled={shownApplications.length === 0}
 			>
 				{allCollapsed ? t('kanban.expandAll') : t('kanban.collapseAll')}
 			</button>
@@ -654,10 +727,12 @@
 	</div>
 
 	<!-- Kanban Workspace -->
-	<div class="kanban-board">
+	<div class="kanban-board" style:--column-count={showArchive ? 6 : 5}>
 		{#each columns as col (col.id)}
 			{@const columnApps = applicationsByColumn[col.id]}
 			<div
+				id="column-{col.id}"
+				hidden={col.id === 'archived' && !showArchive}
 				class="kanban-column"
 				class:drag-over={activeDragOverColumn === col.id}
 				ondragover={(e) => handleDragOver(e, col.id)}
@@ -824,6 +899,15 @@
 		/>
 	{/if}
 
+	{#if archiving}
+		<ArchiveDialog
+			company={archiving.app.company}
+			reason={archiving.app.status === 'draft' ? 'not-sent' : 'no-response'}
+			onarchive={archive}
+			onclose={cancelArchiving}
+		/>
+	{/if}
+
 	{#if dispatchApp}
 		<ApplicationDispatchDialog application={dispatchApp} onclose={() => (dispatchApp = null)} />
 	{/if}
@@ -974,6 +1058,11 @@
 		cursor: not-allowed;
 	}
 
+	.btn-archive[aria-expanded='true'] {
+		background-color: var(--surface-2);
+		border-color: var(--border-strong);
+	}
+
 	.filter-bar {
 		display: flex;
 		align-items: center;
@@ -1050,7 +1139,7 @@
 
 	.kanban-board {
 		display: grid;
-		grid-template-columns: repeat(5, 1fr);
+		grid-template-columns: repeat(var(--column-count), 1fr);
 		gap: 16px;
 		align-items: start;
 		flex: 1;
@@ -1071,6 +1160,11 @@
 		transition:
 			border-color var(--duration-fast) ease,
 			background-color var(--duration-fast) ease;
+	}
+
+	/* The column's own display would otherwise override [hidden]. */
+	.kanban-column[hidden] {
+		display: none;
 	}
 
 	.kanban-column.drag-over {
@@ -1427,7 +1521,7 @@
 
 	@media (max-width: 1024px) {
 		.kanban-board {
-			grid-template-columns: repeat(5, 240px);
+			grid-template-columns: repeat(var(--column-count), 240px);
 		}
 	}
 

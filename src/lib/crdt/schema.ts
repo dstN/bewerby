@@ -56,11 +56,15 @@ const NUMBERS = [
 	'appliedAt',
 	'sentAt',
 	'rejectedAt',
+	'archivedAt',
 	'createdAt',
 	'updatedAt'
 ] as const;
 const TEXTS = ['notes', 'coverLetter'] as const;
-const STATUSES = ['draft', 'sent', 'interview', 'accepted', 'rejected'] as const;
+// A device on an older build lacks 'archived' (#60): it skips that log
+// entry and the stored value, and shows the card in its previous column.
+const STATUSES = ['draft', 'sent', 'interview', 'accepted', 'rejected', 'archived'] as const;
+const ARCHIVE_REASONS = ['no-response', 'withdrawn', 'not-sent'] as const;
 const PRIORITIES = ['low', 'medium', 'high'] as const;
 const INTERVALS = ['24h', '48h', '7d', '14d', 'custom', 'none'] as const;
 const PROFILE_STRINGS = [
@@ -92,6 +96,7 @@ export function newRowMap(row: DocRow, statusAt: number): RowMap {
 	}
 	map.set('priority', row.priority);
 	map.set('reminderInterval', row.reminderInterval);
+	if (row.archiveReason !== undefined) map.set('archiveReason', row.archiveReason);
 	map.set('status', { s: row.status, t: statusAt } satisfies StatusValue);
 	for (const key of TEXTS) map.set(key, new Y.Text(row[key] ?? ''));
 	map.set('tags', Y.Array.from(dedupe(row.tags ?? [])));
@@ -227,6 +232,9 @@ export function readRow(uid: string, map: RowMap): DocRow {
 
 	row.priority = oneOf(map.get('priority'), PRIORITIES, 'medium');
 	row.reminderInterval = oneOf(map.get('reminderInterval'), INTERVALS, 'none');
+	if (map.has('archiveReason')) {
+		row.archiveReason = oneOf(map.get('archiveReason'), ARCHIVE_REASONS, 'no-response');
+	}
 
 	const stored = map.get('status') as Partial<StatusValue> | undefined;
 	const latest = entries.at(-1);

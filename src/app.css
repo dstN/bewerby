@@ -96,6 +96,7 @@
 	--color-kanban-interview: #d97706;
 	--color-kanban-accepted: #16a34a;
 	--color-kanban-rejected: #dc2626;
+	--color-kanban-archived: #7c3aed;
 
 	/* Shape system */
 	--radius-sm: 6px;

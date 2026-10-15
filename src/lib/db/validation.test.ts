@@ -58,9 +58,25 @@ describe('isValidApplication - accepting good data', () => {
 	});
 
 	it('accepts every valid status', () => {
-		for (const status of ['draft', 'sent', 'interview', 'accepted', 'rejected'] as const) {
+		for (const status of [
+			'draft',
+			'sent',
+			'interview',
+			'accepted',
+			'rejected',
+			'archived'
+		] as const) {
 			expect(isValidApplication(validApplication({ status }))).toBe(true);
 		}
+	});
+
+	it('accepts an archive reason and end date, and refuses an unknown reason (#60)', () => {
+		const archived = { status: 'archived' as const, archivedAt: 1_700_000_200_000 };
+		for (const archiveReason of ['no-response', 'withdrawn', 'not-sent'] as const) {
+			expect(isValidApplication(validApplication({ ...archived, archiveReason }))).toBe(true);
+		}
+		expect(isValidApplication(withField('archiveReason', 'bored'))).toBe(false);
+		expect(isValidApplication(withField('archivedAt', '2026-08-17'))).toBe(false);
 	});
 
 	it('accepts every valid priority', () => {
@@ -166,7 +182,7 @@ describe('isValidApplication - rejecting bad data', () => {
 	});
 
 	it('rejects a history entry with an unknown status', () => {
-		expect(isValidApplication(withField('history', [{ status: 'archived', timestamp: 1 }]))).toBe(
+		expect(isValidApplication(withField('history', [{ status: 'parked', timestamp: 1 }]))).toBe(
 			false
 		);
 	});

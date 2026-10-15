@@ -1,4 +1,4 @@
-import { db, type Application } from '#lib/db/index.js';
+import { STATUS_FIELDS, db, type Application } from '#lib/db/index.js';
 import { activeSync } from '#lib/crdt/session.js';
 import { MissingApplicationError } from './errors.js';
 
@@ -45,8 +45,8 @@ export async function createApplication(data: NewApplication, now = Date.now()):
 /**
  * Field edits. A changed status is appended to the history here, so no
  * caller can forget to log it - the edit dialog did, until 2026-08-18 - and
- * an entered rejection date is dropped with it unless the caller sets one:
- * it belongs to the rejection it was entered for (see getRejectedAt).
+ * an entered rejection date, archive reason or end date is dropped with it
+ * unless the caller sets one (STATUS_FIELDS).
  *
  * Read and write happen in one transaction against the stored row, not
  * against whatever copy the caller had on screen.
@@ -68,7 +68,7 @@ export async function updateApplication(
 		const history = current.history ?? [];
 		if (changes.status !== undefined && changes.status !== current.status) {
 			patch.history = [...history, { status: changes.status, timestamp: now }];
-			if (!('rejectedAt' in changes)) patch.rejectedAt = undefined;
+			for (const key of STATUS_FIELDS) if (!(key in changes)) patch[key] = undefined;
 		} else if (!current.history) {
 			patch.history = history;
 		}

@@ -1,16 +1,26 @@
 import type { Application } from '#lib/db/index.js';
-import { getAppliedAt, getRejectedAt, wasSent } from '#lib/utils/reminders.js';
+import { getAppliedAt, getArchivedAt, getRejectedAt, wasSent } from '#lib/utils/reminders.js';
 
 /** Only the three columns a Vermittlungsnachweis actually asks for. */
 export type ExportRow = Pick<
 	Application,
-	'company' | 'status' | 'history' | 'appliedAt' | 'createdAt' | 'sentAt' | 'rejectedAt'
+	| 'company'
+	| 'status'
+	| 'history'
+	| 'appliedAt'
+	| 'createdAt'
+	| 'sentAt'
+	| 'rejectedAt'
+	| 'archiveReason'
+	| 'archivedAt'
 >;
 
 export interface ExportLabels {
 	/** Column headings, in order: date, company, status. */
 	header: [string, string, string];
 	status: Record<Application['status'], string>;
+	/** An archived card's outcome by its reason; one never sent is not listed. */
+	archived: { noResponse: string; withdrawn: string };
 }
 
 /** One rendered line: date, company, status - already localized. */
@@ -34,23 +44,32 @@ export function toExportRows(
 
 	return (
 		apps
-			// A Nachweis lists applications made. Drafts, and drafts archived
-			// straight into "Absage", were never sent and do not belong on it.
+			// A Nachweis lists applications made. Drafts, and cards archived
+			// without ever going out, were never sent and do not belong on it.
 			.filter(wasSent)
 			.map((app) => ({ app, appliedAt: getAppliedAt(app) }))
 			// Oldest first: a Nachweis is read as a chronological log, not as a board.
 			.sort((a, b) => a.appliedAt - b.appliedAt)
 			.map(({ app, appliedAt }) => {
-				const status = labels.status[app.status] ?? app.status;
-				// The outcome column is where a Nachweis wants the rejection's date.
-				const rejectedAt = getRejectedAt(app);
-				return [
-					formatDate.format(appliedAt),
-					app.company,
-					rejectedAt === undefined ? status : `${status} (${formatDate.format(rejectedAt)})`
-				];
+				return [formatDate.format(appliedAt), app.company, outcome(app, labels, formatDate)];
 			})
 	);
+}
+
+/**
+ * The status column: where a Nachweis wants the rejection's date, and what
+ * became of an archived application - no answer (there is no date to give)
+ * or withdrawn on the day it was ended.
+ */
+function outcome(app: ExportRow, labels: ExportLabels, formatDate: Intl.DateTimeFormat): string {
+	const dated = (label: string, at: number | undefined) =>
+		at === undefined ? label : `${label} (${formatDate.format(at)})`;
+	if (app.status !== 'archived') {
+		return dated(labels.status[app.status] ?? app.status, getRejectedAt(app));
+	}
+	return app.archiveReason === 'withdrawn'
+		? dated(labels.archived.withdrawn, getArchivedAt(app))
+		: labels.archived.noResponse;
 }
 
 /**
