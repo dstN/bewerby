@@ -7,6 +7,15 @@ name: Deploy
 on:
   push:
     branches: [master]
+  # Content only (texts, legal pages; Dustin, 20 October 2026): started by hand, the `build` job makes the artifact
+  # ci.yml would make, without lint, checks and tests, and the deploy ships it. The push path above is unchanged.
+  workflow_dispatch:
+    inputs:
+      ohne_ci:
+        description: 'Content only: build here and deploy, without a CI run'
+        required: true
+        default: false
+        type: boolean
 
 # The repo's default workflow token permission is "read", but that default
 # does not extend to the `actions` scope - looking up CI runs and
@@ -23,8 +32,30 @@ permissions:
 jobs:
   # The successful CI run for exactly this commit whose build artifact is
   # still there; empty when there is none.
+  # The build of ci.yml (Node 26, npm ci, npm run build), only for a content-only deploy. A job of its own without the
+  # production environment, so npm and its install scripts never share a job with the webspace password.
+  build:
+    name: Build (content only)
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.ohne_ci }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 26
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - uses: actions/upload-artifact@v7
+        with:
+          name: bewerby-build-${{ github.sha }}
+          path: build/
+          retention-days: 1
+
   tested:
     name: Find the tested build
+    if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.ohne_ci) }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
@@ -57,7 +88,7 @@ jobs:
     uses: ./.github/workflows/ci.yml
 
   deploy:
-    needs: [tested, ci]
+    needs: [tested, ci, build]
     name: Deploy to Netcup
     runs-on: ubuntu-latest
     # See ci.yml's identical comment: apt-get against the runner's mirror has
@@ -66,8 +97,8 @@ jobs:
     # the whole runner VM - a hung run here would otherwise sit on GitHub's
     # default 360-minute cap while a real deploy waits on it.
     timeout-minutes: 15
-    # Runs when a tested build was found (ci skipped) or CI just passed here.
-    if: ${{ !cancelled() && needs.tested.result == 'success' && (needs.tested.outputs.run-id != '' || needs.ci.result == 'success') }}
+    # Runs when a tested build was found (ci skipped) or CI just passed here, or after the content-only build.
+    if: ${{ !cancelled() && ((needs.tested.result == 'success' && (needs.tested.outputs.run-id != '' || needs.ci.result == 'success')) || needs.build.result == 'success') }}
     # The environment must exist in repo Settings → Environments for its protection
     # rules to apply. If it does not, GitHub silently auto-creates an UNPROTECTED one
     # on first run - so an absent `production` environment means no approval gate.
