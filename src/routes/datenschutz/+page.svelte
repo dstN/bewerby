@@ -104,8 +104,8 @@
 		<!-- Netcup's own registered business address - real, verbatim, not i18n'd. -->
 		<address>
 			netcup GmbH<br />
-			Daimlerstraße 25<br />
-			76185 Karlsruhe<br />
+			Emmy-Noether-Straße 10<br />
+			76131 Karlsruhe<br />
 			Deutschland
 		</address>
 		<p>{t('legal.datenschutz.hostingProcessing')}</p>
