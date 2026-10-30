@@ -636,8 +636,8 @@ come from `static/.htaccess` (Apache/Passenger level) instead:
 `Content-Security-Policy: frame-ancestors 'none'` (the one CSP directive a
 `<meta>` tag can't express - the rest of the policy is generated into that
 tag automatically from `vite.config.ts`'s `csp.directives`), plus
-`X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`,
-`Permissions-Policy`, and `Strict-Transport-Security`. `hooks.server.ts`
+`X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy` and
+`Permissions-Policy`; HSTS comes from Plesk with the certificate. `hooks.server.ts`
 still sets the same headers, so they'd be correct the moment any route stops
 being prerendered (e.g. a future dynamic API endpoint) without anyone having
 to remember to add them.

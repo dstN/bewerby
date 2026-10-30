@@ -22,9 +22,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 		'Permissions-Policy',
 		'camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()'
 	);
-	if (event.url.protocol === 'https:') {
-		response.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains');
-	}
+	// No HSTS here: Plesk sends it with the certificate, a second one would arrive twice.
 
 	return response;
 };

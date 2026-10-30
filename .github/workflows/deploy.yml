@@ -309,6 +309,12 @@ jobs:
                 fail=1
               fi
             done
+            # HSTS comes from Plesk; the app or the .htaccess setting it too makes two.
+            hsts=$(printf '%s\n' "$h" | grep -ci '^strict-transport-security:')
+            if [ "$hsts" != 1 ]; then
+              echo "::error::$path sends Strict-Transport-Security $hsts times, expected once."
+              fail=1
+            fi
           done
           [ "$fail" = 0 ] || exit 1
 

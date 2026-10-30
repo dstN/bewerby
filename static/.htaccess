@@ -17,8 +17,11 @@
 # intersection), so this deliberately adds only the one directive the meta
 # tag cannot express rather than repeating the rest and risking a conflict.
 #
+# HSTS comes from Plesk with the certificate; set here too, it would arrive
+# twice.
+#
 # The remaining headers (nosniff, Referrer-Policy, X-Frame-Options,
-# Permissions-Policy, HSTS) are also set in src/hooks.server.ts for any
+# Permissions-Policy) are also set in src/hooks.server.ts for any
 # future non-prerendered route, but verified empirically that adapter-node
 # serves prerendered pages through a static-file path that never invokes that
 # hook - so for the app as it exists today, this file is what actually
@@ -29,8 +32,6 @@
 	Header always set X-Content-Type-Options "nosniff"
 	Header always set Referrer-Policy "strict-origin-when-cross-origin"
 	Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()"
-	# Ignored by browsers over plain HTTP, so safe to set unconditionally.
-	Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains"
 </IfModule>
 
 <IfModule mod_rewrite.c>
