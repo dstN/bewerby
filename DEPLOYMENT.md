@@ -12,9 +12,9 @@ found, not just what the docs predicted.
 Passenger needs two _separate_ directories, and getting this wrong is a real
 security issue, not just a style preference:
 
-| Concept                                   | Points at        | Contains                                                |
-| ----------------------------------------- | ---------------- | ------------------------------------------------------- |
-| **Application Root** (`PassengerAppRoot`) | the project root | `app.cjs`, `package.json`, `build/`                     |
+| Concept                                   | Points at        | Contains                                                                                                                                       |
+| ----------------------------------------- | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Application Root** (`PassengerAppRoot`) | the project root | `app.cjs`, `package.json`, `build/`                                                                                                            |
 | **Document Root**                         | `build/client/`  | only the fingerprinted static assets and `.htaccess`; the prerendered pages sit in `build/prerendered/` and Node serves them through Passenger |
 
 Apache serves any file that physically exists under Document Root directly,
