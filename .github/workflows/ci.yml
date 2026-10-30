@@ -92,4 +92,7 @@ jobs:
         with:
           name: bewerby-build-${{ github.sha }}
           path: build/
+          # build/client/.htaccess carries the security headers; since
+          # upload-artifact 4.4, dotfiles are left out unless asked for.
+          include-hidden-files: true
           retention-days: 7

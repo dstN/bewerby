@@ -51,6 +51,9 @@ jobs:
         with:
           name: bewerby-build-${{ github.sha }}
           path: build/
+          # build/client/.htaccess carries the security headers; since
+          # upload-artifact 4.4, dotfiles are left out unless asked for.
+          include-hidden-files: true
           retention-days: 1
 
   tested:
@@ -235,6 +238,7 @@ jobs:
           test -d build.new || { echo "staged release missing"; exit 1; }
           test -f build.new/handler.js || { echo "staged release looks incomplete"; exit 1; }
           test -d build.new/client || { echo "staged release missing client/"; exit 1; }
+          test -f build.new/client/.htaccess || { echo "staged release missing client/.htaccess (security headers)"; exit 1; }
 
           rm -rf build.prev
           if [ -d build ]; then
@@ -252,12 +256,12 @@ jobs:
         id: smoke
         run: |
           # bewerby has no server API and no database: every route is
-          # prerendered and served as a static file straight out of Document
-          # Root (build/client/), bypassing Passenger entirely for the happy
-          # path (see DEPLOYMENT.md). So unlike a typical SSR app, a
-          # Passenger-specific health endpoint isn't the meaningful check here
-          # - "does / return the real page, and did the client bundle actually
-          # land" is what a failed upload or a wrong DEPLOY_PATH would break.
+          # prerendered. The pages sit in build/prerendered/ and Node serves
+          # them through Passenger; only the assets come straight out of
+          # Document Root (build/client/) (see DEPLOYMENT.md). A health
+          # endpoint isn't the meaningful check here - "does / return the real
+          # page, and did the client bundle actually land" is what a failed
+          # upload or a wrong DEPLOY_PATH would break.
           ok=0
           for i in $(seq 1 8); do
             sleep 10
@@ -286,6 +290,27 @@ jobs:
             fi
           done
           echo "Static assets OK."
+
+      # The headers of build/client/.htaccess, asked for with GET as a browser
+      # does: a page (through Passenger) and an asset (straight from Apache).
+      # Missing headers here meant the .htaccess never reached the server.
+      - name: Verify the security headers
+        if: steps.smoke.outcome == 'success'
+        run: |
+          set -uo pipefail
+          fail=0
+          for path in / /robots.txt; do
+            h=$(curl -s -m 20 -D - -o /dev/null "https://${{ secrets.DEPLOY_DOMAIN }}$path" | tr -d '\r')
+            for name in x-frame-options x-content-type-options referrer-policy permissions-policy; do
+              if printf '%s\n' "$h" | grep -qi "^$name:"; then
+                echo "ok   $path $name"
+              else
+                echo "::error::$path is served without $name - is build/client/.htaccess on the server?"
+                fail=1
+              fi
+            done
+          done
+          [ "$fail" = 0 ] || exit 1
 
       # Application Root (package.json, app.cjs, the root .htaccess, and - if
       # ever accidentally uploaded - src/, .git/) must never be reachable over
