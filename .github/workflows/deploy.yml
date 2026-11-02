@@ -281,9 +281,14 @@ jobs:
             exit 1
           fi
 
-          # Confirm the client bundle - not just the shell HTML - actually made it.
+          # Confirm the client bundle - not just the shell HTML - actually made it,
+          # and that it decodes as a browser asks for it (br, gzip): a second
+          # compression layer from mod_deflate fails here, not in the browser.
           for path in /manifest.json /service-worker.js /robots.txt; do
-            CODE=$(curl -s -m 20 -o /dev/null -w '%{http_code}' "https://${{ secrets.DEPLOY_DOMAIN }}$path")
+            CODE=$(curl -s --compressed -m 20 -o /dev/null -w '%{http_code}' "https://${{ secrets.DEPLOY_DOMAIN }}$path") || {
+              echo "::error::$path does not decode (curl exit $?) - compressed twice? See the no-gzip rule in static/.htaccess."
+              exit 1
+            }
             if [ "$CODE" != "200" ]; then
               echo "::error::$path returned $CODE, expected 200 - static asset upload looks incomplete."
               exit 1

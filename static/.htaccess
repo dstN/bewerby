@@ -49,6 +49,13 @@
 	RewriteCond %{REQUEST_FILENAME}\.gz -f
 	RewriteRule ^(.*)$ $1.gz [L]
 
+	# Plesk's mod_deflate compresses the .br/.gz file a second time, and the
+	# Content-Encoding header below then names only the first layer: the
+	# browser decodes once and fails (ERR_CONTENT_DECODING_FAILED, white
+	# screen on every uncached load). This matches on the pass after the
+	# rewrite above, so the variables land on the request that serves the file.
+	RewriteRule \.(br|gz)$ - [E=no-gzip:1,E=no-brotli:1]
+
 	# Marks fingerprinted build output (content-hashed filenames under
 	# _app/immutable/) so the Cache-Control block below can target it. Done
 	# via an env var + `Header ... env=` rather than <Location>/<If>, since
@@ -74,6 +81,8 @@
 	AddType application/json .json.br .json.gz
 	AddType image/svg+xml .svg.br .svg.gz
 	AddType application/wasm .wasm.br .wasm.gz
+	# .br is also Breton to mod_mime, which sent Content-Language: br.
+	RemoveLanguage .br
 </IfModule>
 
 # Cache-Control: fingerprinted build output (filenames include a content
