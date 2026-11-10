@@ -677,7 +677,7 @@ to remember to add them.
     against **WCAG 2.2 Level AAA** plus axe's `best-practice` and
     `experimental` rulesets (not just the usual AA baseline), and with each
     scan the AAA checks axe has no rules for, in `fixtures/aaa.ts`: 2.5.5
-    target size, 2.4.12/2.4.13 focus visibility and appearance (by tabbing
+    target size (44px, and no two targets overlapping), 2.4.12/2.4.13 focus visibility and appearance (by tabbing
     through the page), 2.1.3 keyboard reach, 1.4.8 text presentation, 2.4.8
     `aria-current` - including the populated board, analytics
     with real data, the application dialog, and the date picker popover, plus
@@ -688,7 +688,12 @@ to remember to add them.
     (`--text-secondary`/`--text-tertiary`, `--color-accent-text`,
     `--color-accent-600`/`700`, `--color-danger`/`-solid`, the sidebar's
     active-item tint) - see that file's comments for the reasoning behind
-    each value.
+    each value. A 44px target does not have to look 44px: the card footer's
+    status chip and icon buttons draw 22px inside a transparent border
+    (`background-clip: padding-box`), the colour swatches a 32px `::before`
+    circle, so the board kept its density. A negative margin lets such a
+    target reach into padding, but never into another target, which the
+    overlap check catches.
 
 See [ROADMAP.md](ROADMAP.md) for the full history of what was found and
 fixed while building out this test coverage.

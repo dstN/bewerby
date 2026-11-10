@@ -9,9 +9,10 @@ import { test, expect, type Page, type Locator } from '@playwright/test';
 
 /**
  * Where a person picks a card up. dragTo() presses the centre of whatever it
- * is called on, and a card's centre is its status <select> since that grew to
- * a full-width 44px row (WCAG 2.5.5) - pressing a select opens it instead of
- * starting a drag, there as anywhere.
+ * is called on, and with 44px targets (WCAG 2.5.5) that point can land on one
+ * of the card's controls: pressing the status <select> opens it instead of
+ * starting a drag, there as anywhere. A drag from the title starts like one
+ * from the card itself.
  */
 function grip(card: Locator): Locator {
 	return card.locator('.card-title');

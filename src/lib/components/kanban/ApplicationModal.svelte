@@ -1828,37 +1828,55 @@
 		background-color: var(--surface-3);
 	}
 
+	/* No gap: the 44px targets (WCAG 2.5.5) themselves keep the 32px circles
+	   they show 12px apart. Each circle is the target's ::before, so hover
+	   and selection change the circle and never the target. */
 	.color-swatches-row {
 		display: flex;
 		align-items: center;
-		gap: 12px;
 		flex-wrap: wrap;
 		padding: 4px 0;
 	}
 
-	.color-swatch {
+	.color-swatch,
+	.btn-add-color {
+		position: relative;
+		display: grid;
+		place-items: center;
 		width: 44px;
 		height: 44px;
-		border-radius: 50%;
+		padding: 0;
 		border: none;
-		background-color: var(--swatch-color);
-		display: flex;
-		align-items: center;
-		justify-content: center;
+		border-radius: 50%;
+		background: none;
 		cursor: pointer;
-		position: relative;
+	}
+
+	.color-swatch::before,
+	.btn-add-color::before {
+		content: '';
+		position: absolute;
+		inset: 6px;
+		border-radius: 50%;
+		background-color: var(--swatch-color);
 		box-shadow: var(--shadow-sm);
 		transition:
 			transform var(--duration-fast) var(--ease-out-expo),
-			box-shadow var(--duration-fast) ease;
+			box-shadow var(--duration-fast) ease,
+			border-color var(--duration-fast) ease;
 	}
 
-	.color-swatch:hover {
+	.color-swatch > svg,
+	.btn-add-color > svg {
+		position: relative;
+	}
+
+	.color-swatch:hover::before {
 		transform: scale(1.15);
 		box-shadow: 0 4px 12px -2px var(--swatch-color, rgba(0, 0, 0, 0.2));
 	}
 
-	.color-swatch.active {
+	.color-swatch.active::before {
 		transform: scale(1.15);
 		box-shadow:
 			0 0 0 2px var(--surface-0),
@@ -1866,14 +1884,20 @@
 	}
 
 	.swatch-none {
-		background-color: transparent;
-		border: 2px dashed var(--border-strong);
 		color: var(--text-secondary);
 	}
 
+	.swatch-none::before {
+		background-color: transparent;
+		border: 2px dashed var(--border-strong);
+	}
+
 	.swatch-none.active {
-		border-color: var(--color-accent-500);
 		color: var(--color-accent-text);
+	}
+
+	.swatch-none.active::before {
+		border-color: var(--color-accent-500);
 		box-shadow:
 			0 0 0 2px var(--surface-0),
 			0 0 0 4px var(--color-accent-500);
@@ -1892,13 +1916,13 @@
 	/* A 44px target of its own beside the swatch (WCAG 2.5.5), not a badge on
 	   its corner: grown to 44px there it would cover the swatch, and a tap on
 	   the colour would delete it. Always shown, since touch has no hover to
-	   reveal it with. The red badge inside stays small. */
+	   reveal it with. The red badge inside stays small and sits at the start,
+	   next to the circle it removes. */
 	.btn-swatch-remove {
 		display: grid;
-		place-items: center;
+		place-items: center start;
 		width: 44px;
 		height: 44px;
-		margin-left: -8px;
 		padding: 0;
 		border: none;
 		border-radius: var(--radius-md);
@@ -1920,26 +1944,22 @@
 	}
 
 	.btn-add-color {
-		width: 44px;
-		height: 44px;
-		border-radius: 50%;
-		border: 2px dashed var(--border-strong);
-		background-color: var(--surface-1);
 		color: var(--text-secondary);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		cursor: pointer;
-		position: relative;
-		transition:
-			border-color var(--duration-fast) ease,
-			color var(--duration-fast) ease,
-			transform var(--duration-fast) var(--ease-out-expo);
+		transition: color var(--duration-fast) ease;
+	}
+
+	.btn-add-color::before {
+		background-color: var(--surface-1);
+		border: 2px dashed var(--border-strong);
+		box-shadow: none;
 	}
 
 	.btn-add-color:hover {
-		border-color: var(--color-accent-500);
 		color: var(--color-accent-text);
+	}
+
+	.btn-add-color:hover::before {
+		border-color: var(--color-accent-500);
 		transform: scale(1.1);
 	}
 
@@ -1949,18 +1969,21 @@
 	.btn-add-color:focus-within {
 		outline: 2px solid var(--color-accent-500);
 		outline-offset: 2px;
-		border-color: var(--color-accent-500);
 		color: var(--color-accent-text);
 	}
 
-	/* Over the label's dashed border too, so the input itself covers the
-	   whole 44px circle. */
+	.btn-add-color:focus-within::before {
+		border-color: var(--color-accent-500);
+	}
+
+	/* The input itself covers the whole 44px target, the + icon included. */
 	.hidden-color-input {
 		position: absolute;
-		inset: -2px;
+		z-index: 1;
+		inset: 0;
 		opacity: 0;
-		width: calc(100% + 4px);
-		height: calc(100% + 4px);
+		width: 100%;
+		height: 100%;
 		cursor: pointer;
 	}
 </style>

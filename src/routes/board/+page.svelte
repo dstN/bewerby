@@ -829,59 +829,61 @@
 										month: 'short'
 									})}
 								</span>
-								{#if !collapsed}
-									<select
-										class="card-status-select"
-										value={app.status}
-										onclick={(e) => e.stopPropagation()}
-										onchange={(e) => {
+								<div class="card-actions">
+									{#if !collapsed}
+										<select
+											class="card-status-select"
+											value={app.status}
+											onclick={(e) => e.stopPropagation()}
+											onchange={(e) => {
+												e.stopPropagation();
+												handleStatusSelect(e, app.id!);
+											}}
+											aria-label={t('kanban.changeStatus').replace('{company}', app.company)}
+										>
+											{#each columns as statusOption (statusOption.id)}
+												<option value={statusOption.id}>{t(statusOption.labelKey)}</option>
+											{/each}
+										</select>
+									{/if}
+									<button
+										class="btn-card-dispatch"
+										onclick={(e) => {
 											e.stopPropagation();
-											handleStatusSelect(e, app.id!);
+											openDispatch(app);
 										}}
-										aria-label={t('kanban.changeStatus').replace('{company}', app.company)}
+										aria-label={t('dispatch.open')}
+										title={t('dispatch.open')}
 									>
-										{#each columns as statusOption (statusOption.id)}
-											<option value={statusOption.id}>{t(statusOption.labelKey)}</option>
-										{/each}
-									</select>
-								{/if}
-								<button
-									class="btn-card-dispatch"
-									onclick={(e) => {
-										e.stopPropagation();
-										openDispatch(app);
-									}}
-									aria-label={t('dispatch.open')}
-									title={t('dispatch.open')}
-								>
-									<svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-										<path
-											d="M4 6h16v12H4zM4 7l8 6 8-6"
-											stroke="currentColor"
-											stroke-width="1.5"
-											stroke-linecap="round"
-											stroke-linejoin="round"
-										/>
-									</svg>
-								</button>
-								<button
-									class="btn-card-delete"
-									onclick={(e) => {
-										e.stopPropagation();
-										deleteApp(app.id!, app.company);
-									}}
-									aria-label={t('kanban.deleteApplication').replace('{company}', app.company)}
-								>
-									<svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-										<path
-											d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-											stroke="currentColor"
-											stroke-width="1.5"
-											stroke-linecap="round"
-											stroke-linejoin="round"
-										/>
-									</svg>
-								</button>
+										<svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+											<path
+												d="M4 6h16v12H4zM4 7l8 6 8-6"
+												stroke="currentColor"
+												stroke-width="1.5"
+												stroke-linecap="round"
+												stroke-linejoin="round"
+											/>
+										</svg>
+									</button>
+									<button
+										class="btn-card-delete"
+										onclick={(e) => {
+											e.stopPropagation();
+											deleteApp(app.id!, app.company);
+										}}
+										aria-label={t('kanban.deleteApplication').replace('{company}', app.company)}
+									>
+										<svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+											<path
+												d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+												stroke="currentColor"
+												stroke-width="1.5"
+												stroke-linecap="round"
+												stroke-linejoin="round"
+											/>
+										</svg>
+									</button>
+								</div>
 							</footer>
 						</li>
 					{/each}
@@ -1371,8 +1373,10 @@
 		cursor: pointer;
 	}
 
-	.card-collapse-btn:hover {
-		background-color: var(--surface-3);
+	/* The hover circle stays the 24px it was, drawn by the dot itself rather
+	   than across the whole 44px target. */
+	.card-collapse-btn:hover .card-color-dot {
+		box-shadow: 0 0 0 7px var(--surface-3);
 	}
 
 	.card-color-dot {
@@ -1457,46 +1461,67 @@
 		align-self: center;
 	}
 
-	/* Three 44px controls (WCAG 2.5.5) do not fit one row of a column, so
-	   the status select takes the full width above the date and the two
-	   icon buttons. */
+	/* The status select and the two icon buttons are 44px targets (WCAG
+	   2.5.5) drawn at the 22px they look: an 11px transparent border is part
+	   of the target, the background stops inside it (background-clip), and a
+	   negative margin of 8px keeps the row as low as the chip. 8px, not 11:
+	   the target ends 4px short of the card's edge, where a specular card's
+	   overflow:hidden would cut off the focus ring. Where the date and the
+	   controls do not fit one row, the controls wrap below the date. */
 	.card-footer {
 		display: flex;
 		flex-wrap: wrap;
 		align-items: center;
-		gap: 4px 6px;
+		gap: 0 8px;
 		border-top: 1px solid var(--border-subtle);
 		padding-top: 8px;
 		margin-top: 4px;
 	}
 
 	.card-date {
-		flex: 1;
-		min-width: 0;
 		font-size: 0.625rem;
 		color: var(--text-tertiary);
 	}
 
+	.card-actions {
+		display: flex;
+		align-items: center;
+		gap: 2px;
+		min-width: 0;
+		margin-left: auto;
+	}
+
+	.card-actions > * {
+		height: 44px;
+		margin-block: -8px;
+		border: 11px solid transparent;
+		background-clip: padding-box;
+	}
+
 	.card-status-select {
+		flex: 0 1 auto;
+		min-width: 44px;
+		margin-right: 4px;
+		border-inline-width: 0;
+		border-radius: var(--radius-sm) / calc(var(--radius-sm) + 11px);
+		padding: 0 4px;
 		font-size: 0.625rem;
 		font-family: inherit;
 		color: var(--text-secondary);
 		background-color: var(--surface-2);
-		border: 1px solid var(--border-subtle);
-		border-radius: var(--radius-sm);
-		padding: 3px 4px;
-		order: -1;
-		flex-basis: 100%;
+		box-shadow: inset 0 0 0 1px var(--border-subtle);
 		cursor: pointer;
 	}
 
-	.btn-card-dispatch {
-		border: none;
-		background: transparent;
+	.btn-card-dispatch,
+	.btn-card-delete {
+		flex: none;
+		width: 44px;
+		padding: 0;
+		border-radius: calc(var(--radius-sm) + 11px);
+		background-color: transparent;
 		color: var(--text-tertiary);
 		cursor: pointer;
-		padding: 4px;
-		border-radius: var(--radius-sm);
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -1508,21 +1533,6 @@
 	.btn-card-dispatch:hover {
 		background-color: var(--surface-2);
 		color: var(--color-accent-text);
-	}
-
-	.btn-card-delete {
-		border: none;
-		background: transparent;
-		color: var(--text-tertiary);
-		cursor: pointer;
-		padding: 4px;
-		border-radius: var(--radius-sm);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		transition:
-			background-color var(--duration-fast) ease,
-			color var(--duration-fast) ease;
 	}
 
 	.btn-card-delete:hover {

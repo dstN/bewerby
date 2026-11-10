@@ -90,8 +90,8 @@ test.describe('Archive', () => {
 		await page.reload();
 		await page.getByRole('button', { name: 'Archiv (0)' }).click();
 
-		// By the title, as a person would: a card's centre is its status
-		// <select>, which opens rather than starting a drag.
+		// By the title, as a person would: the card's centre can be one of its
+		// controls, and the status <select> opens rather than starting a drag.
 		await page
 			.locator('.card', { hasText: 'Weg GmbH' })
 			.locator('.card-title')

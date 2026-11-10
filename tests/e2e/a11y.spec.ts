@@ -130,6 +130,11 @@ for (const theme of ['light', 'dark'] as const) {
 		});
 
 		test('the application dialog has no violations', async ({ page }) => {
+			// Two saved colours, so the scan covers the custom swatches and the
+			// remove button beside each.
+			await page.addInitScript(() =>
+				localStorage.setItem('bewerby_custom_colors', JSON.stringify(['#0ea5e9', '#a855f7']))
+			);
 			await gotoWithTheme(page, '/board', theme);
 			await page.getByRole('button', { name: 'Bewerbung hinzufügen' }).click();
 			await expect(page.locator('dialog.modal-content')).toBeVisible();

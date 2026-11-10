@@ -7,7 +7,8 @@ import type { Page } from '@playwright/test';
  * refresh). Everything below is AAA that can still be read off the rendered
  * page, written against the W3C "Understanding" documents for each criterion:
  *
- * - 2.5.5 Target Size (Enhanced): pointer targets are at least 44x44 CSS px.
+ * - 2.5.5 Target Size (Enhanced): pointer targets are at least 44x44 CSS px
+ *   and do not overlap, since an overlapped target is smaller than its box.
  *   Exceptions as the criterion words them: links inside a sentence or block
  *   of text, and controls the browser sizes that the author has not resized.
  *   The "equivalent control elsewhere" exception is not machine-checkable, so
@@ -171,6 +172,48 @@ function probe(mode: Mode): ProbeResult {
 				problems.push(
 					`2.5.5 target ${Math.round(r.width)}x${Math.round(r.height)} < 44x44: ${describe(target)}`
 				);
+			}
+		}
+		// Where two targets overlap, the one painted on top takes the overlap,
+		// so the other is smaller than its box. A target nested in another (a
+		// label around its input) is one target, and a popover is a layer of
+		// its own above the page. Two targets in the same scroll container
+		// overlap wherever it is scrolled to; across containers, each box is
+		// first cut to what its own containers show, or a field scrolled out of
+		// a dialog's body would seem to sit under the dialog's footer.
+		const overlap = (a: DOMRect, b: DOMRect): [number, number] => [
+			Math.min(a.right, b.right) - Math.max(a.left, b.left),
+			Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top)
+		];
+		const shownBelow = (el: Element, shared: Element): DOMRect => {
+			let r = el.getBoundingClientRect();
+			for (let a = el.parentElement; a && a !== shared; a = a.parentElement) {
+				const style = getComputedStyle(a);
+				if (style.overflowX !== 'visible' || style.overflowY !== 'visible') {
+					const c = a.getBoundingClientRect();
+					const [left, top] = [Math.max(r.left, c.left), Math.max(r.top, c.top)];
+					const [right, bottom] = [Math.min(r.right, c.right), Math.min(r.bottom, c.bottom)];
+					r = new DOMRect(left, top, Math.max(0, right - left), Math.max(0, bottom - top));
+				}
+				if (style.position === 'fixed' || a.matches('dialog:modal, :popover-open')) break;
+			}
+			return r;
+		};
+		const list = [...targets];
+		for (const [i, a] of list.entries()) {
+			for (const b of list.slice(i + 1)) {
+				if (a.contains(b) || b.contains(a)) continue;
+				if (a.closest(':popover-open') !== b.closest(':popover-open')) continue;
+				const [rawW, rawH] = overlap(a.getBoundingClientRect(), b.getBoundingClientRect());
+				if (rawW <= 0.5 || rawH <= 0.5) continue;
+				let shared = a.parentElement ?? document.documentElement;
+				while (!shared.contains(b)) shared = shared.parentElement ?? document.documentElement;
+				const [w, h] = overlap(shownBelow(a, shared), shownBelow(b, shared));
+				if (w > 0.5 && h > 0.5) {
+					problems.push(
+						`2.5.5 targets overlap by ${Math.round(w)}x${Math.round(h)}: ${describe(a)} / ${describe(b)}`
+					);
+				}
 			}
 		}
 

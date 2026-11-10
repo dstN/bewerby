@@ -114,7 +114,7 @@ scans every route, both themes, and mobile with axe-core against WCAG 2.2
 **Level AAA** plus axe's best-practice and experimental rulesets (not just the
 usual AA baseline). axe has only three AAA rules, so every scan also runs
 `tests/e2e/fixtures/aaa.ts`, which checks the AAA criteria that can still be
-read off the page: 44px targets, focus appearance and visibility, keyboard
+read off the page: 44px targets that do not overlap, focus appearance and visibility, keyboard
 reach, text presentation, aria-current. `tests/e2e/mobile-layout.spec.ts` asserts nothing overflows the
 viewport at 320px/390px - see [ARCHITECTURE.md](ARCHITECTURE.md) if you're
 adding to either.
