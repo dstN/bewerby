@@ -113,7 +113,7 @@ for (const theme of ['light', 'dark'] as const) {
 			await gotoWithTheme(page, '/board', theme);
 			await seedApplications(page, representativeBoard());
 
-			// Cards, the coloured/specular variants, the tag overflow chip, the
+			// Cards, the coloured/specular variants, the truncated titles, the
 			// per-card status select and the overdue alert banner only exist once
 			// there is data - an empty board scan misses nearly every component.
 			await expect(page.locator('.card')).toHaveCount(5);

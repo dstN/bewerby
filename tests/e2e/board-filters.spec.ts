@@ -281,7 +281,7 @@ test.describe('Collapsing cards', () => {
 		await toggle.click();
 
 		await expect(toggle).toHaveAttribute('aria-expanded', 'false');
-		await expect(fabrikam.locator('.card-title, .card-tags, .card-status-select')).toHaveCount(0);
+		await expect(fabrikam.locator('.card-title, .card-status-select')).toHaveCount(0);
 		await expect(fabrikam.locator('.card-priority, .card-date')).toHaveCount(2);
 		await expect(fabrikam.locator('.btn-card-dispatch, .btn-card-delete')).toHaveCount(2);
 		// The others stay open.

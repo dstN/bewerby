@@ -689,7 +689,7 @@ to remember to add them.
     `--color-accent-600`/`700`, `--color-danger`/`-solid`, the sidebar's
     active-item tint) - see that file's comments for the reasoning behind
     each value. A 44px target does not have to look 44px: the card footer's
-    status chip and icon buttons draw 22px inside a transparent border
+    status select and icon buttons draw 22px inside a transparent border
     (`background-clip: padding-box`), the colour swatches a 32px `::before`
     circle, so the board kept its density. A negative margin lets such a
     target reach into padding, but never into another target, which the

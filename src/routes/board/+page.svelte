@@ -808,17 +808,6 @@
 											<span class="card-salary">{app.salary}</span>
 										{/if}
 									{/if}
-
-									{#if app.tags.length > 0 && !collapsed}
-										<div class="card-tags">
-											{#each app.tags.slice(0, 3) as tag (tag)}
-												<span class="card-tag">{tag}</span>
-											{/each}
-											{#if app.tags.length > 3}
-												<span class="card-tag-more">+{app.tags.length - 3}</span>
-											{/if}
-										</div>
-									{/if}
 								</button>
 							</div>
 
@@ -831,20 +820,43 @@
 								</span>
 								<div class="card-actions">
 									{#if !collapsed}
-										<select
-											class="card-status-select"
-											value={app.status}
-											onclick={(e) => e.stopPropagation()}
-											onchange={(e) => {
-												e.stopPropagation();
-												handleStatusSelect(e, app.id!);
-											}}
-											aria-label={t('kanban.changeStatus').replace('{company}', app.company)}
-										>
-											{#each columns as statusOption (statusOption.id)}
-												<option value={statusOption.id}>{t(statusOption.labelKey)}</option>
-											{/each}
-										</select>
+										{@const changeStatus = t('kanban.changeStatus').replace(
+											'{company}',
+											app.company
+										)}
+										<span class="card-status">
+											<select
+												class="card-status-select"
+												value={app.status}
+												onclick={(e) => e.stopPropagation()}
+												onchange={(e) => {
+													e.stopPropagation();
+													handleStatusSelect(e, app.id!);
+												}}
+												aria-label={changeStatus}
+												title={changeStatus}
+											>
+												{#each columns as statusOption (statusOption.id)}
+													<option value={statusOption.id}>{t(statusOption.labelKey)}</option>
+												{/each}
+											</select>
+											<svg
+												class="card-status-icon"
+												width="14"
+												height="14"
+												viewBox="0 0 24 24"
+												fill="none"
+												aria-hidden="true"
+											>
+												<path
+													d="M16 3l4 4-4 4M20 7H4M8 21l-4-4 4-4M4 17h16"
+													stroke="currentColor"
+													stroke-width="1.5"
+													stroke-linecap="round"
+													stroke-linejoin="round"
+												/>
+											</svg>
+										</span>
 									{/if}
 									<button
 										class="btn-card-dispatch"
@@ -1144,7 +1156,13 @@
 
 	.kanban-board {
 		display: grid;
-		grid-template-columns: repeat(var(--column-count), 1fr);
+		/* A bare 1fr never gets narrower than its longest unbreakable word, so
+		   one card with "Systemadministratorin/IT-" made its column wider and
+		   every other column narrower. A fixed floor instead: 210px is the
+		   narrowest column whose card footer (date and three 44px targets)
+		   still fits one row. Below that the board scrolls sideways, as it
+		   does under 1024px. */
+		grid-template-columns: repeat(var(--column-count), minmax(210px, 1fr));
 		gap: 16px;
 		align-items: start;
 		flex: 1;
@@ -1157,7 +1175,10 @@
 		background-color: var(--surface-0);
 		border: 1px solid var(--border-default);
 		border-radius: var(--radius-lg);
-		padding: 12px;
+		/* 8px, the gap between the cards: with 12 the footer of a card no
+		   longer fit one row beside a two-digit date once the archive column
+		   is shown. */
+		padding: 8px;
 		display: flex;
 		flex-direction: column;
 		gap: 12px;
@@ -1259,8 +1280,11 @@
 	/* Opens the edit modal - wraps everything except the footer controls
 	   (status select, delete) so those stay independently reachable instead
 	   of nesting interactive elements inside this button (see issue #20). */
+	/* A column, so a card with a one-line title keeps its text at the top of
+	   the 44px minimum height instead of centred in it, level with the dot. */
 	.card-open-btn {
-		display: block;
+		display: flex;
+		flex-direction: column;
 		width: 100%;
 		background: none;
 		border: none;
@@ -1269,6 +1293,11 @@
 		font: inherit;
 		color: inherit;
 		text-align: left;
+		/* Only long compounds ("Initiativ-bewerbung") are hyphenated, not
+		   every word at a line's end; anything still too long breaks anyway. */
+		hyphens: auto;
+		hyphenate-limit-chars: 12 5 5;
+		overflow-wrap: anywhere;
 		cursor: pointer;
 	}
 
@@ -1397,7 +1426,14 @@
 		min-width: 0;
 	}
 
+	/* The card shows one line of the company and two of the title; the edit
+	   dialog the card opens has them in full, and so does the button's
+	   accessible name. */
 	.card-company {
+		min-width: 0;
+		overflow: hidden;
+		white-space: nowrap;
+		text-overflow: ellipsis;
 		font-size: 0.6875rem;
 		font-weight: 600;
 		color: var(--text-secondary);
@@ -1406,6 +1442,7 @@
 	}
 
 	.card-priority {
+		flex: none;
 		font-size: 0.5625rem;
 		font-weight: 700;
 		padding: 1px 4px;
@@ -1430,55 +1467,45 @@
 		color: var(--text-primary);
 		margin: 0;
 		line-height: 1.4;
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 2;
+		line-clamp: 2;
+		overflow: hidden;
 	}
 
 	.card-salary {
+		display: block;
+		overflow: hidden;
+		white-space: nowrap;
+		text-overflow: ellipsis;
 		font-size: 0.75rem;
 		color: var(--text-secondary);
 		font-weight: 500;
 	}
 
-	.card-tags {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 4px;
-	}
-
-	.card-tag {
-		font-size: 0.625rem;
-		font-weight: 500;
-		background-color: var(--surface-2);
-		border: 1px solid var(--border-subtle);
-		color: var(--text-secondary);
-		padding: 2px 6px;
-		border-radius: var(--radius-pill);
-	}
-
-	.card-tag-more {
-		font-size: 0.625rem;
-		font-weight: 600;
-		color: var(--text-tertiary);
-		align-self: center;
-	}
-
 	/* The status select and the two icon buttons are 44px targets (WCAG
 	   2.5.5) drawn at the 22px they look: an 11px transparent border is part
 	   of the target, the background stops inside it (background-clip), and a
-	   negative margin of 8px keeps the row as low as the chip. 8px, not 11:
-	   the target ends 4px short of the card's edge, where a specular card's
-	   overflow:hidden would cut off the focus ring. Where the date and the
-	   controls do not fit one row, the controls wrap below the date. */
+	   negative margin of 8px keeps the row low and lets the last target reach
+	   into the card's padding. 8px, not 11: the target ends 4px short of the
+	   card's edge, where a specular card's overflow:hidden would cut off the
+	   focus ring. The select shows an icon, not the status: that is the
+	   column's name anyway, and with "Vorstellung" written out the row no
+	   longer fit beside a two-digit date. Where it still does not fit, the
+	   controls wrap below the date. */
 	.card-footer {
 		display: flex;
 		flex-wrap: wrap;
 		align-items: center;
-		gap: 0 8px;
+		gap: 0 4px;
 		border-top: 1px solid var(--border-subtle);
 		padding-top: 8px;
 		margin-top: 4px;
 	}
 
 	.card-date {
+		white-space: nowrap;
 		font-size: 0.625rem;
 		color: var(--text-tertiary);
 	}
@@ -1486,52 +1513,75 @@
 	.card-actions {
 		display: flex;
 		align-items: center;
-		gap: 2px;
-		min-width: 0;
 		margin-left: auto;
+		margin-right: -8px;
 	}
 
-	.card-actions > * {
-		height: 44px;
-		margin-block: -8px;
-		border: 11px solid transparent;
-		background-clip: padding-box;
-	}
-
-	.card-status-select {
-		flex: 0 1 auto;
-		min-width: 44px;
-		margin-right: 4px;
-		border-inline-width: 0;
-		border-radius: var(--radius-sm) / calc(var(--radius-sm) + 11px);
-		padding: 0 4px;
-		font-size: 0.625rem;
-		font-family: inherit;
-		color: var(--text-secondary);
-		background-color: var(--surface-2);
-		box-shadow: inset 0 0 0 1px var(--border-subtle);
-		cursor: pointer;
-	}
-
+	.card-status-select,
 	.btn-card-dispatch,
 	.btn-card-delete {
 		flex: none;
 		width: 44px;
+		height: 44px;
+		margin-block: -8px;
 		padding: 0;
+		border: 11px solid transparent;
 		border-radius: calc(var(--radius-sm) + 11px);
 		background-color: transparent;
+		background-clip: padding-box;
 		color: var(--text-tertiary);
 		cursor: pointer;
-		display: flex;
-		align-items: center;
-		justify-content: center;
 		transition:
 			background-color var(--duration-fast) ease,
 			color var(--duration-fast) ease;
 	}
 
+	.btn-card-dispatch,
+	.btn-card-delete {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	/* The icon lies over the select and lets the pointer through to it. The
+	   select's own text is pushed out of its box rather than coloured
+	   transparent, which forced colours would undo; the options set their
+	   indent back. */
+	.card-status {
+		position: relative;
+		display: flex;
+	}
+
+	.card-status-select {
+		appearance: none;
+		text-indent: 44px;
+		white-space: nowrap;
+		overflow: hidden;
+		font: inherit;
+	}
+
+	.card-status-select option {
+		text-indent: 0;
+		color: var(--text-primary);
+		background-color: var(--surface-1);
+	}
+
+	.card-status-icon {
+		position: absolute;
+		inset: 0;
+		margin: auto;
+		color: var(--text-tertiary);
+		pointer-events: none;
+		transition: color var(--duration-fast) ease;
+	}
+
+	.card-status-select:hover,
 	.btn-card-dispatch:hover {
 		background-color: var(--surface-2);
+		color: var(--color-accent-text);
+	}
+
+	.card-status:hover .card-status-icon {
 		color: var(--color-accent-text);
 	}
 
@@ -1592,7 +1642,7 @@
 		/* Below tablet width the board reflows into a vertical stack of full-
 		   width columns instead of forcing horizontal overflow. */
 		.kanban-board {
-			grid-template-columns: 1fr;
+			grid-template-columns: minmax(0, 1fr);
 			overflow-x: visible;
 		}
 

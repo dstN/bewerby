@@ -1007,6 +1007,27 @@ Grund wie #37 hier dokumentiert: nichts soll stillschweigend passieren.
 
 **Nicht automatisierbar** und deshalb weiter Handarbeit: Zeitlimits (2.2.3–2.2.6), Sprache (3.1.3–3.1.6), Hilfe (3.3.5), Fehlervermeidung (3.3.6), Änderung auf Anfrage (3.2.5), gleichzeitige Eingabemethoden (2.5.6), Authentifizierung (3.3.9). Die Medienkriterien 1.2.x entfallen.
 
+## Nach v1.19.0 — Board: kompakte Karten, gleich breite Spalten (v1.20.0)
+
+Ohne eigenes GitHub-Issue, auf Nutzerwunsch nach einem Blick auf das Live-Board umgesetzt.
+
+**Ist:** Bei 1707px Fensterbreite (2560px bei 150 % Skalierung) waren die Spalten ungleich breit. Versendet und Absage maßen 278 und 285px, die anderen drei 257px. Lange Firmennamen und Titel liefen über bis zu fünf Zeilen, dazu kamen bis zu drei Zeilen Tags, sodass eine Karte bis zu 300px hoch wurde. In der schmaleren Spalte passte die Fußzeile nicht mehr in eine Zeile, sobald ein zweistelliges Datum neben „Vorstellung“ stand. Das Datum stand dann allein über den Bedienelementen.
+
+**Ursache der Spaltenbreite:** `repeat(n, 1fr)` heißt `minmax(auto, 1fr)`. Eine Spalte wird nie schmaler als das längste nicht umbrechbare Wort ihrer Karten. Ein „Anwendungsentwicklung“ oder „Systemadministratorin/IT-“ machte seine Spalte breiter, und den drei übrigen fehlte genau dieser Platz. Seit 1.19.0 rückt der 44px-Einklapp-Punkt den Text weiter ein, dadurch fiel es stärker auf.
+
+**Umsetzung:**
+
+- Die Spalten sind `minmax(210px, 1fr)`, also gleich breit, aber nie schmaler als 210px. Das ist die schmalste Spalte, in der die Kartenfußzeile (Datum und drei 44px-Ziele) noch eine Zeile bleibt. Darunter scrollt das Board seitwärts, wie ohnehin unter 1024px. Ein erster Versuch mit `minmax(0, 1fr)` fiel in der a11y-Suite durch: Bei 1280px mit Archivspalte ragten die Ziele über den Kartenrand und das „+“ der Spaltenköpfe unter die Nachbarspalte (2.4.12, 2.4.13). Die Mobilansicht hat `minmax(0, 1fr)`, sonst hätte der einzeilige Firmenname die Spalte über den Bildschirmrand gedrückt.
+- Lange Komposita werden getrennt (`hyphens: auto`, erst ab zwölf Zeichen). Was dann noch nicht passt, bricht hart um.
+- Die Karte zeigt den Firmennamen in einer Zeile und den Titel in zwei, jeweils mit Auslassungszeichen. Vollständig stehen beide im Bearbeiten-Dialog, den die Karte öffnet, und im zugänglichen Namen des Buttons.
+- Tags stehen nicht mehr auf der Karte. Filtern lässt sich weiter nach ihnen, und der Dialog zeigt sie.
+- Der Status-Select zeigt ein Symbol statt des Statusnamens, der ohnehin über der Spalte steht. Als Tooltip und im zugänglichen Namen steht „Status von … ändern“. Der Text des Selects ist aus seiner Box geschoben (`text-indent`) statt transparent gefärbt, denn erzwungene Farben würden ihn sonst wieder zeigen.
+- Spalten-Innenabstand 8 statt 12px, Fußzeilen-Abstand 4 statt 8px. Das letzte Symbol reicht 8px in den Kartenrand, wie der Einklapp-Punkt links.
+
+Mit Beispieldaten, die dem Live-Board entsprechen, haben alle Karten jetzt dieselbe Höhe: 123–144px statt 129–301px. Die Fußzeile bleibt einzeilig bei 1707px und 1440px, jeweils mit und ohne Archivspalte, sowie bei 1280px und 390px. Bei 1440px mit Archivspalte und bei 1280px scrollt das Board dafür seitwärts.
+
+**Verifikation:** `npm run lint`, `npm run check`, `npx vitest run` (546/546), die a11y-Suite sowie `board-crud`, `board-dnd`, `board-archive`, `board-filters`, `mobile-layout`, `mobile-nav` und `modal-keyboard` (135/135). Screenshots alt und neu mit nachgestellten Live-Daten bei 1707px (150 % Skalierung, mit und ohne Archiv), 1440, 1280 und 390px, dunkel und hell, dazu der Fokusring des Status-Symbols.
+
 ## Verifikation für v1
 
 - `npm run lint` und `npm run check` laufen fehlerfrei durch.
