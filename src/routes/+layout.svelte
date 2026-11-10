@@ -1,6 +1,6 @@
 <script lang="ts">
 	import '../app.css';
-	import { onMount } from 'svelte';
+	import { onMount, tick } from 'svelte';
 	import { theme } from '#lib/stores/theme.svelte.js';
 	import { i18n, t } from '#lib/i18n/index.svelte.js';
 	import { resolve } from '$app/paths';
@@ -21,6 +21,7 @@
 	let { children } = $props();
 
 	let sidebarCollapsed = $state(false);
+	let navToggle: HTMLButtonElement | undefined = $state();
 	let mobileNavOpen = $state(false);
 	let isMobileViewport = $state(false);
 	let dbOpenError = $state(false);
@@ -42,8 +43,22 @@
 		}
 	}
 
-	function closeMobileNav() {
+	// Back to the menu button, which the open drawer had made inert.
+	async function closeMobileNav() {
 		mobileNavOpen = false;
+		await tick();
+		navToggle?.focus();
+	}
+
+	// Chromium scrolls a focused textarea only as far as its caret line, and
+	// the rest can stay hidden under a dialog's footer (WCAG 2.4.12). Bringing
+	// the whole control into view also honours the scroll-margin in app.css
+	// that keeps its focus ring clear of the scroller's edge.
+	function revealFocused(event: FocusEvent) {
+		const target = event.target;
+		if (target instanceof Element && target.matches(':focus-visible')) {
+			target.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+		}
 	}
 
 	function handleShellKeydown(event: KeyboardEvent) {
@@ -125,6 +140,7 @@
 </svelte:head>
 
 <svelte:window onkeydown={handleShellKeydown} />
+<svelte:document onfocusin={revealFocused} />
 
 {#if dbOpenError}
 	<div class="db-error-banner" role="alert">
@@ -144,12 +160,16 @@
 		collapsed={sidebarCollapsed}
 		mobileOpen={mobileNavOpen}
 		inert={isMobileViewport && !mobileNavOpen}
+		onclose={closeMobileNav}
 	/>
 
-	<main id="main-content" class="main-content" tabindex="-1">
+	<!-- The open drawer covers the page; inert keeps focus from landing
+	     anywhere it hides (WCAG 2.4.12). -->
+	<main id="main-content" class="main-content" tabindex="-1" inert={mobileNavOpen}>
 		<header class="top-bar">
 			<div class="top-bar-left">
 				<button
+					bind:this={navToggle}
 					class="sidebar-toggle"
 					onclick={toggleNav}
 					aria-expanded={navToggleExpanded}
@@ -254,7 +274,7 @@
 		padding: 10px 20px;
 		background-color: var(--color-danger-solid);
 		color: white;
-		font-size: 13px;
+		font-size: 0.8125rem;
 		font-weight: 600;
 		text-align: center;
 	}
@@ -305,8 +325,8 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		width: 36px;
-		height: 36px;
+		width: 44px;
+		height: 44px;
 		border: none;
 		background: transparent;
 		color: var(--text-secondary);
@@ -326,15 +346,15 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		width: 36px;
-		height: 36px;
+		width: 44px;
+		height: 44px;
 		border: none;
 		background: transparent;
 		color: var(--text-secondary);
 		border-radius: var(--radius-md);
 		cursor: pointer;
 		font-family: inherit;
-		font-size: 12px;
+		font-size: 0.75rem;
 		font-weight: 600;
 		transition:
 			background-color var(--duration-fast) ease,
@@ -347,7 +367,7 @@
 	}
 
 	.locale-label {
-		font-size: 11px;
+		font-size: 0.6875rem;
 		font-weight: 600;
 		letter-spacing: 0.04em;
 	}
@@ -370,21 +390,21 @@
 	}
 
 	.render-error h2 {
-		font-size: 18px;
+		font-size: 1.125rem;
 		font-weight: 700;
 		color: var(--text-primary);
 		margin: 0 0 12px 0;
 	}
 
 	.render-error .message {
-		font-size: 14px;
+		font-size: 0.875rem;
 		line-height: 1.6;
 		color: var(--text-secondary);
 		margin: 0;
 	}
 
 	.render-error .detail {
-		font-size: 12px;
+		font-size: 0.75rem;
 		font-family: var(--font-mono);
 		color: var(--text-tertiary);
 		background-color: var(--surface-2);
@@ -408,7 +428,7 @@
 		border: none;
 		border-radius: var(--radius-md);
 		font-family: inherit;
-		font-size: 14px;
+		font-size: 0.875rem;
 		font-weight: 600;
 		cursor: pointer;
 		transition: background-color var(--duration-fast) ease;
@@ -421,12 +441,13 @@
 	.render-error .btn-flat {
 		display: inline-flex;
 		align-items: center;
+		min-height: 44px;
 		padding: 8px 16px;
 		background: transparent;
 		color: var(--text-secondary);
 		border: 1px solid var(--border-strong);
 		border-radius: var(--radius-md);
-		font-size: 14px;
+		font-size: 0.875rem;
 		font-weight: 500;
 		text-decoration: none;
 		transition:

@@ -7,6 +7,16 @@ import { test, expect, type Page, type Locator } from '@playwright/test';
  * string, and that round-trip is where a card can silently fail to move.
  */
 
+/**
+ * Where a person picks a card up. dragTo() presses the centre of whatever it
+ * is called on, and a card's centre is its status <select> since that grew to
+ * a full-width 44px row (WCAG 2.5.5) - pressing a select opens it instead of
+ * starting a drag, there as anywhere.
+ */
+function grip(card: Locator): Locator {
+	return card.locator('.card-title');
+}
+
 function column(page: Page, label: string): Locator {
 	return page.locator('.kanban-column', {
 		has: page.locator('.column-title', { hasText: label })
@@ -81,7 +91,7 @@ test.describe('Kanban drag and drop', () => {
 			.locator('.card-status-select')
 			.selectOption('sent');
 
-		const card = () => page.locator('.card', { hasText: 'Contoso GmbH' });
+		const card = () => grip(page.locator('.card', { hasText: 'Contoso GmbH' }));
 
 		// Empty drop zone: nothing but the list itself under the pointer.
 		await card().dragTo(column(page, 'Vorstellung').locator('.cards-list'));
@@ -115,7 +125,7 @@ test.describe('Kanban drag and drop', () => {
 		await page.goto('/board');
 		await addApplication(page, 'Frontend Entwickler', 'Contoso GmbH');
 		const card = column(page, 'In Arbeit').locator('.card', { hasText: 'Contoso GmbH' });
-		await card.dragTo(column(page, 'In Arbeit').locator('.column-header'));
+		await grip(card).dragTo(column(page, 'In Arbeit').locator('.column-header'));
 		await expect(card).toBeVisible();
 		await expect(page.locator('.card', { hasText: 'Contoso GmbH' })).toHaveCount(1);
 	});
@@ -144,9 +154,9 @@ test.describe('Kanban drag and drop', () => {
 		).toBeVisible();
 
 		// The drag path must reach the same row.
-		await column(page, 'Versendet')
-			.locator('.card', { hasText: 'Northwind e.V.' })
-			.dragTo(column(page, 'Vorstellung').locator('.cards-list'));
+		await grip(column(page, 'Versendet').locator('.card', { hasText: 'Northwind e.V.' })).dragTo(
+			column(page, 'Vorstellung').locator('.cards-list')
+		);
 		await expect(
 			column(page, 'Vorstellung').locator('.card', { hasText: 'Northwind e.V.' })
 		).toBeVisible();

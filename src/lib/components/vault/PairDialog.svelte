@@ -116,10 +116,12 @@
 </VaultDialog>
 
 <style>
+	/* 16px, so the large pairing code keeps 2.5em to the paragraph after it
+	   (WCAG 1.4.8). */
 	.pair {
 		display: flex;
 		flex-direction: column;
-		gap: 12px;
+		gap: 16px;
 	}
 
 	.qr-box {
@@ -139,14 +141,14 @@
 	}
 
 	.code {
-		font-size: 16px;
+		font-size: 1rem;
 		font-weight: 600;
 		letter-spacing: 0.06em;
 	}
 
 	.compare {
 		font-family: ui-monospace, 'SFMono-Regular', Consolas, monospace;
-		font-size: 32px;
+		font-size: 2rem;
 		font-weight: 700;
 		letter-spacing: 0.12em;
 		text-align: center;

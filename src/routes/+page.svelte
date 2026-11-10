@@ -82,7 +82,7 @@
 
 	.hero h1 {
 		margin: 0;
-		font-size: 34px;
+		font-size: 2.125rem;
 		line-height: 1.2;
 		font-weight: 700;
 		letter-spacing: -0.02em;
@@ -92,7 +92,7 @@
 
 	.lead {
 		margin: 14px 0 0;
-		font-size: 17px;
+		font-size: 1.0625rem;
 		line-height: 1.6;
 		color: var(--text-secondary);
 		max-width: 56ch;
@@ -111,11 +111,12 @@
 	.cta {
 		display: inline-flex;
 		align-items: center;
+		min-height: 44px;
 		padding: 11px 22px;
 		border-radius: var(--radius-md);
 		background-color: var(--color-accent-700);
 		color: #fff;
-		font-size: 15px;
+		font-size: 0.9375rem;
 		font-weight: 600;
 		text-decoration: none;
 		transition: background-color var(--duration-fast) ease;
@@ -125,9 +126,13 @@
 		background-color: var(--color-accent-600);
 	}
 
+	/* A standalone link, so a 44px target of its own (WCAG 2.5.5). */
 	.cta-secondary {
+		display: inline-flex;
+		align-items: center;
+		min-height: 44px;
 		color: var(--color-accent-text);
-		font-size: 14px;
+		font-size: 0.875rem;
 		font-weight: 500;
 		text-decoration: underline;
 		text-underline-offset: 3px;
@@ -158,20 +163,20 @@
 		border-radius: var(--radius-pill);
 		background-color: var(--color-accent-700);
 		color: #fff;
-		font-size: 13px;
+		font-size: 0.8125rem;
 		font-weight: 700;
 	}
 
 	.steps h3 {
 		margin: 12px 0 6px;
-		font-size: 15px;
+		font-size: 0.9375rem;
 		font-weight: 600;
 		color: var(--text-primary);
 	}
 
 	.steps p {
 		margin: 0;
-		font-size: 13px;
+		font-size: 0.8125rem;
 		line-height: 1.6;
 		color: var(--text-secondary);
 	}
@@ -190,7 +195,7 @@
 		border: 1px solid var(--border-default);
 		border-radius: var(--radius-pill);
 		background-color: var(--surface-2);
-		font-size: 13px;
+		font-size: 0.8125rem;
 		font-weight: 500;
 		color: var(--text-secondary);
 	}
@@ -203,14 +208,14 @@
 
 	.data-section h2 {
 		margin: 0 0 8px;
-		font-size: 15px;
+		font-size: 0.9375rem;
 		font-weight: 600;
 		color: var(--text-primary);
 	}
 
 	.data-section p {
 		margin: 0;
-		font-size: 13px;
+		font-size: 0.8125rem;
 		line-height: 1.7;
 		color: var(--text-secondary);
 		max-width: 66ch;
@@ -219,7 +224,7 @@
 	.points {
 		margin: 10px 0 12px;
 		padding-left: 20px;
-		font-size: 13px;
+		font-size: 0.8125rem;
 		line-height: 1.7;
 		color: var(--text-secondary);
 		max-width: 66ch;
@@ -227,11 +232,11 @@
 
 	@media (max-width: 768px) {
 		.hero h1 {
-			font-size: 26px;
+			font-size: 1.625rem;
 		}
 
 		.lead {
-			font-size: 15px;
+			font-size: 0.9375rem;
 		}
 
 		.steps {

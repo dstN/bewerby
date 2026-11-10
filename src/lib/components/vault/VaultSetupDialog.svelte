@@ -206,7 +206,7 @@
 <style>
 	.recovery-title {
 		margin: 0;
-		font-size: 15px;
+		font-size: 0.9375rem;
 		font-weight: 700;
 		color: var(--text-primary);
 	}
@@ -221,7 +221,7 @@
 		border-radius: var(--radius-lg);
 		background-color: var(--surface-1);
 		font-family: ui-monospace, 'SFMono-Regular', Consolas, monospace;
-		font-size: 17px;
+		font-size: 1.0625rem;
 		font-weight: 600;
 		letter-spacing: 0.06em;
 		line-height: 1.7;

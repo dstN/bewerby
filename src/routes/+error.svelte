@@ -46,21 +46,21 @@
 	}
 
 	.error-card h1 {
-		font-size: 20px;
+		font-size: 1.25rem;
 		font-weight: 700;
 		color: var(--text-primary);
 		margin: 0 0 12px 0;
 	}
 
 	.message {
-		font-size: 14px;
+		font-size: 0.875rem;
 		line-height: 1.6;
 		color: var(--text-secondary);
 		margin: 0 0 8px 0;
 	}
 
 	.detail {
-		font-size: 12px;
+		font-size: 0.75rem;
 		font-family: var(--font-mono);
 		color: var(--text-tertiary);
 		background-color: var(--surface-2);
@@ -84,7 +84,7 @@
 		border: none;
 		border-radius: var(--radius-md);
 		font-family: inherit;
-		font-size: 14px;
+		font-size: 0.875rem;
 		font-weight: 600;
 		cursor: pointer;
 		transition: background-color var(--duration-fast) ease;
@@ -102,7 +102,7 @@
 		color: var(--text-secondary);
 		border: 1px solid var(--border-strong);
 		border-radius: var(--radius-md);
-		font-size: 14px;
+		font-size: 0.875rem;
 		font-weight: 500;
 		text-decoration: none;
 		transition:

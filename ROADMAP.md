@@ -990,6 +990,16 @@ mit 200 und `text/html`, 403 für eine fremde Formular-Übermittlung, 405 für
 POST auf statische Dateien) und `npm run dev` mit allen Routen im Browser
 ohne Konsolenfehler.
 
+## Barrierefreiheit: AAA jenseits von axe (2026-11)
+
+**Ist:** Lighthouse meldete die Footer-Links der Sidebar als zu kleine Ziele (14px hoch, 6px Abstand). Die axe-Suite hatte sie durchgelassen, obwohl sie `wcag22aa` prüft: Über den Abstand bestanden sie 2.5.8 um genau einen Pixel. Bei der Nachfrage zeigte sich, dass „AAA“ in der Suite nur Kontrast bedeutete. axe hat genau drei AAA-Regeln (erhöhter Kontrast, gleiche Linktexte, Meta-Refresh), und seine sieben `experimental`-Regeln liefen gar nicht mit, darunter `label-content-name-mismatch` (2.5.3, Level A). Eine Messung über die Routen ergab, dass am Desktop fast jedes Bedienelement unter 44px lag (2.5.5).
+
+**Umsetzung:** `tests/e2e/fixtures/aaa.ts` prüft bei jedem Scan der Suite zusätzlich, was sich von AAA am gerenderten Dokument ablesen lässt, nach den „Understanding“-Dokumenten des W3C: 2.5.5 (44×44px, mit den Ausnahmen Fließtext und unveränderte Browser-Controls), 1.4.8 (Blocksatz, Zeilenhöhe, 80 Zeichen, Absatzabstand, relative Schriftgrößen), 2.4.8 (`aria-current`) und per Tab-Durchgang 2.1.3, 2.4.12 und 2.4.13. Dazu kommt axe mit `experimental`. Siteimprove Alfa lief einmal als Gegenprobe über alle Routen und zwei Viewports. Seine drei Funde (leere Liste in leeren Spalten, Zeilenhöhe einzeiliger Absätze, Schriftgrößen in px) sind behoben, danach meldete es keinen Fehler mehr.
+
+**Behoben:** Eine globale 44px-Regel ohne Spezifität für Buttons, Selects, Eingabefelder und Datei-Labels, dazu einzeln die Links, Sidebar-Einträge, Karten-Steuerelemente und Kalendertage (sieben à 44px passen bei 320px gerade noch, ohne Lücken). Das offene Mobil-Menü macht den Rest der Seite inert und hat einen eigenen Schließen-Button, das Datepicker-Popover schließt beim Verlassen per Tab, und fokussierte Textfelder werden ganz ins Bild geholt (Chromium scrollte nur die Cursorzeile frei, der Rest lag unter dem Dialog-Footer). Der Datepicker-Trigger nennt Feld und Datum, das Listen-Icon im Anschreiben-Editor ist kein „1.“-Text mehr, und alle 187 Schriftgrößen stehen in `rem`.
+
+**Nicht automatisierbar** und deshalb weiter Handarbeit: Zeitlimits (2.2.3–2.2.6), Sprache (3.1.3–3.1.6), Hilfe (3.3.5), Fehlervermeidung (3.3.6), Änderung auf Anfrage (3.2.5), gleichzeitige Eingabemethoden (2.5.6), Authentifizierung (3.3.9). Die Medienkriterien 1.2.x entfallen.
+
 ## Verifikation für v1
 
 - `npm run lint` und `npm run check` laufen fehlerfrei durch.

@@ -82,7 +82,18 @@
 			onclick={() => prefixLines((index) => `${index + 1}. `)}
 			aria-label={t('coverLetter.numberedList')}
 		>
-			<span aria-hidden="true">1.</span>
+			<!-- An icon, not the text "1.": visible text has to be part of the
+			     accessible name (WCAG 2.5.3), and "1. Nummerierte Liste" would
+			     read worse than the picture of one. -->
+			<svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+				<path
+					d="M10 6h11M10 12h11M10 18h11M4 6h1v4M4 10h2M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"
+					stroke="currentColor"
+					stroke-width="1.75"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+				/>
+			</svg>
 		</button>
 		{#if oninsertTemplate}
 			<button type="button" class="template-btn" onclick={oninsertTemplate}>
@@ -135,15 +146,15 @@
 	}
 
 	.toolbar button {
-		min-width: 34px;
-		height: 32px;
+		min-width: 44px;
+		height: 44px;
 		padding: 0 10px;
 		border: 1px solid var(--border-default);
 		border-radius: var(--radius-md);
 		background-color: var(--surface-0);
 		color: var(--text-primary);
 		font-family: inherit;
-		font-size: 13px;
+		font-size: 0.8125rem;
 		cursor: pointer;
 		transition:
 			background-color var(--duration-fast) ease,
@@ -175,7 +186,7 @@
 	.pane label,
 	.pane h3 {
 		margin: 0 0 4px;
-		font-size: 12px;
+		font-size: 0.75rem;
 		font-weight: 500;
 		color: var(--text-secondary);
 	}
@@ -188,14 +199,14 @@
 		border-radius: var(--radius-md);
 		color: var(--text-primary);
 		font-family: inherit;
-		font-size: 13px;
+		font-size: 0.8125rem;
 		line-height: 1.6;
 		resize: vertical;
 	}
 
 	.hint {
 		margin: 6px 0 0;
-		font-size: 11px;
+		font-size: 0.6875rem;
 		line-height: 1.5;
 		color: var(--text-secondary);
 	}
@@ -209,7 +220,7 @@
 		background-color: var(--surface-2);
 		border: 1px solid var(--border-default);
 		border-radius: var(--radius-md);
-		font-size: 13px;
+		font-size: 0.8125rem;
 		line-height: 1.6;
 		color: var(--text-primary);
 		overflow-wrap: anywhere;

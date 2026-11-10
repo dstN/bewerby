@@ -434,6 +434,15 @@
 		box-shadow: var(--shadow-lg);
 	}
 
+	/* The body takes whatever header and footer leave, instead of a max-height
+	   that has to be kept in step with their heights by hand: once they grew
+	   to hold 44px buttons, that sum overflowed the dialog and pushed the
+	   footer out of view. */
+	.dispatch-dialog[open] {
+		display: flex;
+		flex-direction: column;
+	}
+
 	.dispatch-dialog::backdrop {
 		background-color: rgba(15, 23, 42, 0.45);
 	}
@@ -449,7 +458,7 @@
 
 	header h2 {
 		margin: 0;
-		font-size: 16px;
+		font-size: 1rem;
 		font-weight: 700;
 	}
 
@@ -460,7 +469,7 @@
 		border-radius: var(--radius-md);
 		background: transparent;
 		color: var(--text-secondary);
-		font-size: 20px;
+		font-size: 1.25rem;
 		line-height: 1;
 		cursor: pointer;
 	}
@@ -471,9 +480,10 @@
 	}
 
 	.dispatch-body {
+		flex: 1;
+		min-height: 0;
 		padding: 16px 20px;
 		overflow-y: auto;
-		max-height: calc(100dvh - 180px);
 	}
 
 	fieldset {
@@ -485,14 +495,15 @@
 	legend {
 		padding: 0;
 		margin-bottom: 8px;
-		font-size: 14px;
+		font-size: 0.875rem;
 		font-weight: 600;
 		color: var(--text-primary);
 	}
 
 	.cv-state {
 		margin: 0 0 10px;
-		font-size: 13px;
+		font-size: 0.8125rem;
+		line-height: 1.5;
 		color: var(--text-primary);
 		overflow-wrap: anywhere;
 	}
@@ -539,19 +550,19 @@
 	}
 
 	.option strong {
-		font-size: 13px;
+		font-size: 0.8125rem;
 		font-weight: 600;
 	}
 
 	.option small {
-		font-size: 12px;
+		font-size: 0.75rem;
 		line-height: 1.4;
 		color: var(--text-secondary);
 	}
 
 	.mail-hint {
 		margin: 12px 0 0;
-		font-size: 12px;
+		font-size: 0.75rem;
 		line-height: 1.6;
 		color: var(--text-secondary);
 	}
@@ -561,7 +572,7 @@
 		margin: 10px 0 0;
 		padding: 8px 10px;
 		border-radius: var(--radius-md);
-		font-size: 12px;
+		font-size: 0.75rem;
 		line-height: 1.5;
 	}
 
@@ -592,7 +603,7 @@
 		background-color: var(--color-accent-600);
 		color: white;
 		font-family: inherit;
-		font-size: 13px;
+		font-size: 0.8125rem;
 		font-weight: 600;
 		cursor: pointer;
 	}
@@ -614,7 +625,7 @@
 		background: transparent;
 		color: var(--text-secondary);
 		font-family: inherit;
-		font-size: 13px;
+		font-size: 0.8125rem;
 		font-weight: 500;
 		cursor: pointer;
 	}

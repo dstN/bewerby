@@ -253,7 +253,7 @@
 	}
 
 	.page-header h1 {
-		font-size: 24px;
+		font-size: 1.5rem;
 		font-weight: 700;
 		letter-spacing: -0.03em;
 		color: var(--text-primary);
@@ -261,7 +261,7 @@
 	}
 
 	.subtitle {
-		font-size: 13px;
+		font-size: 0.8125rem;
 		color: var(--text-secondary);
 		margin: 4px 0 0 0;
 	}
@@ -281,7 +281,7 @@
 	}
 
 	.section-title {
-		font-size: 16px;
+		font-size: 1rem;
 		font-weight: 700;
 		color: var(--text-primary);
 		margin: 0 0 16px 0;
@@ -289,7 +289,8 @@
 	}
 
 	.card-desc {
-		font-size: 13px;
+		font-size: 0.8125rem;
+		line-height: 1.5;
 		color: var(--text-secondary);
 		margin: -8px 0 20px 0;
 	}
@@ -312,13 +313,13 @@
 	}
 
 	.metric-val {
-		font-size: 22px;
+		font-size: 1.375rem;
 		font-weight: 700;
 		color: var(--text-primary);
 	}
 
 	.metric-label {
-		font-size: 12px;
+		font-size: 0.75rem;
 		color: var(--text-secondary);
 		font-weight: 500;
 	}
@@ -360,12 +361,12 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		font-size: 11px;
+		font-size: 0.6875rem;
 		font-weight: 700;
 	}
 
 	.step-name {
-		font-size: 13px;
+		font-size: 0.8125rem;
 		font-weight: 600;
 		color: var(--text-primary);
 	}
@@ -402,7 +403,7 @@
 	}
 
 	.step-count {
-		font-size: 13px;
+		font-size: 0.8125rem;
 		font-weight: 700;
 		position: relative;
 		z-index: 1;
@@ -413,7 +414,7 @@
 	}
 
 	.step-percentage {
-		font-size: 12px;
+		font-size: 0.75rem;
 		font-weight: 600;
 		color: var(--text-secondary);
 		text-align: right;
@@ -431,7 +432,7 @@
 	}
 
 	.total-val {
-		font-size: 24px;
+		font-size: 1.5rem;
 		font-weight: 700;
 		/* --color-accent-600 only clears 4.5:1 as text on a light surface; the
 		   dedicated text-role token is needed in the dark theme (see #17). */
@@ -439,7 +440,7 @@
 	}
 
 	.total-label {
-		font-size: 13px;
+		font-size: 0.8125rem;
 		color: var(--text-secondary);
 		font-weight: 500;
 	}
@@ -452,7 +453,7 @@
 		border: 1px solid var(--border-default);
 		border-radius: var(--radius-lg);
 		padding: 16px;
-		font-size: 13px;
+		font-size: 0.8125rem;
 		color: var(--text-secondary);
 	}
 
@@ -479,25 +480,25 @@
 	}
 
 	.time-label {
-		font-size: 12px;
+		font-size: 0.75rem;
 		font-weight: 600;
 		color: var(--text-secondary);
 	}
 
 	.time-val {
-		font-size: 24px;
+		font-size: 1.5rem;
 		font-weight: 700;
 		color: var(--text-primary);
 	}
 
 	.time-unit {
-		font-size: 13px;
+		font-size: 0.8125rem;
 		font-weight: 500;
 		color: var(--text-tertiary);
 	}
 
 	.times-meta {
-		font-size: 11px;
+		font-size: 0.6875rem;
 		color: var(--text-tertiary);
 	}
 
@@ -513,6 +514,7 @@
 
 	.empty-state {
 		text-align: center;
+		line-height: 1.5;
 		color: var(--text-secondary);
 	}
 

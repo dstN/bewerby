@@ -1,6 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { test, expect, type Page } from '@playwright/test';
 import type { AxeResults, Result } from 'axe-core';
+import { keyboardViolations, staticViolations } from './fixtures/aaa.js';
 import { representativeBoard, seedApplications } from './fixtures/seed.js';
 import { PASSPHRASE, setUpEncryption } from './fixtures/vault.js';
 
@@ -10,12 +11,13 @@ import { PASSPHRASE, setUpEncryption } from './fixtures/vault.js';
  * Held to WCAG 2.2 **Level AAA** plus axe's best-practice ruleset, not the
  * usual AA baseline. Only three of axe's rules are AAA-only
  * (color-contrast-enhanced, identical-links-same-purpose,
- * meta-refresh-no-exceptions) - the rest of AAA is not machine-testable - but
- * the enhanced 7:1 contrast threshold is exactly the one a hand-tuned dark
- * theme is most likely to drift out of, so it is worth pinning here rather
- * than re-checking by eye. `best-practice` adds the landmark/heading/region
- * structure rules, which is what keeps the app navigable by rotor rather
- * than merely technically labelled.
+ * meta-refresh-no-exceptions), so every scan also runs the AAA checks in
+ * fixtures/aaa.ts: 44px targets, focus appearance and visibility, keyboard
+ * reach, text-block presentation and aria-current. `best-practice` adds the
+ * landmark/heading/region structure rules, which is what keeps the app
+ * navigable by rotor rather than merely technically labelled, and
+ * `experimental` the rules axe has not switched on by default yet - among
+ * them label-content-name-mismatch, which is Level A.
  *
  * Every scan runs in both themes: the two palettes are independent sets of
  * custom properties, so passing in light says nothing about dark.
@@ -37,7 +39,8 @@ const A11Y_TAGS = [
 	'wcag21aa',
 	'wcag22a',
 	'wcag22aa',
-	'best-practice'
+	'best-practice',
+	'experimental'
 ];
 
 const ROUTES: Array<{ path: string; name: string }> = [
@@ -90,7 +93,11 @@ function formatViolations(results: AxeResults): string[] {
 
 async function expectNoViolations(page: Page, builder = analyze(page)): Promise<void> {
 	const results = await builder.analyze();
-	expect(formatViolations(results)).toEqual([]);
+	expect([
+		...formatViolations(results),
+		...(await staticViolations(page)),
+		...(await keyboardViolations(page))
+	]).toEqual([]);
 }
 
 for (const theme of ['light', 'dark'] as const) {

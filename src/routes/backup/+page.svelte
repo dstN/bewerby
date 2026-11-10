@@ -940,7 +940,7 @@
 	}
 
 	.page-header h1 {
-		font-size: 24px;
+		font-size: 1.5rem;
 		font-weight: 700;
 		letter-spacing: -0.03em;
 		color: var(--text-primary);
@@ -948,7 +948,7 @@
 	}
 
 	.subtitle {
-		font-size: 13px;
+		font-size: 0.8125rem;
 		color: var(--text-secondary);
 		margin: 4px 0 0 0;
 	}
@@ -977,7 +977,7 @@
 	}
 
 	.tier-tag {
-		font-size: 10px;
+		font-size: 0.625rem;
 		font-weight: 700;
 		text-transform: uppercase;
 		letter-spacing: 0.04em;
@@ -995,7 +995,7 @@
 	/* Accent text on the neutral tag surface: --color-accent-text is the
 	   shade tuned for AAA contrast in both themes (see app.css). */
 	.recommended-tag {
-		font-size: 10px;
+		font-size: 0.625rem;
 		font-weight: 700;
 		text-transform: uppercase;
 		letter-spacing: 0.04em;
@@ -1032,7 +1032,7 @@
 	}
 
 	.vault-state {
-		font-size: 13px;
+		font-size: 0.8125rem;
 		font-weight: 600;
 		color: var(--text-primary);
 		margin: 0;
@@ -1045,7 +1045,7 @@
 		background: transparent;
 		color: var(--text-secondary);
 		font-family: inherit;
-		font-size: 13px;
+		font-size: 0.8125rem;
 		text-decoration: underline;
 		text-underline-offset: 3px;
 		cursor: pointer;
@@ -1056,14 +1056,14 @@
 	}
 
 	.card-title {
-		font-size: 16px;
+		font-size: 1rem;
 		font-weight: 700;
 		color: var(--text-primary);
 		margin: 0;
 	}
 
 	.card-desc {
-		font-size: 13px;
+		font-size: 0.8125rem;
 		line-height: 1.6;
 		color: var(--text-secondary);
 		margin: 0;
@@ -1080,7 +1080,7 @@
 	}
 
 	.import-mode-group legend {
-		font-size: 12px;
+		font-size: 0.75rem;
 		font-weight: 600;
 		color: var(--text-secondary);
 		padding: 0 4px;
@@ -1090,7 +1090,7 @@
 		display: flex;
 		align-items: center;
 		gap: 8px;
-		font-size: 13px;
+		font-size: 0.8125rem;
 		color: var(--text-primary);
 		cursor: pointer;
 	}
@@ -1113,7 +1113,7 @@
 		border: none;
 		border-radius: var(--radius-md);
 		font-family: inherit;
-		font-size: 13px;
+		font-size: 0.8125rem;
 		font-weight: 600;
 		cursor: pointer;
 		transition: background-color var(--duration-fast) ease;
@@ -1133,7 +1133,7 @@
 		border-radius: var(--radius-md);
 		color: var(--text-primary);
 		font-family: inherit;
-		font-size: 13px;
+		font-size: 0.8125rem;
 		font-weight: 600;
 		cursor: pointer;
 		transition: background-color var(--duration-fast) ease;
@@ -1156,7 +1156,7 @@
 	}
 
 	.status-msg {
-		font-size: 13px;
+		font-size: 0.8125rem;
 		font-weight: 500;
 		padding: 10px 12px;
 		border-radius: var(--radius-md);

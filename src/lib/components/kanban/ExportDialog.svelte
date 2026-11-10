@@ -113,7 +113,7 @@
 
 	.custom-label {
 		min-width: 2.5em;
-		font-size: 13px;
+		font-size: 0.8125rem;
 		color: var(--text-secondary);
 	}
 

@@ -434,7 +434,7 @@
 	}
 
 	.page-header h1 {
-		font-size: 24px;
+		font-size: 1.5rem;
 		font-weight: 700;
 		letter-spacing: -0.03em;
 		color: var(--text-primary);
@@ -442,7 +442,7 @@
 	}
 
 	.subtitle {
-		font-size: 13px;
+		font-size: 0.8125rem;
 		color: var(--text-secondary);
 		margin: 4px 0 0 0;
 	}
@@ -465,7 +465,7 @@
 	}
 
 	.card-title {
-		font-size: 16px;
+		font-size: 1rem;
 		font-weight: 700;
 		color: var(--text-primary);
 		margin: 0;
@@ -479,7 +479,7 @@
 	}
 
 	.card-desc {
-		font-size: 13px;
+		font-size: 0.8125rem;
 		line-height: 1.6;
 		color: var(--text-secondary);
 		margin: 0;
@@ -489,7 +489,7 @@
 		display: flex;
 		align-items: flex-start;
 		gap: 8px;
-		font-size: 13px;
+		font-size: 0.8125rem;
 		line-height: 1.6;
 		color: var(--text-primary);
 	}
@@ -512,7 +512,7 @@
 		display: flex;
 		align-items: center;
 		gap: 8px;
-		font-size: 14px;
+		font-size: 0.875rem;
 	}
 
 	.status-label {
@@ -521,7 +521,7 @@
 	}
 
 	.status-badge {
-		font-size: 12px;
+		font-size: 0.75rem;
 		font-weight: 600;
 		padding: 2px 8px;
 		border-radius: var(--radius-pill);
@@ -547,21 +547,22 @@
 
 	.doc-heading {
 		margin: 0 0 4px;
-		font-size: 14px;
+		font-size: 0.875rem;
 		font-weight: 600;
 		color: var(--text-primary);
 	}
 
+	/* 14px keeps 2.5em between this paragraph and the next (WCAG 1.4.8). */
 	.doc-hint {
-		margin: 0 0 10px;
-		font-size: 12px;
+		margin: 0 0 14px;
+		font-size: 0.75rem;
 		line-height: 1.5;
 		color: var(--text-secondary);
 	}
 
 	.doc-current {
 		margin: 0 0 10px;
-		font-size: 13px;
+		font-size: 0.8125rem;
 		font-weight: 500;
 		color: var(--text-primary);
 		overflow-wrap: anywhere;
@@ -597,7 +598,7 @@
 		border: 1px solid var(--border-strong);
 		border-radius: var(--radius-md);
 		font-family: inherit;
-		font-size: 13px;
+		font-size: 0.8125rem;
 		font-weight: 500;
 		cursor: pointer;
 		transition:
@@ -617,7 +618,7 @@
 		border: 1px solid var(--status-danger-border);
 		border-radius: var(--radius-md);
 		color: var(--color-danger);
-		font-size: 12px;
+		font-size: 0.75rem;
 	}
 
 	.sender-grid {
@@ -633,7 +634,7 @@
 	}
 
 	.sender-field label {
-		font-size: 12px;
+		font-size: 0.75rem;
 		font-weight: 500;
 		color: var(--text-secondary);
 	}
@@ -645,7 +646,7 @@
 		border-radius: var(--radius-md);
 		color: var(--text-primary);
 		font-family: inherit;
-		font-size: 13px;
+		font-size: 0.8125rem;
 	}
 
 	.sender-field input:focus-visible {
@@ -665,7 +666,7 @@
 		border: none;
 		border-radius: var(--radius-md);
 		font-family: inherit;
-		font-size: 13px;
+		font-size: 0.8125rem;
 		font-weight: 600;
 		cursor: pointer;
 		transition: background-color var(--duration-fast) ease;
@@ -683,8 +684,12 @@
 		color: var(--color-danger) !important;
 	}
 
+	/* Standalone links, so 44px targets of their own (WCAG 2.5.5). */
 	.export-hint-link {
-		font-size: 13px;
+		display: inline-flex;
+		align-items: center;
+		min-height: 44px;
+		font-size: 0.8125rem;
 		/* --color-accent-600 only clears 4.5:1 as text on a light surface; this
 		   card's dark-theme background needs the dedicated text-role token
 		   instead (see issue #17). */
@@ -703,7 +708,7 @@
 		border: none;
 		border-radius: var(--radius-md);
 		font-family: inherit;
-		font-size: 13px;
+		font-size: 0.8125rem;
 		font-weight: 600;
 		cursor: pointer;
 		transition: background-color var(--duration-fast) ease;
@@ -720,7 +725,7 @@
 	}
 
 	.storage-usage {
-		font-size: 12px;
+		font-size: 0.75rem;
 		color: var(--text-tertiary);
 		margin: 0;
 	}
@@ -735,15 +740,16 @@
 	}
 
 	.info-list li {
-		font-size: 13px;
+		font-size: 0.8125rem;
 		line-height: 1.6;
 		color: var(--text-secondary);
 	}
 
 	.privacy-link {
-		display: inline-block;
-		margin-top: 4px;
-		font-size: 13px;
+		display: inline-flex;
+		align-items: center;
+		min-height: 44px;
+		font-size: 0.8125rem;
 		font-weight: 600;
 		/* See .export-hint-link above - same dark-theme contrast fix. */
 		color: var(--color-accent-text);

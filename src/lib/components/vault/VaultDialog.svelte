@@ -100,7 +100,7 @@
 
 	header h2 {
 		margin: 0;
-		font-size: 16px;
+		font-size: 1rem;
 		font-weight: 700;
 	}
 
@@ -111,7 +111,7 @@
 		border-radius: var(--radius-md);
 		background: transparent;
 		color: var(--text-secondary);
-		font-size: 20px;
+		font-size: 1.25rem;
 		line-height: 1;
 		cursor: pointer;
 	}
@@ -135,7 +135,7 @@
 
 	.vault-body :global(p) {
 		margin: 0;
-		font-size: 13px;
+		font-size: 0.8125rem;
 		line-height: 1.6;
 		color: var(--text-secondary);
 	}
@@ -148,7 +148,7 @@
 
 	.vault-body :global(.field > label),
 	.vault-body :global(legend) {
-		font-size: 12px;
+		font-size: 0.75rem;
 		font-weight: 600;
 		color: var(--text-secondary);
 	}
@@ -163,7 +163,7 @@
 		border-radius: var(--radius-md);
 		color: var(--text-primary);
 		font-family: inherit;
-		font-size: 14px;
+		font-size: 0.875rem;
 	}
 
 	.vault-body :global(input:focus) {
@@ -184,7 +184,7 @@
 		display: flex;
 		align-items: flex-start;
 		gap: 8px;
-		font-size: 13px;
+		font-size: 0.8125rem;
 		line-height: 1.5;
 		color: var(--text-primary);
 		cursor: pointer;
@@ -195,7 +195,7 @@
 	}
 
 	.vault-body :global(.hint) {
-		font-size: 12px;
+		font-size: 0.75rem;
 		line-height: 1.5;
 		color: var(--text-secondary);
 	}
@@ -206,7 +206,7 @@
 		border-radius: var(--radius-md);
 		background-color: var(--status-danger-bg);
 		color: var(--color-danger);
-		font-size: 12px;
+		font-size: 0.75rem;
 		line-height: 1.5;
 	}
 
@@ -222,7 +222,7 @@
 		padding: 8px 16px;
 		border-radius: var(--radius-md);
 		font-family: inherit;
-		font-size: 13px;
+		font-size: 0.8125rem;
 		font-weight: 600;
 		cursor: pointer;
 	}

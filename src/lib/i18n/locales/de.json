@@ -475,6 +475,7 @@
 	"a11y": {
 		"openMenu": "Menü öffnen",
 		"closeMenu": "Menü schließen",
+		"closeNavigation": "Navigation schließen",
 		"toggleTheme": "Design wechseln",
 		"switchLanguage": "Sprache wechseln",
 		"mainNavigation": "Navigation"

@@ -26,7 +26,7 @@
 			35410 Hungen<br />
 			Deutschland
 		</address>
-		<p><ObfuscatedEmail /></p>
+		<p>{t('legal.impressum.contactEmailLabel')}: <ObfuscatedEmail /></p>
 	</section>
 
 	<section class="legal-card">
@@ -167,7 +167,7 @@
 	}
 
 	.page-header h1 {
-		font-size: 24px;
+		font-size: 1.5rem;
 		font-weight: 700;
 		letter-spacing: -0.03em;
 		color: var(--text-primary);
@@ -175,7 +175,7 @@
 	}
 
 	.intro {
-		font-size: 13px;
+		font-size: 0.8125rem;
 		color: var(--text-secondary);
 		margin: 6px 0 0 0;
 		line-height: 1.6;
@@ -188,18 +188,20 @@
 		padding: 20px 24px;
 		display: flex;
 		flex-direction: column;
-		gap: 8px;
+		/* With the paragraphs' 1.7 line height, 12px puts 2.6em between the
+		   tops of two paragraphs' adjoining lines (WCAG 1.4.8 asks 2.5em). */
+		gap: 12px;
 	}
 
 	.legal-card h2 {
-		font-size: 15px;
+		font-size: 0.9375rem;
 		font-weight: 700;
 		color: var(--text-primary);
 		margin: 0 0 4px 0;
 	}
 
 	.legal-card p {
-		font-size: 13px;
+		font-size: 0.8125rem;
 		line-height: 1.7;
 		color: var(--text-secondary);
 		margin: 0;
@@ -220,7 +222,7 @@
 	}
 
 	.storage-item h3 {
-		font-size: 13px;
+		font-size: 0.8125rem;
 		font-weight: 600;
 		color: var(--text-primary);
 		margin: 0;
@@ -240,7 +242,7 @@
 		table-layout: fixed;
 		border-collapse: collapse;
 		margin-top: 8px;
-		font-size: 12px;
+		font-size: 0.75rem;
 	}
 
 	/* The key column holds identifiers, the purpose column holds prose. Without
@@ -264,7 +266,7 @@
 
 	.storage-table code {
 		font-family: var(--font-mono);
-		font-size: 11px;
+		font-size: 0.6875rem;
 		background-color: var(--surface-2);
 		padding: 2px 6px;
 		border-radius: var(--radius-sm);
@@ -274,7 +276,7 @@
 	}
 
 	.legal-card address {
-		font-size: 13px;
+		font-size: 0.8125rem;
 		line-height: 1.7;
 		font-style: normal;
 		color: var(--text-secondary);

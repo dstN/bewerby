@@ -674,8 +674,12 @@ to remember to add them.
     `app.css`);
   - `a11y.spec.ts` runs an [axe-core](https://github.com/dequelabs/axe-core)
     scan against every route, in both themes, at desktop and 390px width,
-    against **WCAG 2.2 Level AAA** plus axe's `best-practice` ruleset (not
-    just the usual AA baseline) - including the populated board, analytics
+    against **WCAG 2.2 Level AAA** plus axe's `best-practice` and
+    `experimental` rulesets (not just the usual AA baseline), and with each
+    scan the AAA checks axe has no rules for, in `fixtures/aaa.ts`: 2.5.5
+    target size, 2.4.12/2.4.13 focus visibility and appearance (by tabbing
+    through the page), 2.1.3 keyboard reach, 1.4.8 text presentation, 2.4.8
+    `aria-current` - including the populated board, analytics
     with real data, the application dialog, and the date picker popover, plus
     hand-written checks for things axe can't assert on its own (skip-link
     behavior, live-region announcements, `inert` on the closed mobile drawer,

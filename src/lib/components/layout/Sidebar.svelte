@@ -6,8 +6,29 @@
 	let {
 		collapsed = false,
 		mobileOpen = false,
-		inert: isInert = false
-	}: { collapsed?: boolean; mobileOpen?: boolean; inert?: boolean } = $props();
+		inert: isInert = false,
+		onclose
+	}: {
+		collapsed?: boolean;
+		mobileOpen?: boolean;
+		inert?: boolean;
+		onclose?: () => void;
+	} = $props();
+
+	const legalLinks = [
+		{ href: '/impressum', labelKey: 'nav.impressum' },
+		{ href: '/datenschutz', labelKey: 'nav.datenschutz' },
+		{ href: '/nutzungsbedingungen', labelKey: 'nav.nutzungsbedingungen' },
+		{ href: '/kontakt', labelKey: 'nav.kontakt' }
+	] as const;
+
+	// The open drawer covers the page and the menu button with it, so it
+	// brings its own close button and moves focus onto it (WCAG 2.4.12: the
+	// layout makes everything behind the drawer inert meanwhile).
+	let closeButton: HTMLButtonElement | undefined = $state();
+	$effect(() => {
+		if (mobileOpen) closeButton?.focus();
+	});
 
 	const navItems = [
 		{ href: '/board', labelKey: 'nav.kanban', icon: 'kanban' },
@@ -85,6 +106,23 @@
 				<span class="logo-text">bewerby</span>
 			{/if}
 		</a>
+		{#if mobileOpen}
+			<button
+				bind:this={closeButton}
+				class="drawer-close"
+				onclick={onclose}
+				aria-label={t('a11y.closeNavigation')}
+			>
+				<svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+					<path
+						d="M5 5l10 10M15 5L5 15"
+						stroke="currentColor"
+						stroke-width="1.5"
+						stroke-linecap="round"
+					/>
+				</svg>
+			</button>
+		{/if}
 	</div>
 
 	<nav class="sidebar-nav">
@@ -187,10 +225,13 @@
 	<div class="sidebar-footer">
 		{#if showLabels}
 			<nav class="legal-links" aria-label={t('legal.impressum.title')}>
-				<a href={resolve('/impressum')}>{t('nav.impressum')}</a>
-				<a href={resolve('/datenschutz')}>{t('nav.datenschutz')}</a>
-				<a href={resolve('/nutzungsbedingungen')}>{t('nav.nutzungsbedingungen')}</a>
-				<a href={resolve('/kontakt')}>{t('nav.kontakt')}</a>
+				{#each legalLinks as link (link.href)}
+					<a
+						href={resolve(link.href)}
+						aria-current={page.url.pathname === link.href ? 'page' : undefined}
+						>{t(link.labelKey)}</a
+					>
+				{/each}
 			</nav>
 			<span class="version-tag">v{__APP_VERSION__}</span>
 		{/if}
@@ -224,6 +265,7 @@
 		display: flex;
 		align-items: center;
 		gap: 10px;
+		min-height: 44px;
 		text-decoration: none;
 		color: var(--text-primary);
 	}
@@ -235,7 +277,7 @@
 	}
 
 	.logo-text {
-		font-size: 16px;
+		font-size: 1rem;
 		font-weight: 700;
 		letter-spacing: -0.02em;
 		white-space: nowrap;
@@ -259,11 +301,12 @@
 		display: flex;
 		align-items: center;
 		gap: 10px;
+		min-height: 44px;
 		padding: 8px 12px;
 		border-radius: var(--radius-md);
 		color: var(--sidebar-text);
 		text-decoration: none;
-		font-size: 14px;
+		font-size: 0.875rem;
 		font-weight: 500;
 		transition:
 			background-color var(--duration-fast) ease,
@@ -304,22 +347,47 @@
 	.legal-links {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 6px 10px;
+		gap: 0 10px;
 	}
 
+	/* 44x44 (WCAG 2.5.5) around 11px text. Lighthouse had failed them at
+	   their bare 14px height, which even 2.5.8's 24px only met by spacing. */
 	.legal-links a {
-		font-size: 11px;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-height: 44px;
+		min-width: 44px;
+		font-size: 0.6875rem;
 		color: var(--text-tertiary);
 		text-decoration: none;
 	}
 
-	.legal-links a:hover {
+	.legal-links a:hover,
+	.legal-links a[aria-current='page'] {
 		color: var(--sidebar-text-active);
 		text-decoration: underline;
 	}
 
+	.drawer-close {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		margin-left: auto;
+		border: none;
+		background: transparent;
+		color: var(--text-secondary);
+		border-radius: var(--radius-md);
+		cursor: pointer;
+	}
+
+	.drawer-close:hover {
+		background-color: var(--sidebar-item-hover);
+		color: var(--text-primary);
+	}
+
 	.version-tag {
-		font-size: 11px;
+		font-size: 0.6875rem;
 		color: var(--text-tertiary);
 		font-weight: 400;
 	}

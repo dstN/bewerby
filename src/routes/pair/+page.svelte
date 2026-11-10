@@ -108,7 +108,7 @@
 
 	h1 {
 		margin: 0;
-		font-size: 24px;
+		font-size: 1.5rem;
 		font-weight: 700;
 		letter-spacing: -0.03em;
 		color: var(--text-primary);
@@ -116,7 +116,7 @@
 
 	p {
 		margin: 0;
-		font-size: 14px;
+		font-size: 0.875rem;
 		line-height: 1.6;
 		color: var(--text-secondary);
 	}
@@ -129,7 +129,7 @@
 	}
 
 	label {
-		font-size: 12px;
+		font-size: 0.75rem;
 		font-weight: 600;
 		color: var(--text-secondary);
 	}
@@ -144,7 +144,7 @@
 		border-radius: var(--radius-md);
 		color: var(--text-primary);
 		font-family: ui-monospace, 'SFMono-Regular', Consolas, monospace;
-		font-size: 14px;
+		font-size: 0.875rem;
 		text-transform: uppercase;
 	}
 
@@ -157,13 +157,13 @@
 		align-items: center;
 		gap: 8px;
 		font-weight: 500;
-		font-size: 13px;
+		font-size: 0.8125rem;
 		color: var(--text-primary);
 	}
 
 	.compare {
 		font-family: ui-monospace, 'SFMono-Regular', Consolas, monospace;
-		font-size: 32px;
+		font-size: 2rem;
 		font-weight: 700;
 		letter-spacing: 0.12em;
 		color: var(--text-primary);
@@ -175,7 +175,7 @@
 		border-radius: var(--radius-md);
 		background-color: var(--status-danger-bg);
 		color: var(--color-danger);
-		font-size: 13px;
+		font-size: 0.8125rem;
 	}
 
 	.btn-primary {
@@ -187,7 +187,7 @@
 		background-color: var(--color-accent-600);
 		color: white;
 		font-family: inherit;
-		font-size: 13px;
+		font-size: 0.8125rem;
 		font-weight: 600;
 		text-decoration: none;
 		cursor: pointer;

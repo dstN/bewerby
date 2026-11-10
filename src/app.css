@@ -300,7 +300,8 @@ body {
 	position: fixed;
 	top: 1rem;
 	left: 1rem;
-	z-index: 50;
+	/* Above the open mobile drawer (300), which would otherwise cover it. */
+	z-index: 1000;
 	width: auto;
 	height: auto;
 	padding: 0.5rem 1rem;
@@ -320,6 +321,48 @@ body {
 	outline: 2px solid var(--color-accent-500);
 	outline-offset: 2px;
 	border-radius: var(--radius-sm);
+}
+
+/* WCAG 2.5.5 Target Size (Enhanced, AAA): every pointer target at least 44x44
+   CSS px. Declared once, at zero specificity, so a component's own sizes can
+   only make a control bigger: min-height and min-width win over height,
+   width and their max-* counterparts. Checkboxes and radios keep the size the
+   browser draws them at (the criterion's user-agent exception); where one is
+   resized, its wrapping label carries the 44px. Links are sized where they
+   are styled, since only standalone ones are targets in their own right.
+   tests/e2e/fixtures/aaa.ts holds every page to this. */
+:where(
+	button,
+	select,
+	textarea,
+	input:not([type='checkbox'], [type='radio']),
+	label:has(> input[type='file'])
+) {
+	min-height: 44px;
+}
+
+/* When focus scrolls a control into view, stop short of the scroller's edge
+   so the focus ring 2px outside it is not cut off (WCAG 2.4.13). */
+:where(a[href], button, input, select, textarea, summary, [tabindex]) {
+	scroll-margin: 8px;
+}
+
+/* A file input hidden with .sr-only inside the label that stands in for it:
+   placed against that label, focusing the input scrolls the label into view
+   rather than wherever the input's containing block happens to be. */
+:where(label:has(> input.sr-only)) {
+	position: relative;
+}
+
+:where(button, input[type='color']) {
+	min-width: 44px;
+}
+
+/* WCAG 1.4.8 Visual Presentation (AAA): lines of running text no longer than
+   80 characters, and at least 1.5 apart. */
+p {
+	max-width: 80ch;
+	line-height: 1.5;
 }
 
 /* Smooth scrolling, respecting reduced motion */

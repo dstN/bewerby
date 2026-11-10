@@ -754,7 +754,10 @@
 					</button>
 				</header>
 
-				<ul class="cards-list">
+				<!-- A list only while there is something in it: an empty <ul> is a list
+				     without the list items its role requires (Siteimprove SIA-R68).
+				     Either way it is the column's drop area. -->
+				<svelte:element this={columnApps.length > 0 ? 'ul' : 'div'} class="cards-list">
 					{#each columnApps as app (app.id)}
 						{@const collapsed = collapsedIds.has(app.id!)}
 						<li
@@ -882,7 +885,7 @@
 							</footer>
 						</li>
 					{/each}
-				</ul>
+				</svelte:element>
 			</div>
 		{/each}
 	</div>
@@ -967,7 +970,7 @@
 	.alerts-list {
 		margin: 0;
 		padding-left: 20px;
-		font-size: 13px;
+		font-size: 0.8125rem;
 		display: flex;
 		flex-direction: column;
 		gap: 4px;
@@ -980,7 +983,7 @@
 	}
 
 	.dashboard-header h1 {
-		font-size: 24px;
+		font-size: 1.5rem;
 		font-weight: 700;
 		letter-spacing: -0.03em;
 		color: var(--text-primary);
@@ -988,7 +991,7 @@
 	}
 
 	.subtitle {
-		font-size: 13px;
+		font-size: 0.8125rem;
 		color: var(--text-secondary);
 		margin: 4px 0 0 0;
 	}
@@ -1003,7 +1006,7 @@
 		border: none;
 		border-radius: var(--radius-md);
 		font-family: inherit;
-		font-size: 14px;
+		font-size: 0.875rem;
 		font-weight: 600;
 		cursor: pointer;
 		transition:
@@ -1037,7 +1040,7 @@
 		border: 1px solid var(--border-default);
 		border-radius: var(--radius-md);
 		font-family: inherit;
-		font-size: 14px;
+		font-size: 0.875rem;
 		font-weight: 600;
 		cursor: pointer;
 		transition:
@@ -1096,7 +1099,7 @@
 		border-radius: var(--radius-md);
 		color: var(--text-primary);
 		font-family: inherit;
-		font-size: 13px;
+		font-size: 0.8125rem;
 		transition: border-color var(--duration-fast) ease;
 	}
 
@@ -1117,7 +1120,7 @@
 		border-radius: var(--radius-md);
 		color: var(--text-primary);
 		font-family: inherit;
-		font-size: 13px;
+		font-size: 0.8125rem;
 		cursor: pointer;
 	}
 
@@ -1128,7 +1131,7 @@
 		border-radius: var(--radius-md);
 		color: var(--text-primary);
 		font-family: inherit;
-		font-size: 13px;
+		font-size: 0.8125rem;
 		white-space: nowrap;
 		cursor: pointer;
 	}
@@ -1189,7 +1192,7 @@
 	}
 
 	.column-title {
-		font-size: 14px;
+		font-size: 0.875rem;
 		font-weight: 700;
 		color: var(--text-primary);
 		margin: 0;
@@ -1197,7 +1200,7 @@
 	}
 
 	.column-badge {
-		font-size: 11px;
+		font-size: 0.6875rem;
 		font-weight: 600;
 		background-color: var(--surface-2);
 		color: var(--text-secondary);
@@ -1209,14 +1212,14 @@
 		border: none;
 		background: transparent;
 		color: var(--text-secondary);
-		font-size: 18px;
+		font-size: 1.125rem;
 		line-height: 1;
 		cursor: pointer;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		width: 24px;
-		height: 24px;
+		width: 44px;
+		height: 44px;
 		border-radius: var(--radius-md);
 		transition: background-color var(--duration-fast) ease;
 	}
@@ -1350,16 +1353,18 @@
 		gap: 2px;
 	}
 
-	/* 24px target (WCAG 2.5.8) around a 10px dot; the negative margin lets it
-	   reach into the card padding instead of pushing the text over. */
+	/* 44px target (WCAG 2.5.5) around a 10px dot. The negative margins reach
+	   into the card's 12px padding but stop 4px short of its edge, where a
+	   specular card's overflow:hidden would cut off the focus ring; the
+	   padding puts the dot level with the company line. */
 	.card-collapse-btn {
 		display: grid;
-		place-items: center;
+		place-items: start center;
 		flex-shrink: 0;
-		width: 24px;
-		height: 24px;
-		margin: -6px 0 -6px -7px;
-		padding: 0;
+		width: 44px;
+		height: 44px;
+		margin: -8px 0 -8px -8px;
+		padding: 11px 0 0;
 		background: none;
 		border: none;
 		border-radius: 50%;
@@ -1389,7 +1394,7 @@
 	}
 
 	.card-company {
-		font-size: 11px;
+		font-size: 0.6875rem;
 		font-weight: 600;
 		color: var(--text-secondary);
 		text-transform: uppercase;
@@ -1397,7 +1402,7 @@
 	}
 
 	.card-priority {
-		font-size: 9px;
+		font-size: 0.5625rem;
 		font-weight: 700;
 		padding: 1px 4px;
 		border-radius: var(--radius-sm);
@@ -1416,7 +1421,7 @@
 	}
 
 	.card-title {
-		font-size: 13px;
+		font-size: 0.8125rem;
 		font-weight: 600;
 		color: var(--text-primary);
 		margin: 0;
@@ -1424,7 +1429,7 @@
 	}
 
 	.card-salary {
-		font-size: 12px;
+		font-size: 0.75rem;
 		color: var(--text-secondary);
 		font-weight: 500;
 	}
@@ -1436,7 +1441,7 @@
 	}
 
 	.card-tag {
-		font-size: 10px;
+		font-size: 0.625rem;
 		font-weight: 500;
 		background-color: var(--surface-2);
 		border: 1px solid var(--border-subtle);
@@ -1446,16 +1451,20 @@
 	}
 
 	.card-tag-more {
-		font-size: 10px;
+		font-size: 0.625rem;
 		font-weight: 600;
 		color: var(--text-tertiary);
 		align-self: center;
 	}
 
+	/* Three 44px controls (WCAG 2.5.5) do not fit one row of a column, so
+	   the status select takes the full width above the date and the two
+	   icon buttons. */
 	.card-footer {
 		display: flex;
+		flex-wrap: wrap;
 		align-items: center;
-		gap: 6px;
+		gap: 4px 6px;
 		border-top: 1px solid var(--border-subtle);
 		padding-top: 8px;
 		margin-top: 4px;
@@ -1463,19 +1472,21 @@
 
 	.card-date {
 		flex: 1;
-		font-size: 10px;
+		min-width: 0;
+		font-size: 0.625rem;
 		color: var(--text-tertiary);
 	}
 
 	.card-status-select {
-		font-size: 10px;
+		font-size: 0.625rem;
 		font-family: inherit;
 		color: var(--text-secondary);
 		background-color: var(--surface-2);
 		border: 1px solid var(--border-subtle);
 		border-radius: var(--radius-sm);
 		padding: 3px 4px;
-		max-width: 90px;
+		order: -1;
+		flex-basis: 100%;
 		cursor: pointer;
 	}
 

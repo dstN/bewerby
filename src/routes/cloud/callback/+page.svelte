@@ -77,7 +77,7 @@
 
 	h1 {
 		margin: 0;
-		font-size: 24px;
+		font-size: 1.5rem;
 		font-weight: 700;
 		letter-spacing: -0.03em;
 		color: var(--text-primary);
@@ -85,14 +85,19 @@
 
 	p {
 		margin: 0;
-		font-size: 14px;
+		font-size: 0.875rem;
 		line-height: 1.6;
 		color: var(--text-secondary);
 	}
 
+	/* A standalone link, so a 44px target of its own (WCAG 2.5.5). */
 	a {
+		display: inline-flex;
+		align-items: center;
+		align-self: flex-start;
+		min-height: 44px;
 		color: var(--color-accent-text);
-		font-size: 14px;
+		font-size: 0.875rem;
 		font-weight: 600;
 	}
 </style>

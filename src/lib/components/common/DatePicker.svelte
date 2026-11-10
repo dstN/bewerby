@@ -13,8 +13,9 @@
 		id?: string;
 		disabled?: boolean;
 		/**
-		 * Names the trigger ("From: 1 November 2026") where there is no
-		 * <label for> to do it, and two pickers sit side by side.
+		 * Names the trigger together with the date ("From: 1 November 2026").
+		 * An aria-label overrides a <label for>, so without this the trigger
+		 * would only say "open calendar", not which date it is or holds.
 		 */
 		label?: string;
 	} = $props();
@@ -348,9 +349,12 @@
 <div class="datepicker-wrapper">
 	<!-- Value-mirror only, not an alternate tab stop - the trigger button below
 	     is the sole accessible entry point (see issue #19). -->
-	<input {id} type="date" bind:value class="sr-only" {disabled} tabindex="-1" aria-hidden="true" />
+	<input type="date" bind:value class="sr-only" {disabled} tabindex="-1" aria-hidden="true" />
 
+	<!-- Carries the id, so the field's <label for> opens the calendar rather
+	     than pointing at the hidden mirror above. -->
 	<button
+		{id}
 		type="button"
 		class="datepicker-trigger"
 		class:active={isOpen}
@@ -415,6 +419,11 @@
 		role="dialog"
 		aria-label={t('datepicker.selectDate')}
 		ontoggle={handlePopoverToggle}
+		onfocusout={(e) => {
+			// Tabbing out leaves a light-dismiss popover open over the fields it
+			// covers, where focus would land unseen (WCAG 2.4.12).
+			if (!popupEl?.contains(e.relatedTarget as Node | null)) popupEl?.hidePopover();
+		}}
 	>
 		<!-- Quick shortcuts pill bar -->
 		<div class="quick-shortcuts">
@@ -522,14 +531,14 @@
 		align-items: center;
 		justify-content: space-between;
 		width: 100%;
-		height: 36px;
+		height: 44px;
 		padding: 0 12px;
 		box-sizing: border-box;
 		background-color: var(--surface-0);
 		border: 1px solid var(--border-strong);
 		border-radius: var(--radius-md);
 		color: var(--text-primary);
-		font-size: 14px;
+		font-size: 0.875rem;
 		font-family: inherit;
 		box-shadow: none;
 		cursor: pointer;
@@ -590,9 +599,10 @@
 		position-try-fallbacks: flip-block;
 		margin: 0;
 		margin-top: 8px;
-		width: 19.5rem;
-		max-width: calc(100vw - 32px);
-		padding: 1rem;
+		/* Seven 44px day cells (WCAG 2.5.5) plus padding and border. */
+		width: calc(7 * 44px + 2 * 0.75rem + 2px);
+		max-width: 100vw;
+		padding: 0.75rem;
 		background-color: var(--surface-0);
 		border: 1px solid var(--border-default);
 		border-radius: var(--radius-lg);
@@ -681,7 +691,6 @@
 	.weekday-grid {
 		display: grid;
 		grid-template-columns: repeat(7, 1fr);
-		gap: 0.25rem;
 		margin-bottom: 0.375rem;
 	}
 
@@ -693,22 +702,22 @@
 	}
 
 	/* Days Grid */
+	/* No gaps: seven 44px cells already take 308px, and the narrowest phone
+	   screen WCAG 1.4.10 asks for is 320px. */
 	.days-grid {
 		display: grid;
-		gap: 0.25rem;
 	}
 
 	.grid-row {
 		display: grid;
 		grid-template-columns: repeat(7, 1fr);
-		gap: 0.25rem;
 	}
 
 	.day-cell {
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		height: 2.125rem;
+		height: 44px;
 		border-radius: var(--radius-sm);
 		font-size: 0.8125rem;
 		font-weight: 400;
@@ -739,5 +748,20 @@
 		color: #ffffff;
 		font-weight: 600;
 		box-shadow: 0 2px 4px rgb(59 130 246 / 0.3);
+	}
+
+	/* Below 334px the popup cannot keep its inset around the 308px of day
+	   cells, so on the narrowest phones it spans the screen edge to edge. */
+	@media (max-width: 333px) {
+		.datepicker-popup {
+			position-area: bottom span-all;
+			position-try-fallbacks: flip-block;
+			left: 0;
+			right: 0;
+			width: auto;
+			padding-inline: 5px;
+			border-inline: none;
+			border-radius: 0;
+		}
 	}
 </style>

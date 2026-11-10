@@ -57,7 +57,7 @@
 	}
 
 	.page-header h1 {
-		font-size: 24px;
+		font-size: 1.5rem;
 		font-weight: 700;
 		letter-spacing: -0.03em;
 		color: var(--text-primary);
@@ -72,22 +72,28 @@
 	}
 
 	.legal-card h2 {
-		font-size: 15px;
+		font-size: 0.9375rem;
 		font-weight: 700;
 		color: var(--text-primary);
 		margin: 0 0 12px 0;
 	}
 
 	.legal-card p {
-		font-size: 13px;
+		font-size: 0.8125rem;
 		line-height: 1.7;
 		color: var(--text-secondary);
-		margin: 0 0 4px 0;
+		margin: 0;
 		white-space: pre-line;
 	}
 
+	/* 2.6em from the top of one paragraph's last line to the next one's first
+	   (WCAG 1.4.8 asks 2.5em), as on the other legal pages. */
+	.legal-card p + p {
+		margin-top: 12px;
+	}
+
 	.legal-card address {
-		font-size: 13px;
+		font-size: 0.8125rem;
 		line-height: 1.7;
 		font-style: normal;
 		color: var(--text-secondary);

@@ -647,6 +647,7 @@ export type TranslationKeys = {
 	a11y: {
 		openMenu: string;
 		closeMenu: string;
+		closeNavigation: string;
 		toggleTheme: string;
 		switchLanguage: string;
 		mainNavigation: string;

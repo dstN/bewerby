@@ -896,7 +896,11 @@
 
 				<div class="form-group">
 					<label for="appliedAt">{t('application.appliedAt')}</label>
-					<DatePicker id="appliedAt" bind:value={appliedDateStr} />
+					<DatePicker
+						id="appliedAt"
+						label={t('application.appliedAt')}
+						bind:value={appliedDateStr}
+					/>
 				</div>
 
 				<div class="form-group">
@@ -923,7 +927,11 @@
 				{#if status === 'rejected'}
 					<div class="form-group col-span-2">
 						<label for="rejectedAt">{t('application.rejectedAt')}</label>
-						<DatePicker id="rejectedAt" bind:value={rejectedDateStr} />
+						<DatePicker
+							id="rejectedAt"
+							label={t('application.rejectedAt')}
+							bind:value={rejectedDateStr}
+						/>
 						<p class="field-hint">{t('application.rejectedAtHint')}</p>
 					</div>
 				{/if}
@@ -940,7 +948,11 @@
 					{#if archiveReason === 'withdrawn'}
 						<div class="form-group col-span-2">
 							<label for="archivedAt">{t('application.archivedAt')}</label>
-							<DatePicker id="archivedAt" bind:value={archivedDateStr} />
+							<DatePicker
+								id="archivedAt"
+								label={t('application.archivedAt')}
+								bind:value={archivedDateStr}
+							/>
 							<p class="field-hint">{t('application.archivedAtHint')}</p>
 						</div>
 					{/if}
@@ -1032,7 +1044,11 @@
 				{#if reminderInterval === 'custom'}
 					<div class="form-group">
 						<label for="reminderDate">{t('reminders.customDate')}</label>
-						<DatePicker id="reminderDate" bind:value={reminderDateStr} />
+						<DatePicker
+							id="reminderDate"
+							label={t('reminders.customDate')}
+							bind:value={reminderDateStr}
+						/>
 					</div>
 				{/if}
 
@@ -1122,7 +1138,8 @@
 										if (cardColor?.toLowerCase() === customHex.toLowerCase()) cardColor = 'none';
 									}}
 									title={t('application.removeCustomColor')}
-									aria-label={t('application.removeCustomColor')}>×</button
+									aria-label={t('application.removeCustomColor')}
+									><span class="swatch-remove-badge" aria-hidden="true">×</span></button
 								>
 							</div>
 						{/each}
@@ -1267,7 +1284,7 @@
 	}
 
 	.modal-header h2 {
-		font-size: 18px;
+		font-size: 1.125rem;
 		font-weight: 700;
 		letter-spacing: -0.02em;
 		margin: 0;
@@ -1333,7 +1350,7 @@
 
 	.review-panel legend {
 		padding: 0 6px;
-		font-size: 13px;
+		font-size: 0.8125rem;
 		font-weight: 600;
 		color: var(--text-primary);
 	}
@@ -1347,7 +1364,7 @@
 		background: none;
 		border: none;
 		font-family: inherit;
-		font-size: 12px;
+		font-size: 0.75rem;
 		font-weight: 600;
 		/* Not --color-accent-600: that shade is tuned for white text *on* it and
 		   only reaches 2.7:1 as text on the dark surface. --color-accent-text is
@@ -1360,7 +1377,7 @@
 	.paste-import .field-label {
 		display: block;
 		margin-top: 12px;
-		font-size: 12px;
+		font-size: 0.75rem;
 		font-weight: 600;
 		color: var(--text-secondary);
 	}
@@ -1393,7 +1410,7 @@
 
 	.fetch-error {
 		margin: 6px 0 0;
-		font-size: 12px;
+		font-size: 0.75rem;
 		line-height: 1.4;
 		color: var(--color-danger);
 	}
@@ -1406,15 +1423,15 @@
 
 	.field-hint {
 		margin: 6px 0 0;
-		font-size: 12px;
-		line-height: 1.4;
+		font-size: 0.75rem;
+		line-height: 1.5;
 		color: var(--text-secondary);
 	}
 
 	.review-hint,
 	.review-empty {
 		margin: 0 0 10px;
-		font-size: 12px;
+		font-size: 0.75rem;
 		line-height: 1.5;
 		color: var(--text-secondary);
 	}
@@ -1443,7 +1460,7 @@
 		gap: 8px;
 		padding: 6px 8px;
 		border-radius: var(--radius-sm);
-		font-size: 13px;
+		font-size: 0.8125rem;
 		cursor: pointer;
 	}
 
@@ -1479,7 +1496,7 @@
 		border: 1px solid var(--border-strong);
 		border-radius: var(--radius-pill);
 		color: var(--text-secondary);
-		font-size: 11px;
+		font-size: 0.6875rem;
 		font-weight: 600;
 	}
 
@@ -1493,7 +1510,7 @@
 		padding: 6px 14px;
 		border-radius: var(--radius-md);
 		font-family: inherit;
-		font-size: 13px;
+		font-size: 0.8125rem;
 		font-weight: 600;
 		cursor: pointer;
 		transition: background-color var(--duration-fast) ease;
@@ -1531,7 +1548,7 @@
 		border: 1px solid var(--status-danger-border);
 		border-radius: var(--radius-md);
 		color: var(--color-danger);
-		font-size: 13px;
+		font-size: 0.8125rem;
 	}
 
 	.btn-dismiss-pdf-error {
@@ -1544,7 +1561,7 @@
 		border: none;
 		background: transparent;
 		color: var(--color-danger);
-		font-size: 16px;
+		font-size: 1rem;
 		line-height: 1;
 		cursor: pointer;
 		border-radius: var(--radius-sm);
@@ -1562,7 +1579,7 @@
 		border-radius: var(--radius-lg);
 		color: var(--text-primary);
 		font-family: inherit;
-		font-size: 13px;
+		font-size: 0.8125rem;
 		font-weight: 600;
 		cursor: pointer;
 		transition: background-color var(--duration-fast) ease;
@@ -1603,7 +1620,7 @@
 	}
 
 	.pdf-upload-text {
-		font-size: 13px;
+		font-size: 0.8125rem;
 		font-weight: 500;
 		color: var(--text-secondary);
 	}
@@ -1647,7 +1664,7 @@
 
 	.form-group label,
 	.form-group .form-label {
-		font-size: 12px;
+		font-size: 0.75rem;
 		font-weight: 600;
 		color: var(--text-secondary);
 	}
@@ -1667,7 +1684,7 @@
 		border-radius: var(--radius-md);
 		color: var(--text-primary);
 		font-family: inherit;
-		font-size: 14px;
+		font-size: 0.875rem;
 		transition: border-color var(--duration-fast) ease;
 	}
 
@@ -1678,7 +1695,7 @@
 	}
 
 	.subsection-title {
-		font-size: 14px;
+		font-size: 0.875rem;
 		font-weight: 700;
 		color: var(--text-primary);
 		margin: 12px 0 4px 0;
@@ -1722,7 +1739,7 @@
 		background-color: var(--surface-2);
 		border: 1px solid var(--border-default);
 		border-radius: var(--radius-pill);
-		font-size: 12px;
+		font-size: 0.75rem;
 		font-weight: 500;
 		color: var(--text-secondary);
 	}
@@ -1732,7 +1749,7 @@
 		background: transparent;
 		color: var(--text-tertiary);
 		cursor: pointer;
-		font-size: 14px;
+		font-size: 0.875rem;
 		padding: 0;
 		line-height: 1;
 	}
@@ -1760,7 +1777,7 @@
 		border: none;
 		border-radius: var(--radius-md);
 		font-family: inherit;
-		font-size: 14px;
+		font-size: 0.875rem;
 		font-weight: 600;
 		cursor: pointer;
 		transition: background-color var(--duration-fast) ease;
@@ -1782,7 +1799,7 @@
 		border: none;
 		border-radius: var(--radius-md);
 		font-family: inherit;
-		font-size: 14px;
+		font-size: 0.875rem;
 		font-weight: 500;
 		cursor: pointer;
 		transition:
@@ -1802,7 +1819,7 @@
 		border-radius: var(--radius-md);
 		color: var(--text-primary);
 		font-family: inherit;
-		font-size: 16px;
+		font-size: 1rem;
 		cursor: pointer;
 		transition: background-color var(--duration-fast) ease;
 	}
@@ -1820,8 +1837,8 @@
 	}
 
 	.color-swatch {
-		width: 32px;
-		height: 32px;
+		width: 44px;
+		height: 44px;
 		border-radius: 50%;
 		border: none;
 		background-color: var(--swatch-color);
@@ -1868,41 +1885,43 @@
 	}
 
 	.custom-swatch-wrapper {
-		position: relative;
 		display: flex;
 		align-items: center;
-		justify-content: center;
 	}
 
+	/* A 44px target of its own beside the swatch (WCAG 2.5.5), not a badge on
+	   its corner: grown to 44px there it would cover the swatch, and a tap on
+	   the colour would delete it. Always shown, since touch has no hover to
+	   reveal it with. The red badge inside stays small. */
 	.btn-swatch-remove {
-		position: absolute;
-		top: -4px;
-		right: -4px;
-		width: 16px;
-		height: 16px;
+		display: grid;
+		place-items: center;
+		width: 44px;
+		height: 44px;
+		margin-left: -8px;
+		padding: 0;
+		border: none;
+		border-radius: var(--radius-md);
+		background: none;
+		cursor: pointer;
+	}
+
+	.swatch-remove-badge {
+		display: grid;
+		place-items: center;
+		width: 18px;
+		height: 18px;
 		border-radius: 50%;
 		background-color: var(--color-danger-solid);
 		color: #ffffff;
-		border: 1px solid var(--surface-0);
-		font-size: 11px;
+		font-size: 0.75rem;
 		font-weight: 700;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		cursor: pointer;
-		opacity: 0;
-		transition: opacity var(--duration-fast) ease;
-	}
-
-	.custom-swatch-wrapper:hover .btn-swatch-remove,
-	.custom-swatch-wrapper:focus-within .btn-swatch-remove,
-	.btn-swatch-remove:focus-visible {
-		opacity: 1;
+		line-height: 1;
 	}
 
 	.btn-add-color {
-		width: 32px;
-		height: 32px;
+		width: 44px;
+		height: 44px;
 		border-radius: 50%;
 		border: 2px dashed var(--border-strong);
 		background-color: var(--surface-1);
@@ -1934,12 +1953,14 @@
 		color: var(--color-accent-text);
 	}
 
+	/* Over the label's dashed border too, so the input itself covers the
+	   whole 44px circle. */
 	.hidden-color-input {
 		position: absolute;
-		inset: 0;
+		inset: -2px;
 		opacity: 0;
-		width: 100%;
-		height: 100%;
+		width: calc(100% + 4px);
+		height: calc(100% + 4px);
 		cursor: pointer;
 	}
 </style>

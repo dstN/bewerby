@@ -149,7 +149,7 @@
 	}
 
 	.page-header h1 {
-		font-size: 24px;
+		font-size: 1.5rem;
 		font-weight: 700;
 		letter-spacing: -0.03em;
 		color: var(--text-primary);
@@ -157,7 +157,7 @@
 	}
 
 	.intro {
-		font-size: 13px;
+		font-size: 0.8125rem;
 		color: var(--text-secondary);
 		margin: 6px 0 0 0;
 		line-height: 1.6;
@@ -193,7 +193,7 @@
 	}
 
 	.form-group label {
-		font-size: 12px;
+		font-size: 0.75rem;
 		font-weight: 600;
 		color: var(--text-secondary);
 	}
@@ -207,7 +207,7 @@
 		border-radius: var(--radius-md);
 		color: var(--text-primary);
 		font-family: inherit;
-		font-size: 14px;
+		font-size: 0.875rem;
 		transition: border-color var(--duration-fast) ease;
 	}
 
@@ -220,13 +220,14 @@
 		display: flex;
 		align-items: flex-start;
 		gap: 8px;
-		font-size: 13px;
+		font-size: 0.8125rem;
 		color: var(--text-secondary);
 		line-height: 1.5;
 	}
 
-	/* 18px box plus the label as a second hit area; the label is the larger
-	   target, so the pair clears WCAG 2.5.8's 24px minimum. */
+	/* 18px box plus the label as a second hit area. The label toggles it just
+	   the same and is at least 44px tall, which makes it the equivalent
+	   control WCAG 2.5.5 allows in place of a 44px box. */
 	.form-check input {
 		flex-shrink: 0;
 		width: 18px;
@@ -237,6 +238,7 @@
 	}
 
 	.form-check label {
+		min-height: 44px;
 		cursor: pointer;
 	}
 
@@ -245,7 +247,7 @@
 	}
 
 	.form-banner {
-		font-size: 13px;
+		font-size: 0.8125rem;
 		padding: 10px 12px;
 		border-radius: var(--radius-md);
 	}
@@ -270,7 +272,7 @@
 		border: none;
 		border-radius: var(--radius-md);
 		font-family: inherit;
-		font-size: 14px;
+		font-size: 0.875rem;
 		font-weight: 600;
 		cursor: pointer;
 		transition: background-color var(--duration-fast) ease;
@@ -286,7 +288,7 @@
 	}
 
 	.form-hint {
-		font-size: 13px;
+		font-size: 0.8125rem;
 		color: var(--text-secondary);
 		margin: 0;
 		border-top: 1px solid var(--border-subtle);
