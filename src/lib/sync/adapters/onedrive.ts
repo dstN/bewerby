@@ -6,7 +6,7 @@ import { TokenKeeper, tokenRequest, withTokens } from './tokens.js';
  * OneDrive, personal and work or school accounts (#54), scoped to
  * Files.ReadWrite.AppFolder: the token reaches /Apps/<app name> and nothing
  * else. Registered as a single-page app, so the browser redeems the code
- * itself with PKCE and no secret - Microsoft's refresh tokens for SPAs last
+ * itself with PKCE and no secret; Microsoft's refresh tokens for SPAs last
  * 24 hours, after which signing in again is a redirect without a password
  * prompt, as long as the Microsoft session is alive.
  *
@@ -14,7 +14,7 @@ import { TokenKeeper, tokenRequest, withTokens } from './tokens.js';
  * `/content` answers with a redirect, and a redirect is not allowed on a
  * CORS request that needs a preflight (Microsoft Graph docs, "Downloading
  * files in JavaScript apps"). The download URL is pre-authenticated and on
- * a different host - which is why that host is in the CSP.
+ * a different host, which is why that host is in the CSP.
  */
 
 const AUTHORITY = 'https://login.microsoftonline.com/common/oauth2/v2.0';

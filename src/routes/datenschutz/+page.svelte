@@ -18,7 +18,7 @@
 
 	<section class="legal-card">
 		<h2>{t('legal.datenschutz.controllerTitle')}</h2>
-		<!-- Verbatim, not i18n'd - see the identical note on the Impressum page. -->
+		<!-- Verbatim, not i18n'd; see the identical note on the Impressum page. -->
 		<address>
 			Dustin Tramm<br />
 			c/o Impressumservice Dein-Impressum<br />
@@ -101,7 +101,7 @@
 	<section class="legal-card">
 		<h2>{t('legal.datenschutz.hostingTitle')}</h2>
 		<p>{t('legal.datenschutz.hostingBody')}</p>
-		<!-- Netcup's own registered business address - real, verbatim, not i18n'd. -->
+		<!-- Netcup's own registered business address: real, verbatim, not i18n'd. -->
 		<address>
 			netcup GmbH<br />
 			Emmy-Noether-Straße 10<br />
@@ -231,7 +231,7 @@
 	/*
 	 * `table-layout: fixed` because the automatic algorithm sizes columns by their
 	 * content's minimum width, and the longest key (`bewerby_custom_colors`) has no
-	 * break opportunity — so at 320px the table ran 3px past the viewport instead
+	 * break opportunity, so at 320px the table ran 3px past the viewport instead
 	 * of wrapping. Only 3px, and only on Linux, where Lexend renders a shade wider
 	 * than on Windows: the reason this passed locally while failing in CI. Fixed
 	 * layout takes the widths from the header row rather than from the content, so

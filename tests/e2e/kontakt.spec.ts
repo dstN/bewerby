@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 /**
  * The contact form. The relay is intercepted, so nothing here sends a real
- * mail - what is under test is what the form lets through to it.
+ * mail; what is under test is what the form lets through to it.
  */
 
 const RELAY = 'https://contact.yinside.de/phpmailer.php';

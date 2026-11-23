@@ -79,7 +79,7 @@ describe('assertPublicUrl', () => {
 	it('refuses embedded credentials, which can smuggle a host past a reader', async () => {
 		// "example.com" here is the *username*; the real host is the loopback
 		// address behind the @. Caught as credentials rather than as a private
-		// address, because that check runs first - either way it never resolves.
+		// address, because that check runs first; either way it never resolves.
 		expect(await rejection('https://example.com@127.0.0.1/')).toBe('credentials');
 		expect(await rejection('https://user:pw@example.com/')).toBe('credentials');
 	});

@@ -106,7 +106,7 @@
 		margin-top: 28px;
 	}
 
-	/* Navigation, so an anchor rather than a button - it just happens to look
+	/* Navigation, so an anchor rather than a button; it just happens to look
 	   like one. --color-accent-700 on white measures 8.6:1. */
 	.cta {
 		display: inline-flex;

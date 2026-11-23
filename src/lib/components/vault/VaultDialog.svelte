@@ -3,7 +3,7 @@
 
 	/**
 	 * The frame both vault dialogs share: native modal <dialog>, focus
-	 * returned on close, and the hand-built Tab wrap from ApplicationModal -
+	 * returned on close, and the hand-built Tab wrap from ApplicationModal;
 	 * Chromium's native containment lets Tab escape to the browser chrome
 	 * (see #18). Form styles live here too, so setup and unlock look the same.
 	 */

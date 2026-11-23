@@ -20,7 +20,7 @@
 
 	let { application, onclose }: { application: Application; onclose: () => void } = $props();
 
-	// Snapshotted once - the parent mounts a fresh instance per open, the same
+	// Snapshotted once: the parent mounts a fresh instance per open, the same
 	// guarantee ApplicationModal relies on.
 	const initial = untrack(() => application);
 
@@ -142,7 +142,7 @@
 			throw new Error('The application has no id, so there is no row to update.');
 		}
 		// Throws when no row matches, rather than resolving like a successful
-		// write - see MissingApplicationError.
+		// write; see MissingApplicationError.
 		await updateApplication(application.id, { coverLetter, cvRef, cvName });
 		// Only once the row points at the new file: deleting first would orphan
 		// a live reference if the write had failed.

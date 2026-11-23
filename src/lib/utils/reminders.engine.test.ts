@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { Application } from '#lib/db/index.js';
 
 /**
- * Covers the reminder *engine* - the scheduling, de-duplication and cleanup
+ * Covers the reminder *engine*: the scheduling, de-duplication and cleanup
  * around getReminderDueAt() (whose own date maths is covered in
  * reminders.test.ts). None of it is reachable without a live query, a clock,
  * and a notification sink, so all three are substituted here.
@@ -37,7 +37,7 @@ const NOW = Date.UTC(2026, 0, 15, 12, 0, 0);
 
 let shownNotifications: Array<{ title: string; options: NotificationOptions }>;
 
-/** A service-worker registration stand-in - the path production actually
+/** A service-worker registration stand-in, the path production actually
  *  takes (an in-page `new Notification()` is only the fallback). */
 function installServiceWorker({ active = true }: { active?: boolean } = {}) {
 	shownNotifications = [];
@@ -108,7 +108,7 @@ function notifiedKeys(): string[] {
 /**
  * checkAndSchedule() deliberately does not await showReminderNotification()
  * (a slow/hanging notification must not stall the rest of the scan), so the
- * localStorage marker it writes lands several microtasks later - past
+ * localStorage marker it writes lands several microtasks later, past
  * `navigator.serviceWorker.ready`, showNotification(), and the `.then()`.
  * Draining the microtask queue is what makes those observable.
  */
@@ -357,7 +357,7 @@ describe('scheduling the next reminder', () => {
 		startReminderEngine();
 
 		// 14 days is ~1.2e9 ms and fits, so push it well past 2^31-1 ms (~24.8
-		// days) - an overflowed delay would wrap negative and fire immediately.
+		// days); an overflowed delay would wrap negative and fire immediately.
 		pushApplications!([futureApp(1, 60 * DAY_MS)]);
 		await flush();
 

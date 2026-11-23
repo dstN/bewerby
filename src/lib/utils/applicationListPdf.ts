@@ -9,7 +9,7 @@ import {
 
 /**
  * Renders the proof-of-applications list as a printable A4 table, entirely on
- * the device. Same three columns as the CSV, from the same `toExportRows` -
+ * the device. Same three columns as the CSV, from the same `toExportRows`;
  * this is the version that gets handed in on paper, the CSV is the one that
  * gets opened in a spreadsheet.
  *
@@ -46,7 +46,7 @@ const COLUMNS = [
  * Cuts a cell down to the column width, ending in an ellipsis so a truncated
  * company name is visibly truncated rather than quietly wrong. Split out from
  * the rendering because it is the only arithmetic here worth testing without
- * a font engine - `measure` is the sole thing that knows about fonts.
+ * a font engine; `measure` is the sole thing that knows about fonts.
  */
 export function truncateToWidth(
 	text: string,
@@ -109,7 +109,7 @@ export async function renderApplicationListPdf(
 		y -= HEADER_GAP;
 	}
 
-	// Title block, first page only - a repeated heading on page three would
+	// Title block, first page only; a repeated heading on page three would
 	// read as a second document rather than a continuation.
 	draw(labels.heading, MARGIN, TITLE_SIZE, bold);
 	y -= TITLE_SIZE * 1.6;
@@ -147,7 +147,7 @@ export async function renderApplicationListPdf(
 		});
 	}
 
-	// Page numbers go on last, when the total is finally known - a proof that
+	// Page numbers go on last, when the total is finally known: a proof that
 	// gets handed in on paper should say whether a sheet is missing.
 	const pages = doc.getPages();
 	pages.forEach((sheet, index) => {

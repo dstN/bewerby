@@ -85,7 +85,7 @@ separate key file (`vault.bwk` in the plan) is needed.
   confirmed against real accounts (#49).
 - **Google Drive** (#54): the `drive.appdata` scope, a folder hidden even
   from the user. Google refuses to redeem or refresh a code from a web
-  client without its client secret, so those two calls - and revocation -
+  client without its client secret, so those two calls (and revocation)
   go through a broker, `/api/oauth/google` on bewerby.de. It adds the
   secret from the server's environment and returns the token fields. It
   stores nothing and logs nothing, checks the Origin, accepts only this

@@ -2,7 +2,7 @@
  * OAuth 2.0 authorization code flow with PKCE (RFC 7636), done entirely in
  * the browser: no client secret, no server in between (#53). The verifier
  * and the state wait in sessionStorage while the user is at the provider,
- * and are taken out - read and removed - when they come back to
+ * and are taken out (read and removed) when they come back to
  * /cloud/callback.
  */
 
@@ -48,7 +48,7 @@ export function rememberAuthorization(provider: Provider, verifier: string, uri:
 
 /**
  * The attempt the callback belongs to, removed so it cannot be replayed.
- * Null unless the returned state matches the one sent - a callback this tab
+ * Null unless the returned state matches the one sent: a callback this tab
  * did not start (CSRF) is ignored.
  */
 export function takeAuthorization(state: string | null): PendingAuthorization | null {

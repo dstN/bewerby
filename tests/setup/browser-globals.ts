@@ -13,12 +13,12 @@ import { beforeEach } from 'vitest';
  *
  * The theme store, the locale detection, and the reminder engine all read
  * both, so this installs deterministic, per-test-reset stand-ins in every
- * environment - which also lets a test that only needs storage stay in the
+ * environment, which also lets a test that only needs storage stay in the
  * fast plain-`node` environment instead of pulling in jsdom.
  *
  * A test that needs a specific media-query answer (e.g. "system prefers
  * dark") overrides `globalThis.matchMedia` itself, before importing the
- * module under test - the stores read it at construction time.
+ * module under test; the stores read it at construction time.
  */
 
 class MemoryStorage implements Storage {
@@ -49,7 +49,7 @@ class MemoryStorage implements Storage {
 	}
 }
 
-/** A MediaQueryList that never matches and never changes - the default. */
+/** A MediaQueryList that never matches and never changes (the default). */
 export function stubMediaQueryList(matches: boolean, media = ''): MediaQueryList {
 	return {
 		matches,

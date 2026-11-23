@@ -31,7 +31,7 @@
 	let navToggleExpanded = $derived(isMobileViewport ? mobileNavOpen : !sidebarCollapsed);
 
 	// collapsed (desktop icon-rail) and mobileNavOpen (mobile drawer) are
-	// deliberately never toggled together - the current viewport decides
+	// deliberately never toggled together; the current viewport decides
 	// which single concept this button controls, so a mobile drawer opened
 	// after switching from desktop never accidentally inherits a collapsed,
 	// icon-only sidebar.
@@ -86,7 +86,7 @@
 
 	// Every OPFS file that is still referenced by something. cleanupOrphanedPdfs
 	// deletes whatever is not in this set, so a ref that is missed here is data
-	// loss on the next boot - which is why the profile's global CV and the
+	// loss on the next boot, which is why the profile's global CV and the
 	// per-application CV have to be listed alongside the job ad, and why
 	// profileStore.init() runs before this does.
 	async function cleanupOrphanedPdfsOnStartup() {
@@ -102,7 +102,7 @@
 	// One-time app boot: none of this should ever re-run reactively. It
 	// previously lived in a bare $effect, which meant every language switch
 	// re-ran the entire pipeline below (including tearing down and
-	// restarting the reminder engine) - i18n.init() writes i18n.locale and
+	// restarting the reminder engine); i18n.init() writes i18n.locale and
 	// then reads it right back via document.documentElement.lang, and that
 	// read was enough to make the effect depend on locale.
 	onMount(() => {

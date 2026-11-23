@@ -9,7 +9,7 @@ import { deleteKeystore } from '#lib/vault/keystore.js';
  * (applications and backup keys), every attached PDF in
  * OPFS, all localStorage, every Cache Storage entry, and any notifications
  * still shown. Afterwards the origin is in the same state as a fresh
- * install - there is no partial/soft-delete state to reason about.
+ * install; there is no partial/soft-delete state to reason about.
  *
  * A connected sync target is disconnected first, which revokes its access
  * token. With `remote`, this vault's encrypted files there are deleted too
@@ -31,7 +31,7 @@ export async function eraseAllData({ remote = false }: { remote?: boolean } = {}
 			const root = await navigator.storage.getDirectory();
 			await root.removeEntry('application-pdfs', { recursive: true });
 		} catch (err) {
-			// Already gone, or never existed - not fatal for an erase operation.
+			// Already gone, or never existed: not fatal for an erase operation.
 			console.warn('Failed to remove OPFS PDF directory during erase:', err);
 		}
 	}

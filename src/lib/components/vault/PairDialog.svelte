@@ -18,7 +18,7 @@
 	/**
 	 * The existing device's side of adding a device (#55). Opened right after
 	 * the user re-entered the passphrase or recovery key, which is what yields
-	 * `raw` - the stored key itself cannot be exported.
+	 * `raw`; the stored key itself cannot be exported.
 	 */
 	let { header, raw, onclose }: { header: KeyHeader; raw: Uint8Array; onclose: () => void } =
 		$props();

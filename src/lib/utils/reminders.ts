@@ -44,10 +44,10 @@ export const INTERVAL_MS: Partial<Record<Application['reminderInterval'], number
 /**
  * When this application was sent, as far as anything records it: the date
  * the user entered, otherwise the first move into "sent". Undefined when
- * neither exists - the statistics time a response only from a real send.
+ * neither exists; the statistics time a response only from a real send.
  *
  * `history` is required on the type, but a row written past TypeScript (an
- * old import, a hand-edited IndexedDB entry) can be missing it - see
+ * old import, a hand-edited IndexedDB entry) can be missing it; see
  * analytics.ts for the same guard.
  */
 export function getSentAt(app: Pick<Application, 'history' | 'sentAt'>): number | undefined {
@@ -70,7 +70,7 @@ export function getAppliedAt(
 /**
  * When this application was rejected: the date the user entered, otherwise
  * the move into "Absage". Undefined for anything not rejected, and for a
- * rejection whose history does not end in one - before 2026-08-18 the edit
+ * rejection whose history does not end in one: before 2026-08-18 the edit
  * dialog set a status without logging it, and an older "rejected" entry
  * further back would date the wrong rejection. The edit dialog and the
  * export both read it from here, so they show the same date.
@@ -96,13 +96,13 @@ export function getArchivedAt(
 }
 
 /**
- * Whether an application actually went out - the rule both the statistics
+ * Whether an application actually went out: the rule both the statistics
  * funnel and the proof-of-applications export count by. Every status past
  * draft implies it except an archived card whose reason says it never went
  * out, and a rejection: before the archive (#60) a card dragged from draft
  * straight to "Absage" (the posting was gone, say) was never sent, and only
- * its history shows that. A rejection with no draft entry at all - logged after the fact
- * directly in the rejected column, or a legacy row without history - records
+ * its history shows that. A rejection with no draft entry at all (logged after the fact
+ * directly in the rejected column, or a legacy row without history) records
  * a real rejection and counts. So does one with an entered application date:
  * that is the user saying it went out, whatever the board saw.
  */
@@ -128,12 +128,12 @@ export function wasSent(
 
 /**
  * The single source of truth for "when is a follow-up reminder due for this
- * application" - used by both the board's in-app alert banner and the
+ * application", used by both the board's in-app alert banner and the
  * notification-firing engine below, so they can never drift out of sync with
  * each other the way two separately hand-copied interval mappings could.
  *
  * Reads the row's own `reminderAt` when it has one, and otherwise falls back
- * to counting the interval from when the application entered "sent" - never
+ * to counting the interval from when the application entered "sent", never
  * from `updatedAt`, so editing an unrelated field, changing the card color,
  * or dragging the card without changing its status can't push the follow-up
  * date back either way.
@@ -155,7 +155,7 @@ export function getReminderDueAt(app: Application): number | null {
 	const intervalMs = INTERVAL_MS[app.reminderInterval];
 	// Falls through for any unrecognized value (e.g. data written by an older
 	// build, or 'custom' on a row whose reminderAt went missing) instead of
-	// throwing or mis-scheduling - no reminder is safer than a wrong one.
+	// throwing or mis-scheduling; no reminder is safer than a wrong one.
 	if (!intervalMs) return null;
 
 	// Rows predating reminderAt keep the original behaviour: counted from when
@@ -184,7 +184,7 @@ function cleanupStaleNotifyKeys(validKeys: Set<string>): void {
  * Shows a reminder notification via the active service worker registration
  * (falling back to an in-page Notification if none is controlling this
  * page). Returns whether a notification was actually shown, so the caller
- * only marks it "notified" on success - never before, or a denied/unavailable
+ * only marks it "notified" on success, never before, or a denied/unavailable
  * permission would permanently suppress a reminder that was never seen.
  */
 async function showReminderNotification(app: Application): Promise<boolean> {
@@ -221,7 +221,7 @@ let scheduledTimeout: ReturnType<typeof setTimeout> | null = null;
 
 /**
  * Fires any reminders that are due right now, then schedules a single precise
- * timeout for whichever reminder is due next - no polling. Re-invoked
+ * timeout for whichever reminder is due next, no polling. Re-invoked
  * automatically whenever the applications table changes (see
  * startReminderEngine), so a new/edited/deleted application always
  * reschedules against current data instead of a stale snapshot.
@@ -293,7 +293,7 @@ export function startReminderEngine(): () => void {
 
 /**
  * Best-effort registration for a one-shot background sync tag. This does
- * NOT make reminders fire while bewerby is fully closed - Background Sync
+ * NOT make reminders fire while bewerby is fully closed: Background Sync
  * only runs once connectivity returns and has no listener registered for it
  * in the service worker, since there is nothing meaningful to reconcile for
  * a 100%-local app. Kept only as a documented no-op rather than removed

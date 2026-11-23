@@ -1,7 +1,7 @@
 # bewerby
 
 A privacy-first job application tracker. Kanban board, job-ad autofill,
-analytics, backups, proof-of-applications export and follow-up reminders —
+analytics, backups, proof-of-applications export and follow-up reminders,
 all running in your browser, with your application data never leaving it.
 
 ## Why
@@ -11,7 +11,7 @@ all running in your browser, with your application data never leaving it.
   There is no account, no backend database, and no analytics/telemetry.
   The single server endpoint that exists, the optional job-ad link import,
   receives one public URL and stores nothing beyond an in-memory, one-hour
-  rate-limit counter per IP - see [ARCHITECTURE.md](ARCHITECTURE.md) for
+  rate-limit counter per IP. See [ARCHITECTURE.md](ARCHITECTURE.md) for
   exactly where data lives, what that endpoint does, and why.
 - **Offline-first PWA.** Installable, and every route keeps working without a
   network connection once it's been loaded once.
@@ -21,15 +21,15 @@ all running in your browser, with your application data never leaving it.
 
 - Kanban board (draft → sent → interview → accepted/rejected) with both
   drag-and-drop and a keyboard/touch-friendly per-card status control.
-  Cards collapse to company, priority, date and their mail/delete buttons -
-  one at a time via the dot in front of the company, or all at once from the
-  filter bar - and stay that way across reloads.
-- An archive for applications that ended without a result - no response,
-  ended by you, never sent: a column of its own, hidden unless switched on,
+  Cards collapse to company, priority, date and their mail/delete buttons
+  (one at a time via the dot in front of the company, or all at once from the
+  filter bar) and stay that way across reloads.
+- An archive for applications that ended without a result (no response,
+  ended by you, never sent): a column of its own, hidden unless switched on,
   that asks for the reason on the way in.
 - Three ways to fill in a posting, all feeding the same review panel so
   nothing is written without being shown first: upload the **PDF**, **paste
-  the ad's text**, or **give it a link** - the last one fetched server-side
+  the ad's text**, or **give it a link**; the last one is fetched server-side
   through `/api/fetch-ad`, which reads schema.org `JobPosting` data when the
   page has it. That endpoint receives one public URL and nothing else; see
   [ARCHITECTURE.md](ARCHITECTURE.md) for what it does and does not give away.
@@ -37,12 +37,12 @@ all running in your browser, with your application data never leaving it.
   real answers only (interview, offer, rejection), and how many of the
   applications sent were archived without a response.
 - Proof of applications for the Agentur für Arbeit: date, company and status
-  of every application on the board that was actually sent - no drafts - as
+  of every application on the board that was actually sent (no drafts), as
   a print-ready **PDF** or a **CSV** a German Excel opens correctly. A
   rejection is listed with its date, an archived application as "no
   response" or as "withdrawn" with the day it ended.
 - Application and rejection dates follow the card's moves into "Versendet"
-  and "Absage" unless you enter the real date in the edit dialog - then the
+  and "Absage" unless you enter the real date in the edit dialog. Then the
   entered date counts everywhere: card, export, statistics, reminders.
 - Encrypted backup: one `.bwv` file, encrypted in the browser (AES-256-GCM,
   passphrase via Argon2id, plus a recovery key shown once), safe to keep in
@@ -63,7 +63,7 @@ all running in your browser, with your application data never leaving it.
   the encrypted copy at the sync target along with everything else.
 - Backup & restore: JSON export/import (attached PDFs included), plus an
   optional local-directory dump via the File System Access API.
-- Follow-up reminders via the Notifications API - a fixed interval, or a
+- Follow-up reminders via the Notifications API: a fixed interval, or a
   date you pick yourself. Changing the interval restarts the countdown from
   that moment, not from the day you applied.
 - One-button right to erasure: wipes IndexedDB, OPFS, localStorage, caches,
@@ -73,15 +73,15 @@ all running in your browser, with your application data never leaving it.
 
 - SvelteKit 3 / Svelte 5 (runes). Every _page_ is client-rendered and
   prerendered (`ssr = false`, `prerender = true`); the sole exception is the
-  `/api/fetch-ad` endpoint - see [ARCHITECTURE.md](ARCHITECTURE.md)
+  `/api/fetch-ad` endpoint (see [ARCHITECTURE.md](ARCHITECTURE.md))
 - [Dexie](https://dexie.org/) 4 over IndexedDB for application data; OPFS for
   attached PDFs
 - [pdf.js](https://mozilla.github.io/pdf.js/) for client-side PDF text
   extraction, [pdf-lib](https://pdf-lib.js.org/) (dynamically imported) for
   generating cover letters and the proof-of-applications list
-- Hand-written CSS with design tokens (`src/app.css`) - no CSS framework
+- Hand-written CSS with design tokens (`src/app.css`), no CSS framework
 - `@sveltejs/adapter-node`, deployed via a small Phusion Passenger-compatible
-  entry point (`app.cjs`) - see [DEPLOYMENT.md](DEPLOYMENT.md)
+  entry point (`app.cjs`); see [DEPLOYMENT.md](DEPLOYMENT.md)
 - [Vitest](https://vitest.dev/) for unit tests, [Playwright](https://playwright.dev/)
   for end-to-end, mobile-layout, and accessibility tests (the latter via
   [axe-core](https://github.com/dequelabs/axe-core), held to WCAG 2.2 AAA)
@@ -93,7 +93,7 @@ npm install
 npm run dev
 ```
 
-Requires Node ≥26 (see `package.json`'s `engines` field) - the same version
+Requires Node ≥26 (see `package.json`'s `engines` field), the same version
 the production server runs. See [DEPLOYMENT.md](DEPLOYMENT.md) for the
 server setup.
 
@@ -116,7 +116,7 @@ usual AA baseline). axe has only three AAA rules, so every scan also runs
 `tests/e2e/fixtures/aaa.ts`, which checks the AAA criteria that can still be
 read off the page: 44px targets that do not overlap, focus appearance and visibility, keyboard
 reach, text presentation, aria-current. `tests/e2e/mobile-layout.spec.ts` asserts nothing overflows the
-viewport at 320px/390px - see [ARCHITECTURE.md](ARCHITECTURE.md) if you're
+viewport at 320px/390px. See [ARCHITECTURE.md](ARCHITECTURE.md) if you're
 adding to either.
 
 ## Project structure
@@ -140,10 +140,10 @@ tests/e2e/            Playwright specs
 
 ## Documentation
 
-- [DEPLOYMENT.md](DEPLOYMENT.md) - how to deploy to Netcup/Plesk (Phusion
+- [DEPLOYMENT.md](DEPLOYMENT.md): how to deploy to Netcup/Plesk (Phusion
   Passenger)
-- [ARCHITECTURE.md](ARCHITECTURE.md) - where data lives, why it never leaves
+- [ARCHITECTURE.md](ARCHITECTURE.md): where data lives, why it never leaves
   the device, how offline support and reminders actually work, and their
   known limits
-- [ROADMAP.md](ROADMAP.md) - the v1 production-readiness roadmap, kept
+- [ROADMAP.md](ROADMAP.md): the v1 production-readiness roadmap, kept
   up to date issue by issue

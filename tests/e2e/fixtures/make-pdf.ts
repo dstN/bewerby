@@ -1,6 +1,6 @@
 /**
  * Builds a minimal, valid single-page PDF with a real text layer, entirely
- * in memory - no binary fixture needs to be checked into the repo (matching
+ * in memory; no binary fixture needs to be checked into the repo (matching
  * the approach already used for ad hoc verification in earlier issues).
  * pdf.js can open and extract text from this via getTextContent().
  */

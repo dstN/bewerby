@@ -140,8 +140,8 @@ export function moveTo(map: RowMap, status: Application['status'], at: number): 
 }
 
 /**
- * Turns the text into `next` with one contiguous edit - the stretch between
- * the common prefix and the common suffix - instead of replacing it whole,
+ * Turns the text into `next` with one contiguous edit (the stretch between
+ * the common prefix and the common suffix) instead of replacing it whole,
  * so an edit made elsewhere in the same text on another device survives.
  */
 export function setText(text: Y.Text, next: string): void {
@@ -194,7 +194,7 @@ function isHistoryEntry(value: unknown): value is StatusHistory {
 /**
  * Reads a row back out, type-checking every field: the document arrives from
  * other devices, and nothing that is not a valid Application reaches the
- * table. History comes back in time order - after a merge, two devices'
+ * table. History comes back in time order: after a merge, two devices'
  * moves sit in the array in client order, not in the order they happened.
  */
 export function readRow(uid: string, map: RowMap): DocRow {

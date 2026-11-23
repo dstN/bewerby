@@ -23,7 +23,7 @@ export interface ExportLabels {
 	archived: { noResponse: string; withdrawn: string };
 }
 
-/** One rendered line: date, company, status - already localized. */
+/** One rendered line: date, company, status, already localized. */
 export type ExportCells = [string, string, string];
 
 /**
@@ -58,7 +58,7 @@ export function toExportRows(
 
 /**
  * The status column: where a Nachweis wants the rejection's date, and what
- * became of an archived application - no answer (there is no date to give)
+ * became of an archived application: no answer (there is no date to give)
  * or withdrawn on the day it was ended.
  */
 function outcome(app: ExportRow, labels: ExportLabels, formatDate: Intl.DateTimeFormat): string {
@@ -77,7 +77,7 @@ function outcome(app: ExportRow, labels: ExportLabels, formatDate: Intl.DateTime
  * ANSI codepage and every umlaut arrives as mojibake. Built from its code
  * point rather than written as an escape: Prettier rewrites the escape in a
  * template literal into the raw character, which ESLint's
- * no-irregular-whitespace then rejects - the two tools fight over it forever.
+ * no-irregular-whitespace then rejects; the two tools fight over it forever.
  */
 const BOM = String.fromCharCode(0xfeff);
 
@@ -85,7 +85,7 @@ const BOM = String.fromCharCode(0xfeff);
  * Characters that make Excel/LibreOffice treat a cell as a formula rather
  * than text. A company literally named "=HYPERLINK(...)" is far-fetched, but
  * this file is opened by somebody else on a machine we know nothing about,
- * and the row content came from a parsed job ad - so it is untrusted input
+ * and the row content came from a parsed job ad, so it is untrusted input
  * crossing into an interpreter either way.
  */
 const FORMULA_TRIGGERS = ['=', '+', '-', '@', '\t', '\r'];
@@ -99,7 +99,7 @@ function escapeCell(value: string): string {
 
 /**
  * Builds the proof-of-applications list the Agentur für Arbeit asks for:
- * when it was sent, to whom, and where it stands now - nothing else.
+ * when it was sent, to whom, and where it stands now, nothing else.
  *
  * Semicolon-separated with a UTF-8 BOM and CRLF line endings, which is what
  * a German Excel opens correctly on a double-click; a comma-separated file

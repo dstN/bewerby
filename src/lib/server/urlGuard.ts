@@ -120,7 +120,7 @@ export async function assertPublicUrl(input: string): Promise<{ url: URL; addres
  * A `lookup` for node:https that applies the same rule at connect time.
  *
  * assertPublicUrl resolves the host once to judge it, but a connection made
- * afterwards resolves it again - and a DNS server that answers with a public
+ * afterwards resolves it again, and a DNS server that answers with a public
  * address the first time and 127.0.0.1 the second (rebinding) walks straight
  * past a check that only ran up front. Handing this to the request instead
  * makes the address that gets checked the address that gets connected to.

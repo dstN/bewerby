@@ -440,8 +440,8 @@ function probe(mode: Mode): ProbeResult {
 }
 
 /**
- * Reduced motion shortens every transition to 0.01ms - including the implicit
- * `all` that also covers the focus outline and a dialog's opening transform -
+ * Reduced motion shortens every transition to 0.01ms (including the implicit
+ * `all` that also covers the focus outline and a dialog's opening transform),
  * but a transition still only completes on the next frame. Read before that,
  * the outline is its unfocused self and the dialog still mid-scale.
  */

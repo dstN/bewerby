@@ -6,8 +6,8 @@ import { defineConfig } from 'vitest/config';
 
 const pkg = JSON.parse(readFileSync('./package.json', 'utf-8'));
 
-// OAuth client ids of the sync providers (#53, #54). Public by design -
-// PKCE needs no secret - and set as GitHub environment variables for the
+// OAuth client ids of the sync providers (#53, #54). Public by design
+// (PKCE needs no secret) and set as GitHub environment variables for the
 // build. A provider without one is not offered, and its origins stay out of
 // the CSP below: no key, no new place the page may talk to.
 const syncClients = {
@@ -42,7 +42,7 @@ const syncOrigins: `https://${string}.${string}`[] = [
 // prerendered *URL paths* (/board) rather than their files (board.html), so
 // `.html` never makes it into the table and every prerendered page goes out
 // without a Content-Type header. Behind Apache's `nosniff` (static/.htaccess)
-// browsers then render the page as text/plain - raw source instead of the
+// browsers then render the page as text/plain: raw source instead of the
 // app. Adding the one missing entry fixes it; SvelteKit's own table still
 // wins, so this becomes a no-op once that is fixed upstream and can go.
 // Covered by tests/e2e/prerendered.spec.ts.
@@ -59,7 +59,7 @@ function withHtmlMimeType(inner: Adapter): Adapter {
 
 export default defineConfig({
 	// Single source of truth for the version shown in the sidebar (see
-	// Sidebar.svelte) - reading package.json directly there isn't possible in
+	// Sidebar.svelte); reading package.json directly there isn't possible in
 	// client code, so it's injected as a build-time constant instead.
 	define: {
 		__APP_VERSION__: JSON.stringify(pkg.version),
@@ -80,7 +80,7 @@ export default defineConfig({
 			),
 			prerender: {
 				// The skip-link in app.html targets #main-content, which is part of
-				// +layout.svelte - with ssr disabled (see +layout.ts) that element only
+				// +layout.svelte; with ssr disabled (see +layout.ts) that element only
 				// exists after client-side hydration, not in the prerendered HTML. That's
 				// expected for this fully client-rendered app, not a broken link.
 				handleMissingId: 'warn'
@@ -88,7 +88,7 @@ export default defineConfig({
 			csp: {
 				// Every route is prerendered (see +layout.ts), so SvelteKit delivers
 				// this via a <meta http-equiv> tag in the static HTML rather than a
-				// real response header - which means frame-ancestors/report-uri/
+				// real response header, which means frame-ancestors/report-uri/
 				// sandbox are silently ignored here (SvelteKit's own documented
 				// limitation). Those three are set as real HTTP headers instead,
 				// in .htaccess, so they actually take effect under Passenger/Apache.
@@ -104,8 +104,8 @@ export default defineConfig({
 					'img-src': ['self'],
 					'font-src': ['self'],
 					// The contact form (see /kontakt) posts to a mail relay on separate
-					// infrastructure the same person operates - not a third-party
-					// service - documented in ARCHITECTURE.md and the Datenschutzerklärung.
+					// infrastructure the same person operates (not a third-party
+					// service), documented in ARCHITECTURE.md and the Datenschutzerklärung.
 					'connect-src': ['self', 'https://contact.yinside.de', ...syncOrigins],
 					'worker-src': ['self'],
 					'manifest-src': ['self'],

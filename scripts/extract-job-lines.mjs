@@ -2,7 +2,7 @@
  * Regenerates the job-posting test fixtures from a local folder of PDFs.
  *
  * The parser's strongest signal is typography, so a fixture has to carry
- * geometry - plain text is not enough any more. This writes the same line model
+ * geometry; plain text is not enough any more. This writes the same line model
  * `extractJobDocument()` produces (page, y, font size, weight, text) as JSON:
  * reviewable in a diff, and still no binary blobs in the repo.
  *
@@ -11,7 +11,7 @@
  * but the named contact people are not ours to check in.
  *
  * Usage:  node scripts/extract-job-lines.mjs <pdf-dir> [out-dir]
- * Not part of CI - fixtures are committed, this only refreshes them.
+ * Not part of CI: fixtures are committed, this only refreshes them.
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -44,7 +44,7 @@ function pseudonymize(text) {
 	return out;
 }
 
-/** Mirrors extractJobDocument() in src/lib/utils/pdf.ts - keep the two in sync. */
+/** Mirrors extractJobDocument() in src/lib/utils/pdf.ts; keep the two in sync. */
 async function extractLines(data) {
 	const pdf = await pdfjs.getDocument({ data }).promise;
 	const lines = [];

@@ -4,7 +4,7 @@ import { makeSeedApplication, seedApplications } from './fixtures/seed.js';
 /**
  * The board's search / filter / sort controls. All of it lives in one
  * `$derived` chain over the live query, so a change to any single control can
- * quietly break the combination with another - these drive the real controls
+ * quietly break the combination with another; these drive the real controls
  * rather than the derived function.
  */
 
@@ -47,7 +47,7 @@ function board() {
 
 /**
  * Sorting reorders the filtered list, but the board then *groups* it by
- * status into five fixed columns - so a sort is only observable between cards
+ * status into five fixed columns, so a sort is only observable between cards
  * that share a column. These four all sit in "sent" for that reason.
  */
 function oneColumnBoard() {

@@ -38,7 +38,7 @@
 	] as const;
 
 	// Every nav target is now a real sub-path, so the exact-match special case
-	// for '/' is gone - that entry became the landing page, which is reached
+	// for '/' is gone; that entry became the landing page, which is reached
 	// through the logo rather than the navigation.
 	function isActive(href: string): boolean {
 		return page.url.pathname.startsWith(href);
@@ -46,7 +46,7 @@
 
 	// The 72px icon-rail ("collapsed") is a desktop-only concept. When the
 	// mobile drawer is open it must always show full labels regardless of
-	// that desktop toggle's current value - collapsed and mobileOpen are
+	// that desktop toggle's current value: collapsed and mobileOpen are
 	// flipped by the same button, so without this a mobile drawer opened
 	// right after a desktop collapse would render icon-only.
 	let showLabels = $derived(!collapsed || mobileOpen);
@@ -63,7 +63,7 @@
 	<div class="sidebar-header">
 		<a href={resolve('/')} class="logo-link" aria-label={t('app.name')}>
 			<div class="logo-mark" aria-hidden="true">
-				<!-- Simplified vector reinterpretation of the app icon (see issue #22) -
+				<!-- Simplified vector reinterpretation of the app icon (see issue #22);
 				     the real icon is a multi-gradient raster illustration unsuited for a
 				     hand-authored vector trace, so this captures the same folder+ring
 				     motif rather than reproducing it pixel-for-pixel. -->
@@ -392,7 +392,7 @@
 		font-weight: 400;
 	}
 
-	/* Collapsed (72px icon rail) is a desktop-only concept - on mobile the
+	/* Collapsed (72px icon rail) is a desktop-only concept; on mobile the
 	   drawer is always full-width with labels, either open or off-canvas. */
 	@media (min-width: 769px) {
 		.collapsed .sidebar-header {

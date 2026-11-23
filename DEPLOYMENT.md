@@ -1,4 +1,4 @@
-# Deployment Runbook — Netcup / Plesk (Phusion Passenger)
+# Deployment Runbook: Netcup / Plesk (Phusion Passenger)
 
 This describes how to get bewerby running on Netcup webhosting via Plesk's
 Node.js (Phusion Passenger) support. It was originally written from Phusion
@@ -10,7 +10,7 @@ found, not just what the docs predicted.
 ## Architecture: two roots, not one
 
 Passenger needs two _separate_ directories, and getting this wrong is a real
-security issue, not just a style preference:
+security issue:
 
 | Concept                                   | Points at        | Contains                                                                                                                                       |
 | ----------------------------------------- | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -18,7 +18,7 @@ security issue, not just a style preference:
 | **Document Root**                         | `build/client/`  | only the fingerprinted static assets and `.htaccess`; the prerendered pages sit in `build/prerendered/` and Node serves them through Passenger |
 
 Apache serves any file that physically exists under Document Root directly,
-**bypassing Passenger/Node entirely** — this is documented, standard
+**bypassing Passenger/Node entirely**. This is documented, standard
 Passenger behavior ("static assets are accelerated", see
 [Passenger's Node.js troubleshooting guide](https://www.phusionpassenger.com/library/admin/apache/troubleshooting/nodejs/)
 and the canonical deploy layout in
@@ -28,17 +28,17 @@ subdirectory while the application root stays one level up).
 
 If Document Root were set to the project root instead, requests like
 `GET /package.json`, `GET /.git/config`, or `GET /src/lib/db/index.ts` would
-be served as plain static files — publishing source code and internals to
+be served as plain static files, publishing source code and internals to
 every visitor. Plesk's Node.js panel exposes "Application Root" and
 "Document Root" as two distinct fields for exactly this reason; as of this
 writing Plesk does not warn if both are left identical (there's an
 [open feature request for that warning](https://talk.plesk.com/threads/add-warning-when-document-root-equals-application-root-in-node-js-apps.391992/)),
-so this is an easy, real misconfiguration to make, not a hypothetical one.
+so this misconfiguration is easy to make in practice.
 
 ## Why the startup file is `app.cjs`, not `app.js`
 
 Passenger's Node.js loader (`node-loader.js`) loads the startup file via
-`require()` internally — confirmed directly from Passenger's source. Since
+`require()` internally (confirmed directly from Passenger's source). Since
 this project's `package.json` sets `"type": "module"`, a plain `app.js` would
 be treated as an ES module, and `require()` cannot load an ES module (Node
 throws `ERR_REQUIRE_ESM`). This is not version-gated and has never been
@@ -54,12 +54,12 @@ CommonJS file. Do not rename it back to `app.js` or change the extension.
 
 The build output is fully self-contained: `build/index.js` and everything it
 imports reference only Node's own built-in modules (`node:http`, `node:fs`,
-`node:crypto`, …) and the app's own bundled chunk files — verified by
+`node:crypto`, …) and the app's own bundled chunk files. This was verified by
 grepping the built output for bare package imports and finding none. **No
 `node_modules` directory is needed on the server at all.** Upload only:
 
 - `app.cjs`
-- `build/` (the entire directory — `client/`, `server/`, `prerendered/`,
+- `build/` (the entire directory: `client/`, `server/`, `prerendered/`,
   `index.js`, `handler.js`, `adapter-node.js`, and their `.map` files)
 - `.htaccess` (Application Root config)
 - `package.json` (Passenger reads this for app metadata)
@@ -68,7 +68,7 @@ Do **not** upload `node_modules/`, `src/`, `.git/`, `static/` (already
 merged into `build/client/` by the build), or any of the dev-only config
 files (`vite.config.ts`, `eslint.config.js`, `tsconfig.json`, …). Keeping
 these off the server entirely is a second, independent layer of protection
-on top of the Document Root fix above — belt and suspenders, not a
+on top of the Document Root fix above: belt and suspenders, not a
 replacement for it.
 
 ## First-time setup (Plesk panel)
@@ -76,10 +76,10 @@ replacement for it.
 1. Under the domain's **Node.js** settings, set:
    - **Application Root**: the directory you'll upload the project to
      (e.g. `/bewerby`)
-   - **Document Root**: `/bewerby/build/client` — a subdirectory of
+   - **Document Root**: `/bewerby/build/client`, a subdirectory of
      Application Root, never the same path
    - **Application Startup File**: `app.cjs`
-   - **Node.js version**: 26 - what production runs, and the same version
+   - **Node.js version**: 26, which is what production runs, and the same version
      as local dev and CI (`package.json`'s `engines` field, `>=26.0.0`).
      Strictly, the server only needs SvelteKit 3's minimum of 22.17: it never
      runs npm at all, only the already-bundled `build/handler.js`, which uses
@@ -88,7 +88,7 @@ replacement for it.
      "Build & deploy" below); pdfjs-dist's own install-time floor is lower
      still (`>=22.13`).
 2. Confirm `mod_headers`, `mod_rewrite`, `mod_expires` and `mod_mime` are
-   enabled for the vhost — `build/client/.htaccess` (generated from
+   enabled for the vhost. `build/client/.htaccess` (generated from
    `static/.htaccess`) depends on all four for security headers, the
    pre-compressed asset rewrite rules, and cache-control.
 3. **Do not add `PassengerAppType`/`PassengerStartupFile`/`PassengerNodejs`
@@ -98,7 +98,7 @@ replacement for it.
    `.htaccess` parsing entirely and 500s **every** request under the vhost,
    including static files. The panel's Application Root/Document
    Root/Application Startup File/Node.js version fields above are the only
-   place to configure this on this host — see "Known limitations" below.
+   place to configure this on this host; see "Known limitations" below.
 
 ## Build & deploy
 
@@ -144,7 +144,7 @@ are reachable), verifies the Application Root itself isn't web-readable
 (the exact misconfiguration warned about above), and rolls back
 automatically if the smoke test fails.
 
-**Secrets** (GitHub → Settings → Environments → `production` - environment
+**Secrets** (GitHub → Settings → Environments → `production`; these are environment
 secrets, not repository secrets, so a pushed branch can never read them
 without passing the environment's protection rules):
 
@@ -153,19 +153,19 @@ without passing the environment's protection rules):
 | `DEPLOY_SSH_HOST`     | `bewerby.de`                                                                                                                                                                                                           |
 | `DEPLOY_SSH_USER`     | The Plesk system user for this subscription                                                                                                                                                                            |
 | `DEPLOY_SSH_PASSWORD` | That user's password (Netcup exposes no key auth in the panel)                                                                                                                                                         |
-| `DEPLOY_PATH`         | `/bewerby.de` - the Application Root. Netcup's SSH is chrooted with the subscription root as `/`, so this is exactly what `pwd` shows after login, not a `/var/www/vhosts/...` path                                    |
-| `DEPLOY_DOMAIN`       | `bewerby.de` - host only, for the post-deploy smoke test                                                                                                                                                               |
+| `DEPLOY_PATH`         | `/bewerby.de`, the Application Root. Netcup's SSH is chrooted with the subscription root as `/`, so this is exactly what `pwd` shows after login, not a `/var/www/vhosts/...` path                                     |
+| `DEPLOY_DOMAIN`       | `bewerby.de` (host only), for the post-deploy smoke test                                                                                                                                                               |
 | `DEPLOY_SSH_HOSTKEY`  | _Optional but recommended._ Output of `ssh-keyscan -t ed25519 bewerby.de`. Without it the deploy trusts whatever key it fetches at connect time, and with password auth a MITM would collect the password in cleartext |
 
 **Verified live**: the first real run against bewerby.de surfaced a genuine
-bug in this runbook, not in the workflow — see "Known limitations" below.
+bug in this runbook, not in the workflow; see "Known limitations" below.
 Once `.htaccess` was corrected, the pipeline itself (build download, SSH
 upload, atomic activation, restart, smoke test) worked as designed. Keep
 watching new deploys for assumptions that don't hold; fix the workflow
 rather than trusting a green run blindly.
 
-**Sync providers** (#53). OAuth client ids are public - the PKCE flow
-needs no client secret - so they are **repository variables** (Settings →
+**Sync providers** (#53). OAuth client ids are public (the PKCE flow
+needs no client secret), so they are **repository variables** (Settings →
 Secrets and variables → Actions → Variables), not secrets. `ci.yml` passes
 them to the build job-wide, and `vite.config.ts` bakes them in. A missing
 variable builds without that provider: no button, and none of its origins
@@ -186,8 +186,8 @@ nothing else is affected. SvelteKit 3 passes on only the server variables
 declared in `src/env.ts`; a new one has to be added there first.
 
 **Live sync between devices** (#55) needs nothing to set up. Signaling
-messages are files under `tmp/signal/` in the Application Root - outside
-the Document Root, so never reachable from the web - created on first use
+messages are files under `tmp/signal/` in the Application Root (outside
+the Document Root, so never reachable from the web), created on first use
 and gone after two minutes; `SIGNAL_DIR` in the Node app's environment moves
 them elsewhere. The directory does not need to survive a deploy. For
 devices on different networks, set the repository variable
@@ -201,7 +201,7 @@ Redirect URIs to register with each provider:
 ## Rollback
 
 The automated deploy above rolls back on a failed smoke test by itself
-(swapping back to `build.prev`) - the steps below are the manual fallback,
+(swapping back to `build.prev`). The steps below are the manual fallback,
 e.g. if a bad release passed the smoke test but broke something the smoke
 test doesn't check.
 
@@ -213,7 +213,7 @@ before overwriting them on the server. To roll back:
 2. Restart the Passenger application the same way as in step 3 above.
 
 Because `build/client/**` under `_app/immutable/` is content-hashed and
-cached for a year (`Cache-Control: public, max-age=31536000, immutable` -
+cached for a year (`Cache-Control: public, max-age=31536000, immutable`;
 see `static/.htaccess`), a rollback that reintroduces old filenames is safe:
 nothing serves a mismatched hash, since the prerendered HTML for the rolled-
 back version references exactly the immutable filenames that exist in the
@@ -229,11 +229,11 @@ Apache docs, written before any live Plesk instance was available) that
 It is not, on this host: Apache's error log showed
 `[core:alert] .../.htaccess: PassengerAppType not allowed here`, which
 means Apache failed to parse `.htaccess` at all and returned 500 for every
-request under the vhost — including static files like `/favicon.ico`, not
+request under the vhost, including static files like `/favicon.ico`, not
 just app routes. Plesk's Node.js panel (Application Root, Document Root,
 Application Startup File, Node.js version) already configures the
 equivalent Passenger settings at the vhost level; `.htaccess` must not
-duplicate them. Fixed by removing both directives from `.htaccess` — see
+duplicate them. Fixed by removing both directives from `.htaccess`; see
 the comment left in that file for the full explanation.
 
 Still unverified against the live host:

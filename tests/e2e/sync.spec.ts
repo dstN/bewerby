@@ -4,7 +4,7 @@ import { PASSPHRASE, setUpEncryption } from './fixtures/vault.js';
 /**
  * Folder sync between two devices (#53). A native folder picker cannot be
  * driven by Playwright, so the picker returns a folder in the origin's
- * private file system instead - same FileSystemDirectoryHandle API - and the
+ * private file system instead (same FileSystemDirectoryHandle API), and the
  * test itself plays the sync client, copying the folder between the two
  * browser contexts.
  */
@@ -181,7 +181,7 @@ test.describe('Sync between devices', () => {
 			phone.locator('.card-desc', { hasText: /Zuletzt synchronisiert um/ })
 		).toBeVisible();
 
-		// The laptop changes the key - the current passphrase first - and adds
+		// The laptop changes the key (the current passphrase first) and adds
 		// an application under the new one.
 		await laptop.getByRole('button', { name: 'Passwort ändern und Geräte ausschließen' }).click();
 		const confirm = laptop.getByRole('dialog', {
@@ -243,7 +243,7 @@ test.describe('Sync between devices', () => {
 		await expect(phone.locator('.status-msg.success-msg')).toHaveText(
 			'Die Dateien am Speicherort sind gelöscht, die Verbindung ist getrennt.'
 		);
-		// Nothing left but the marker - three bytes, no content - that keeps
+		// Nothing left but the marker (three bytes, no content) that keeps
 		// other devices from uploading it all again.
 		const left = await readFolder(phone);
 		expect(Object.keys(left)).toHaveLength(1);

@@ -77,7 +77,7 @@
 	--color-accent-800: #1e40af;
 	--color-accent-900: #1e3a8a;
 
-	/* Semantic colors - defaults tuned for dark surfaces; :root below darkens
+	/* Semantic colors: defaults tuned for dark surfaces; :root below darkens
 	   success/warning/danger for light surfaces, :root.dark restates them. */
 	--color-success: #16a34a;
 	--color-warning: #d97706;
@@ -164,7 +164,7 @@
 	--status-danger-bg: rgba(220, 38, 38, 0.03);
 	--status-danger-border: rgba(220, 38, 38, 0.25);
 
-	/* Shadows — tinted to surface, never pure black */
+	/* Shadows: tinted to surface, never pure black */
 	--shadow-sm: 0 1px 2px rgb(15 23 42 / 0.04);
 	--shadow-md: 0 2px 8px rgb(15 23 42 / 0.06), 0 1px 2px rgb(15 23 42 / 0.04);
 	--shadow-lg: 0 4px 16px rgb(15 23 42 / 0.08), 0 2px 4px rgb(15 23 42 / 0.04);
@@ -267,7 +267,7 @@ body {
 }
 
 /* Visually-hidden but screen-reader-accessible content. Hand-written to
-   replace Tailwind's .sr-only utility (see issue #21 - Tailwind was removed
+   replace Tailwind's .sr-only utility (see issue #21; Tailwind was removed
    entirely since the app only ever used this one utility class plus the
    skip-link's focus:* variants below). */
 .sr-only {

@@ -7,8 +7,8 @@ import type { ParsedJobInfo } from './jobParse.js';
  *
  * 1. **schema.org `JobPosting` in JSON-LD.** Greenhouse, Personio, StepStone,
  *    Indeed and the Bundesagentur all emit it, because Google for Jobs
- *    requires it. When it is there it is the employer's own structured data -
- *    not a guess - so those fields come back separately and the caller marks
+ *    requires it. When it is there it is the employer's own structured data,
+ *    not a guess, so those fields come back separately and the caller marks
  *    them `high`.
  * 2. **The visible text**, for everything JSON-LD does not carry (contact
  *    person, phone, e-mail) and for pages that have no JSON-LD at all. This
@@ -90,7 +90,7 @@ export function htmlToText(html: string): string {
 				.replace(/<[^>]*>/g, ' ')
 		)
 			.split('\n')
-			// Collapse runs of spaces/tabs inside a line, but keep the line breaks -
+			// Collapse runs of spaces/tabs inside a line, but keep the line breaks:
 			// the parser's structural signals are entirely line-based. Stripping an
 			// inline tag leaves a space behind, so "<b>Svelte</b>." would otherwise
 			// come out as "Svelte ." and no longer match anything.
@@ -158,7 +158,7 @@ function readLocation(posting: Record<string, JsonValue>): string {
 
 /**
  * `identifier` is either a bare string or a PropertyValue, and for that shape
- * the readable part is `value` - `name` holds the *label* ("req", "Job ID"),
+ * the readable part is `value`; `name` holds the *label* ("req", "Job ID"),
  * which the generic asText() would otherwise pick up as the reference number.
  */
 function readIdentifier(posting: Record<string, JsonValue>): string {
@@ -192,7 +192,7 @@ function readSalary(posting: Record<string, JsonValue>): string {
 export interface ExtractedJobPage {
 	/** The ad as plain text, for the heuristic parser. */
 	text: string;
-	/** Fields the page stated about itself - never guessed. */
+	/** Fields the page stated about itself, never guessed. */
 	fields: Partial<ParsedJobInfo>;
 }
 

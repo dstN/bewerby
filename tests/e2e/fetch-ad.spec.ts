@@ -3,7 +3,7 @@ import { test, expect, type APIRequestContext } from '@playwright/test';
 /**
  * The one non-prerendered route in the app. These run against the real
  * adapter-node build (see playwright.config.ts), so they exercise the guard
- * as it will actually be deployed - not a unit-tested copy of it.
+ * as it will actually be deployed, not a unit-tested copy of it.
  *
  * Nothing here reaches the public internet: every case is either rejected
  * before a socket is opened, or points back at the test server itself.

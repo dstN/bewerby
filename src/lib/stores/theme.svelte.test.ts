@@ -39,7 +39,7 @@ function installSystemPreference(prefersDark: boolean) {
 }
 
 /** The store applies the class in its constructor, so the module has to be
- *  re-imported after each scenario is set up - not hoisted to the top. */
+ *  re-imported after each scenario is set up, not hoisted to the top. */
 async function loadTheme(): Promise<ThemeModule> {
 	vi.resetModules();
 	return import('./theme.svelte.js');

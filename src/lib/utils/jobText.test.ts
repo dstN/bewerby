@@ -27,7 +27,7 @@ describe('unspaceLetterSpacing', () => {
 
 	it('leaves a grouped phone number untouched', () => {
 		// Its groups are two digits wide, so the single-character majority
-		// rule never fires - this is the case the guard exists for.
+		// rule never fires; this is the case the guard exists for.
 		expect(unspaceLetterSpacing('+49 30 12 34 56')).toBe('+49 30 12 34 56');
 	});
 

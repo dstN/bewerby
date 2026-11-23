@@ -34,7 +34,7 @@ export function createRateLimiter(windowMs: number, maxPerWindow: number) {
  * Who is asking, for a rate limit. Behind Passenger the socket peer is
  * Passenger itself, so getClientAddress() alone would put every visitor into
  * one shared bucket. Passenger passes the real address in a header with the
- * `!~` prefix, which it refuses to accept from clients - unlike
+ * `!~` prefix, which it refuses to accept from clients, unlike
  * X-Forwarded-For, which anyone can send. Without Passenger (locally, in
  * tests) the header is absent and the socket peer is the client after all.
  * https://www.phusionpassenger.com/library/indepth/nodejs/secure_http_headers.html

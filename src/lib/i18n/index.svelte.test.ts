@@ -8,7 +8,7 @@ vi.mock('$app/env', () => ({ browser: true }));
 
 type I18nModule = typeof import('./index.svelte.js');
 
-/** Fresh module instance per test - `i18n` is a module-level singleton, and
+/** Fresh module instance per test: `i18n` is a module-level singleton, and
  *  detectLocale() reads localStorage/navigator exactly once, at init(). */
 async function loadI18n(): Promise<I18nModule> {
 	vi.resetModules();
@@ -44,7 +44,7 @@ describe('i18n.t()', () => {
 
 	it('returns the key when the path resolves to an object rather than a string', async () => {
 		const { i18n } = await loadI18n();
-		// 'kanban.columns' is a real branch of the tree, but not a leaf - rendering
+		// 'kanban.columns' is a real branch of the tree, but not a leaf; rendering
 		// "[object Object]" into the UI would be worse than showing the key.
 		expect(i18n.t('kanban.columns')).toBe('kanban.columns');
 	});

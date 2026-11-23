@@ -8,7 +8,7 @@
 
 	/**
 	 * The new device's side of adding a device (#55). The pairing secret
-	 * arrives in the URL fragment - which browsers never send to a server -
+	 * arrives in the URL fragment (which browsers never send to a server)
 	 * or typed in. It is removed from the address bar right away.
 	 */
 	let pairing = $state<GuestState | null>(null);

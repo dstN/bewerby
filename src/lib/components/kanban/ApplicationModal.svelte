@@ -57,7 +57,7 @@
 	// Snapshot the prop once via untrack(): the parent only ever renders this
 	// component inside {#if showModal}, so a fresh instance is mounted per
 	// open/edit and `application` never changes during this instance's
-	// lifetime - the same guarantee {#key} would otherwise exist to provide.
+	// lifetime, the same guarantee {#key} would otherwise exist to provide.
 	// Reading it directly in each $state(...) initializer below still triggers
 	// Svelte's "state_referenced_locally" warning (it can't tell a deliberate
 	// one-time snapshot from a forgotten reactive binding), so it's captured
@@ -93,7 +93,7 @@
 	// The OPFS ref that will be saved. originalPdfRef is a plain (non-reactive)
 	// snapshot of what was loaded, so save() can tell whether the PDF was
 	// replaced and clean up the old OPFS file only once the new ref is
-	// actually persisted - never before, or a cancelled edit would leave the
+	// actually persisted, never before, or a cancelled edit would leave the
 	// row pointing at a file that no longer exists.
 	let pdfRef = $state<string | undefined>(initialApp?.pdfRef);
 	let originalPdfRef: string | undefined = initialApp?.pdfRef;
@@ -128,7 +128,7 @@
 	);
 	let appliedDateStr = $state(initialAppliedDateStr);
 	// Only shown while the status is "Absage", pre-filled with what the export
-	// prints: the entered date, else the move into "Absage" - which for a row
+	// prints: the entered date, else the move into "Absage", which for a row
 	// not rejected yet is this save, i.e. today. Empty for an old row that
 	// records neither, rather than claiming a date nobody entered.
 	const shownRejectedAt =
@@ -204,7 +204,7 @@
 	}
 
 	function handleCancelEvent(event: Event) {
-		// Fired on Escape before the dialog closes - block the automatic close
+		// Fired on Escape before the dialog closes; block the automatic close
 		// so unsaved changes get the same confirmation as every other exit path.
 		if (isDirty) {
 			event.preventDefault();
@@ -219,7 +219,7 @@
 
 	// Chromium's native <dialog> inert-containment stops Tab from reaching
 	// background content, but does not reliably wrap focus from the last
-	// element back to the first (it can fall through to <body>) - verified
+	// element back to the first (it can fall through to <body>), verified
 	// directly rather than assumed. This closes that gap manually.
 	function handleDialogKeydown(event: KeyboardEvent) {
 		if (event.key !== 'Tab') return;
@@ -364,7 +364,7 @@
 				value: info[field],
 				uncertain,
 				// Pre-selected only where the target is still empty *and* the
-				// value is a confident one - never overwrite the user's typing,
+				// value is a confident one; never overwrite the user's typing,
 				// never nudge them into accepting a guess.
 				selected: !currentValue(field) && !uncertain
 			};
@@ -409,7 +409,7 @@
 	}
 
 	/**
-	 * Parses an ad the user pasted in as plain text - copied off a job board,
+	 * Parses an ad the user pasted in as plain text, copied off a job board,
 	 * or the posting plus an Impressum block. Runs the exact same parser and
 	 * feeds the exact same review panel as the PDF path, so neither route can
 	 * silently overwrite a field the other would have asked about.
@@ -559,7 +559,7 @@
 	/**
 	 * The absolute moment this application's follow-up is due.
 	 *
-	 * Changing the interval restarts the countdown here and now - that is the
+	 * Changing the interval restarts the countdown here and now; that is the
 	 * whole point of changing it, and anchoring it on the application date
 	 * instead made "remind me again in 7 days" fire instantly on anything sent
 	 * more than a week ago. Leaving the interval alone keeps the pending date
@@ -659,7 +659,7 @@
 		}
 
 		// Only now that the new pdfRef is persisted is it safe to remove the
-		// replaced file - if the row still referenced it (e.g. this write had
+		// replaced file: if the row still referenced it (e.g. this write had
 		// failed), deleting it here would have orphaned live data.
 		if (originalPdfRef && originalPdfRef !== pdfRef) {
 			await deletePdfFromOpfs(originalPdfRef);

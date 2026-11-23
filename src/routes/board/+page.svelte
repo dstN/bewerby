@@ -47,7 +47,7 @@
 	const applicationsStore = liveQuery(() => db.applications.toArray());
 
 	// The sort and the filter selection survive a reload: a view preference,
-	// in localStorage next to the collapsed cards. The search text does not -
+	// in localStorage next to the collapsed cards. The search text does not:
 	// a forgotten search would make the board look empty on the next start.
 	const VIEW_STORAGE_KEY = 'bewerby-board-view';
 	const SORTS = ['default', 'color', 'priority', 'date'] as const;
@@ -106,7 +106,7 @@
 	let selectedPriority = $state<string>(savedView.priority);
 	let selectedColor = $state<string>(savedView.color);
 	let selectedSortBy = $state<Sort>(savedView.sortBy);
-	// The period the last Nachweis covered, preselected in the export dialog -
+	// The period the last Nachweis covered, preselected in the export dialog,
 	// e.g. the current application phase.
 	let exportChoice = $state<PeriodChoice>(savedView.exportPeriod);
 	let exportFrom = $state(savedView.from);
@@ -291,8 +291,8 @@
 			// A shallow, replacing goto() is SvelteKit 3's replaceState(): it
 			// rewrites the history entry without re-running the route.
 			// Deferred to a microtask: calling it synchronously inside this
-			// same onMount - before the initial mount/hydration cycle has fully
-			// settled - crashed the render ("Cannot read properties of
+			// same onMount (before the initial mount/hydration cycle has fully
+			// settled) crashed the render ("Cannot read properties of
 			// undefined ($set)"). Queuing it for the next tick avoids the
 			// reentrant update.
 			queueMicrotask(() => goto(resolve('/board'), { shallow: true, replace: true }));
@@ -321,7 +321,7 @@
 
 	let isExporting = $state(false);
 
-	/** Shared by both export formats - see downloadBlob below. */
+	/** Shared by both export formats; see downloadBlob below. */
 	function exportLabels() {
 		return {
 			header: [
@@ -365,7 +365,7 @@
 	/**
 	 * Downloads the proof-of-applications list the Agentur für Arbeit asks
 	 * for: what the filter bar shows, in the period chosen in the export
-	 * dialog - minus anything never sent, which is not an application and has
+	 * dialog, minus anything never sent, which is not an application and has
 	 * no place on a Nachweis.
 	 */
 	function exportCsv(period: Period) {
@@ -432,7 +432,7 @@
 		if (event.dataTransfer) {
 			event.dataTransfer.effectAllowed = 'move';
 			// Firefox will not start a drag whose dataTransfer is empty. The
-			// payload is never read back - see handleDrop.
+			// payload is never read back; see handleDrop.
 			event.dataTransfer.setData('text/plain', String(id));
 		}
 	}
@@ -450,7 +450,7 @@
 		const app = ($applicationsStore ?? []).find((a) => a.id === id);
 		if (!app) {
 			// A move that does nothing and says nothing looks exactly like a
-			// dead drop target - name the row instead.
+			// dead drop target; name the row instead.
 			console.warn(`Cannot move application ${String(id)}: no row with that id`);
 			return;
 		}
@@ -479,7 +479,7 @@
 	}
 
 	// Six columns do not fit beside the sidebar on most screens, so the board
-	// scrolls sideways - and the archive, switched on, would appear out of
+	// scrolls sideways, and the archive, switched on, would appear out of
 	// view with nothing visibly changed. It is brought into view instead.
 	async function toggleArchive() {
 		showArchive = !showArchive;
@@ -509,8 +509,8 @@
 
 		// The id comes from the dragstart this page saw, not from dataTransfer.
 		// Reading it back as text and parseInt()ing it used to break silently
-		// for every key that is not a plain integer - a row written past
-		// TypeScript (see analytics.ts) has one - and matched a stray text
+		// for every key that is not a plain integer (a row written past
+		// TypeScript (see analytics.ts) has one) and matched a stray text
 		// drop from any other window against a card by accident. draggedId is
 		// the row key exactly as the status <select> hands it to moveApp().
 		const id = draggedId;
@@ -1277,7 +1277,7 @@
 			border-color var(--duration-fast) ease;
 	}
 
-	/* Opens the edit modal - wraps everything except the footer controls
+	/* Opens the edit modal, wraps everything except the footer controls
 	   (status select, delete) so those stay independently reachable instead
 	   of nesting interactive elements inside this button (see issue #20). */
 	/* A column, so a card with a one-line title keeps its text at the top of

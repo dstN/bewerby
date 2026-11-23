@@ -4,7 +4,7 @@
 	import { announcer } from '#lib/stores/announcer.svelte.js';
 	import ObfuscatedEmail from '#lib/components/common/ObfuscatedEmail.svelte';
 
-	// Shared mail relay (see ARCHITECTURE.md) - operated by the same person as
+	// Shared mail relay (see ARCHITECTURE.md), operated by the same person as
 	// bewerby itself, on the same netcup server, not a third-party service.
 	// Its own origin allowlist is what actually gates who may use it.
 	const CONTACT_ENDPOINT = 'https://contact.yinside.de/phpmailer.php';
@@ -17,7 +17,7 @@
 	let honeypot = $state('');
 	// "Read", not "accepted": the form runs on legitimate interest (Art. 6(1)(f)
 	// GDPR, see /datenschutz), so this is an acknowledgement, not a consent
-	// that could be withdrawn. Not sent anywhere - `required` gates the submit.
+	// that could be withdrawn. Not sent anywhere; `required` gates the submit.
 	let privacyRead = $state(false);
 	const [privacyBefore, privacyAfter] = $derived(t('legal.kontakt.privacyRead').split('{link}'));
 	let status = $state<'idle' | 'sending' | 'success' | 'error'>('idle');

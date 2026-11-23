@@ -245,7 +245,7 @@ describe('backup format versioning', () => {
 	});
 
 	it('reads rows whose optional fields an older instance exported as null', () => {
-		// Real 1.5.0 exports carry rows like this - imported long ago, before
+		// Real 1.5.0 exports carry rows like this: imported long ago, before
 		// rows were validated, with a string id and `appliedAt: null`. The app
 		// reads them fine, so its own export of them has to import again.
 		const legacyRow = {
@@ -343,7 +343,7 @@ describe('profile and CV attachments in a backup', () => {
 		const target = makeFakeOpfs('imported');
 		const { rows, profile } = await prepareImportRows(payload, target.writePdfToOpfs);
 
-		// Refs from a foreign export must never be reused verbatim - they could
+		// Refs from a foreign export must never be reused verbatim; they could
 		// collide with a file this browser already holds.
 		expect(rows[0].pdfRef).not.toBe(adRef);
 		expect(rows[0].cvRef).not.toBe(appCvRef);

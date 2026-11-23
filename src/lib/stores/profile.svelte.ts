@@ -32,7 +32,7 @@ function createProfileStore() {
 	}
 
 	/**
-	 * Must run before cleanupOrphanedPdfs() on boot - the sweep deletes every
+	 * Must run before cleanupOrphanedPdfs() on boot: the sweep deletes every
 	 * OPFS file it is not told about, and the stored CV is only reachable
 	 * through this store.
 	 */

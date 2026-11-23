@@ -5,7 +5,7 @@
 	import { computeApplicationStats, type AnalyticsRow } from '#lib/utils/analytics.js';
 
 	// Analytics only ever reads status, history, the entered dates and the
-	// archive reason - project down to that instead
+	// archive reason; project down to that instead
 	// of holding every field (title, notes, contact info, pdfRef, ...) of
 	// every application in the reactive store.
 	const applicationsStore = liveQuery(async (): Promise<AnalyticsRow[]> =>
@@ -21,7 +21,7 @@
 	);
 
 	// Funnel and Response Time metrics; the actual computation is a plain,
-	// unit-tested function (see analytics.test.ts) - this just feeds it the
+	// unit-tested function (see analytics.test.ts); this just feeds it the
 	// live query's current value reactively.
 	let stats = $derived(computeApplicationStats($applicationsStore ?? []));
 </script>

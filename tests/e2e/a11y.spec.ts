@@ -16,7 +16,7 @@ import { PASSPHRASE, setUpEncryption } from './fixtures/vault.js';
  * reach, text-block presentation and aria-current. `best-practice` adds the
  * landmark/heading/region structure rules, which is what keeps the app
  * navigable by rotor rather than merely technically labelled, and
- * `experimental` the rules axe has not switched on by default yet - among
+ * `experimental` the rules axe has not switched on by default yet, among
  * them label-content-name-mismatch, which is Level A.
  *
  * Every scan runs in both themes: the two palettes are independent sets of
@@ -25,8 +25,8 @@ import { PASSPHRASE, setUpEncryption } from './fixtures/vault.js';
  * Scans also run with reduced motion emulated. The app's global
  * reduced-motion rule collapses all transition durations to ~0, so overlays
  * (the modal, the date picker popover) are at their final opacity by the time
- * axe samples them. Without it axe reads *mid-fade* blended colours - e.g. a
- * label measured against a half-transparent dialog - and reports contrast
+ * axe samples them. Without it axe reads *mid-fade* blended colours (e.g. a
+ * label measured against a half-transparent dialog) and reports contrast
  * numbers for pixels no user ever sees, which is both wrong and flaky.
  */
 test.use({ contextOptions: { reducedMotion: 'reduce' } });
@@ -115,7 +115,7 @@ for (const theme of ['light', 'dark'] as const) {
 
 			// Cards, the coloured/specular variants, the truncated titles, the
 			// per-card status select and the overdue alert banner only exist once
-			// there is data - an empty board scan misses nearly every component.
+			// there is data; an empty board scan misses nearly every component.
 			await expect(page.locator('.card')).toHaveCount(5);
 			await expect(page.locator('.alerts-banner')).toBeVisible();
 			await expectNoViolations(page);
@@ -172,7 +172,7 @@ for (const theme of ['light', 'dark'] as const) {
 			const dispatch = page.locator('dialog.dispatch-dialog');
 			await expect(dispatch).toBeVisible();
 
-			// With a letter written, the Markdown preview is rendered too - an
+			// With a letter written, the Markdown preview is rendered too; an
 			// empty dialog would skip that half of the component.
 			await dispatch
 				.locator('#dispatch-letter')

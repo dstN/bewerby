@@ -30,7 +30,7 @@ describe('announcer', () => {
 
 		announcer.announce('zweite Meldung');
 		// Synchronously after the call the region must be empty, not still
-		// holding the previous text - that blank frame is what makes the next
+		// holding the previous text; that blank frame is what makes the next
 		// message a change rather than a no-op for the screen reader.
 		expect(announcer.message).toBe('');
 		await flushMicrotasks();

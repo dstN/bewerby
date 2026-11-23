@@ -7,7 +7,7 @@ import { representativeBoard, seedApplications } from './fixtures/seed.js';
  * The concrete bug this was written for: the board's search input is
  * `width: 100%` with a 36px left inset for its icon plus padding and a
  * border. Without a `border-box` reset that adds up to 50px *past* the
- * container - invisible on desktop, where the wrapper is capped at 320px and
+ * container, invisible on desktop, where the wrapper is capped at 320px and
  * the overflow just spilled into the flex row's spare space, but plainly off
  * the right edge of a 390px phone once the mobile breakpoint removes that
  * cap. The same arithmetic applied to every other `width: 100%` element in
@@ -41,7 +41,7 @@ const PHONE_VIEWPORTS = [
 /**
  * Waits until the shell has hydrated *and* the webfont has swapped in. Lexend
  * and its metric-matched fallback are close but not identical, so measuring
- * mid-swap reads widths that belong to neither - the source of an
+ * mid-swap reads widths that belong to neither, the source of an
  * intermittent overflow report on the text-heavy legal pages.
  */
 async function settled(page: Page): Promise<void> {
@@ -188,14 +188,14 @@ test.describe('The board search field on a phone', () => {
 
 	/**
 	 * A regression test for a bug the "stays inside the filter bar" check above
-	 * cannot catch: a native <select> never overflows its own box - an
+	 * cannot catch: a native <select> never overflows its own box; an
 	 * over-narrow one just silently clips its label text inside a
 	 * still-perfectly-in-bounds box. `flex: 1` (which sets `flex-basis: 0%`)
 	 * let all four selects shrink to fit one row instead of ever triggering
 	 * `flex-wrap`, so every label rendered as one or two characters ("Alle
 	 * Tags" -> "Al") while every bounding-box assertion above kept passing.
-	 * Asserting each select spans the *full* width of the bar - i.e. that they
-	 * stack one per row - is what actually catches that.
+	 * Asserting each select spans the *full* width of the bar (i.e. that they
+	 * stack one per row) is what actually catches that.
 	 */
 	test('filter selects stack full-width instead of cramming onto one row', async ({ page }) => {
 		await page.goto('/board');

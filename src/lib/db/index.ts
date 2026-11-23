@@ -50,7 +50,7 @@ export interface Application {
 	 * Absolute timestamp the follow-up is due at. Set whenever the user picks
 	 * an interval or a date themselves, so changing the setting restarts the
 	 * countdown from that moment instead of from the application date. Unset on
-	 * rows written before this existed - those still fall back to the
+	 * rows written before this existed; those still fall back to the
 	 * interval-from-`sent` math in #lib/utils/reminders.ts.
 	 */
 	reminderAt?: number;
@@ -58,14 +58,14 @@ export interface Application {
 	appliedAt?: number;
 	/**
 	 * The application date the user entered, if they changed it. Unset, the
-	 * first move into "sent" stands in - see getAppliedAt in
+	 * first move into "sent" stands in; see getAppliedAt in
 	 * #lib/utils/reminders.ts. Not appliedAt: the edit dialog has written that
 	 * on every save, entered or not, so it cannot tell the two apart.
 	 */
 	sentAt?: number;
 	/**
 	 * When the rejection arrived, if the user entered it. Unset, the date the
-	 * card moved into "Absage" stands in - see getRejectedAt in
+	 * card moved into "Absage" stands in; see getRejectedAt in
 	 * #lib/utils/reminders.ts. Cleared on every status change, so a card
 	 * rejected a second time never carries the first rejection's date.
 	 */
@@ -74,7 +74,7 @@ export interface Application {
 	archiveReason?: ArchiveReason;
 	/**
 	 * When the application was ended, if the user entered it. Unset, the move
-	 * into the archive stands in - see getArchivedAt in #lib/utils/reminders.ts.
+	 * into the archive stands in; see getArchivedAt in #lib/utils/reminders.ts.
 	 */
 	archivedAt?: number;
 	createdAt: number;
@@ -148,7 +148,7 @@ export class BewerbyDatabase extends Dexie {
 		// v2: move attached PDFs out of IndexedDB and into OPFS (pdfBlob -> pdfRef).
 		// Keeping the Blob in the row meant every board/analytics/reminder read of
 		// db.applications.toArray() deserialized every attached PDF, and a Blob
-		// can't survive JSON export (see #6). The index list is unchanged - only
+		// can't survive JSON export (see #6). The index list is unchanged; only
 		// the shape of non-indexed fields differs, so `.stores()` is identical to
 		// v1 and all the work happens in `.upgrade()`.
 		this.version(2)
@@ -240,8 +240,8 @@ function isValidStatusHistoryEntry(value: unknown): value is StatusHistory {
 }
 
 /**
- * Full structural validation of an imported backup row - every field, not
- * just title/company - so a malformed import fails cleanly up front instead
+ * Full structural validation of an imported backup row (every field, not
+ * just title/company), so a malformed import fails cleanly up front instead
  * of writing a row that later crashes the board's or analytics' $derived
  * computations (e.g. a missing `tags` or `history`).
  */
@@ -280,7 +280,7 @@ export function isValidApplication(value: unknown): value is Application {
 		app.history.every(isValidStatusHistoryEntry) &&
 		(app.pdfName === undefined || typeof app.pdfName === 'string') &&
 		(app.pdfRef === undefined || typeof app.pdfRef === 'string') &&
-		// Added after the format-2 backups shipped, so they must stay optional -
+		// Added after the format-2 backups shipped, so they must stay optional;
 		// requiring them here would make every existing export fail to import.
 		(app.location === undefined || typeof app.location === 'string') &&
 		(app.referenceNumber === undefined || typeof app.referenceNumber === 'string') &&

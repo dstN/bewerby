@@ -104,8 +104,8 @@ class LiveSync {
 		};
 
 		/**
-		 * Lets a peer in again: a connection that no longer stands - a laptop
-		 * closed overnight, without its channel noticing - and an offer it
+		 * Lets a peer in again: a connection that no longer stands (a laptop
+		 * closed overnight, without its channel noticing) and an offer it
 		 * never answered would otherwise keep it out for good.
 		 */
 		const clearStale = (peer: string) => {

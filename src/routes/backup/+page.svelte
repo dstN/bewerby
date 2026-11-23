@@ -315,7 +315,7 @@
 	}
 
 	/**
-	 * After a target was connected: sync, if this device has a vault - or,
+	 * After a target was connected: sync, if this device has a vault; or,
 	 * if not, offer to join the sync already there, unlocked with its
 	 * passphrase or recovery key like an imported file.
 	 */
@@ -478,7 +478,7 @@
 
 		await importApplications(rowsToInsert, importMode);
 
-		// Only after the rows are committed, and only on a replace - merging
+		// Only after the rows are committed, and only on a replace: merging
 		// into an existing setup must not silently overwrite the sender
 		// details this browser already holds. Version-2 files carry none.
 		if (importedProfile && importMode === 'replace') {

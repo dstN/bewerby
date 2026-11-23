@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Fails the build if static/ contains a file that isn't explicitly allowed.
 // static/ is shipped verbatim into build/client and precached by the
-// service worker — anything unexpected here becomes public and offline-cached.
+// service worker; anything unexpected here becomes public and offline-cached.
 // See ROADMAP.md #1 (personal PDFs were shipped this way) and #2 (dead pdf.js
 // bundles were shipped this way).
 import { readdirSync } from 'node:fs';

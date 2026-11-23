@@ -77,7 +77,7 @@
 			const info = l.weekInfo ?? l.getWeekInfo?.();
 			if (info?.firstDay) return info.firstDay;
 		} catch {
-			// Intl.Locale unsupported here - fall through to the default below.
+			// Intl.Locale unsupported here; fall through to the default below.
 		}
 		return 1;
 	}
@@ -347,7 +347,7 @@
 </script>
 
 <div class="datepicker-wrapper">
-	<!-- Value-mirror only, not an alternate tab stop - the trigger button below
+	<!-- Value-mirror only, not an alternate tab stop; the trigger button below
 	     is the sole accessible entry point (see issue #19). -->
 	<input type="date" bind:value class="sr-only" {disabled} tabindex="-1" aria-hidden="true" />
 
@@ -483,7 +483,7 @@
 			</button>
 		</header>
 
-		<!-- Weekday headers (decorative - each grid cell carries its own full
+		<!-- Weekday headers (decorative: each grid cell carries its own full
 		     weekday name in its accessible label, so this row is redundant for AT). -->
 		<div class="weekday-grid" aria-hidden="true">
 			{#each weekdayHeaders as wday, i (i)}
@@ -589,7 +589,7 @@
 		transform: rotate(180deg);
 	}
 
-	/* Popover Card - positioned via CSS anchor positioning against the trigger
+	/* Popover Card: positioned via CSS anchor positioning against the trigger
 	   button (anchor-name/position-anchor above), so no JS position tracking
 	   or scroll/resize listeners are needed. position-try-fallbacks flips it
 	   above the trigger when there isn't room below. */

@@ -12,7 +12,7 @@
 	import VaultDialog from '#lib/components/vault/VaultDialog.svelte';
 
 	/**
-	 * Asks which period a Nachweis covers, when it is exported - not as a
+	 * Asks which period a Nachweis covers, when it is exported, not as a
 	 * standing filter on the board. The choice is the board's to keep
 	 * (bindable), so it is preselected next time.
 	 */

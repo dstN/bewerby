@@ -122,7 +122,7 @@ describe('getReminderDueAt', () => {
 
 	it('returns null for an unrecognized reminderInterval value instead of miscalculating', () => {
 		const app = makeApp({
-			// Simulates data written by an older/different build - deliberately
+			// Simulates data written by an older/different build, deliberately
 			// bypassing the type system the way real stale data would.
 			reminderInterval: 'unexpected-value' as Application['reminderInterval'],
 			history: sentAt(1_000_000)

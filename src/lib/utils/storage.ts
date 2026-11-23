@@ -3,7 +3,7 @@ import { browser } from '$app/env';
 /**
  * Requests persistent storage from the browser, so it won't evict this
  * origin's IndexedDB/OPFS data under storage pressure the way "best effort"
- * storage can be. Safe to call repeatedly - browsers no-op if already
+ * storage can be. Safe to call repeatedly: browsers no-op if already
  * granted, and most (Firefox) auto-grant based on site engagement without
  * ever prompting, while others (Chromium) may silently deny depending on
  * heuristics. Either way, the actual state is always readable via

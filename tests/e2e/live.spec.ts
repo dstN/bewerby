@@ -5,7 +5,7 @@ import { PASSPHRASE, setUpEncryption } from './fixtures/vault.js';
  * Pairing a device and live sync (#55): two browser contexts, a real WebRTC
  * data channel between them, signaling through /api/signal on the test
  * server. Chromium hides local addresses behind mDNS names by default, which
- * a headless browser cannot resolve - the channel would never open.
+ * a headless browser cannot resolve; the channel would never open.
  */
 test.use({ launchOptions: { args: ['--disable-features=WebRtcHideLocalIpsWithMdns'] } });
 
@@ -103,7 +103,7 @@ test.describe('Devices connected directly', () => {
 		await expect(phoneModal).toBeHidden();
 
 		// The morning: the laptop opens again while the phone is open, and
-		// catches up by itself - no store in between.
+		// catches up by itself (no store in between).
 		const morning = await page.context().newPage();
 		await morning.goto('/board');
 		await expect(

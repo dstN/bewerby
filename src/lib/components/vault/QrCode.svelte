@@ -2,7 +2,7 @@
 	import qrcode from 'qrcode-generator';
 
 	/**
-	 * A QR code as one SVG path - no {@html}, and no data: URL the CSP's
+	 * A QR code as one SVG path: no {@html}, and no data: URL the CSP's
 	 * img-src would have to allow. Dark on white in both themes: scanners
 	 * expect it, and the quiet zone around it is part of the code.
 	 */

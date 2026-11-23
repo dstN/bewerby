@@ -16,7 +16,7 @@ describe('buildSalutation', () => {
 
 	it('never guesses a gender from a bare first name', () => {
 		// Getting this wrong misgenders a real person on the first line of a job
-		// application, and a name carries no reliable signal - so the neutral
+		// application, and a name carries no reliable signal, so the neutral
 		// form is used instead of a coin flip.
 		expect(buildSalutation('Petra Musterfrau')).toBe('Guten Tag Petra Musterfrau,');
 		expect(buildSalutation('Kim Schmidt')).toBe('Guten Tag Kim Schmidt,');

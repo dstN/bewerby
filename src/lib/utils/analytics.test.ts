@@ -29,7 +29,7 @@ describe('computeApplicationStats', () => {
 
 	it('survives a row whose history field is missing', () => {
 		// Not reachable through the UI, but a record written past TypeScript can
-		// arrive like this — a put() with a partial object replaces the row and
+		// arrive like this: a put() with a partial object replaces the row and
 		// drops every field it omits. One such row used to throw inside .find()
 		// and take the whole statistics page down.
 		const broken = { status: 'sent' } as unknown as AnalyticsRow;

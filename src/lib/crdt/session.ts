@@ -18,7 +18,7 @@ async function open(): Promise<SyncRuntime> {
 	return runtime;
 }
 
-/** The sync layer, started on first use - or null on a device without a vault. */
+/** The sync layer, started on first use, or null on a device without a vault. */
 export function activeSync(): Promise<SyncRuntime | null> {
 	current ??= loadStoredVault()
 		.then((vault) => (vault ? open() : null))

@@ -3,7 +3,7 @@
  *
  * This is the second source-agnostic signal after typography. Job boards and
  * applicant tracking systems overwhelmingly render their metadata as a field
- * label followed by a value - either `Label: Wert` on one line, or the label on
+ * label followed by a value: either `Label: Wert` on one line, or the label on
  * its own line with the value underneath. Measuring this against two completely
  * unrelated layouts (a job-board print-out and a company's own careers page)
  * found location, e-mail and phone in both, which is precisely why this
@@ -21,7 +21,7 @@ export interface LabelledFields {
 	/**
 	 * The occupational *category* (e.g. "Frontend-Entwickler/in"), which is not
 	 * the same thing as the ad's own title ("Senior Frontend Developer (m/w/d)").
-	 * Only ever a fallback - it must never overwrite a headline.
+	 * Only ever a fallback; it must never overwrite a headline.
 	 */
 	occupation?: string;
 	startDate?: string;
@@ -35,7 +35,7 @@ type Field = keyof LabelledFields;
  * Hygiene matters more than coverage here: every entry has to be specific
  * enough that a stray match is unlikely, because a wrong value is worse than a
  * missing one. Deliberately absent are bare `Ort` (matches "Ortsteil", "Vor
- * Ort"), bare `ab` (an ordinary preposition) and bare `Mail` - they produced
+ * Ort"), bare `ab` (an ordinary preposition) and bare `Mail`; they produced
  * false positives without adding a field the other synonyms miss.
  */
 const LABELS: ReadonlyArray<readonly [string, Field]> = [
@@ -133,7 +133,7 @@ function isPlausibleValue(value: string): boolean {
 
 /**
  * Scans reconstructed lines for labelled fields. Only the first hit per field
- * is kept - later repetitions in a page footer are usually the same value.
+ * is kept; later repetitions in a page footer are usually the same value.
  */
 export function readLabelledFields(lines: string[]): LabelledFields {
 	const found: LabelledFields = {};

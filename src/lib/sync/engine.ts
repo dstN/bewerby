@@ -56,7 +56,7 @@ const MARKER = new Uint8Array([0x42, 0x57, 0x56]);
 
 /**
  * Right to erasure (#56): removes every file of a vault from the store, all
- * epochs. Files of other vaults stay. Needs no key - the paths say whose
+ * epochs. Files of other vaults stay. Needs no key: the paths say whose
  * files they are.
  *
  * Leaves a marker of three bytes with no content. Devices still connected
@@ -117,7 +117,7 @@ export class SyncEngine {
 
 	/**
 	 * Decrypts one remote file. Null for a file of another vault or one that
-	 * does not decode - recorded in the report and not retried. A failed read
+	 * does not decode (recorded in the report and not retried). A failed read
 	 * (the network) throws instead, so it is retried on the next pass.
 	 */
 	private async open(path: string, report: SyncReport): Promise<Snapshot | null> {
@@ -183,7 +183,7 @@ export class SyncEngine {
 		}).length;
 
 		// 0. Erased from another device: stop, unless this one was just
-		// connected on purpose - then its data goes back, and the marker.
+		// connected on purpose; then its data goes back, and the marker.
 		const marker = erasedMarker(this.vault.header.vaultId);
 		if (listed.includes(marker)) {
 			if (!(await this.state.progress()).connected) {

@@ -3,7 +3,7 @@ import type { InlineRun, MarkdownBlock } from './markdown.js';
 /**
  * Renders a cover letter to a PDF, entirely on the device.
  *
- * pdf-lib is imported dynamically, the same way pdfjs is in pdf.ts - it is
+ * pdf-lib is imported dynamically, the same way pdfjs is in pdf.ts: it is
  * roughly 350 KB that most sessions never need, and a static import would put
  * it in the start bundle and in the service worker's precache.
  */
@@ -106,7 +106,7 @@ export function wrapRuns(
 
 /**
  * The standard fonts encode WinAnsi (cp1252), which covers German fully but
- * not, say, an emoji or a Greek letter - and pdf-lib throws rather than
+ * not, say, an emoji or a Greek letter, and pdf-lib throws rather than
  * skipping one. Anything unencodable is dropped so a stray character cannot
  * fail the whole export.
  */
@@ -226,7 +226,7 @@ export async function renderCoverLetterPdf(options: CoverLetterPdfOptions): Prom
 	if (recipientLines.length > 0) y -= BODY_SIZE * 2;
 
 	// Body. The letter already carries its own dateline, subject and
-	// salutation - the template puts them there - so nothing is generated on
+	// salutation (the template puts them there), so nothing is generated on
 	// top of it; duplicating them would be worse than a plainer letterhead.
 	for (const block of options.blocks) {
 		if (block.type === 'paragraph') {

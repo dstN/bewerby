@@ -6,7 +6,7 @@ const STORAGE_KEY = 'bewerby_custom_colors';
 
 type ColorsModule = typeof import('./colors.svelte.js');
 
-/** Fresh module per test - the store keeps its custom colors in module-level
+/** Fresh module per test: the store keeps its custom colors in module-level
  *  `$state`, and init() only ever reads localStorage once. */
 async function loadColorStore(): Promise<ColorsModule> {
 	vi.resetModules();

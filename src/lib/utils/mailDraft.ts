@@ -22,8 +22,8 @@ export interface MailDraftResult {
 }
 
 /**
- * Outlook on Windows silently truncates long `mailto:` URLs - no error, just a
- * cut-off draft - and the practical ceiling sits around 2000 characters. This
+ * Outlook on Windows silently truncates long `mailto:` URLs (no error, just a
+ * cut-off draft), and the practical ceiling sits around 2000 characters. This
  * stays under it and tells the caller when it had to cut, so the UI can offer
  * the full text on the clipboard instead of quietly shipping half a letter.
  */

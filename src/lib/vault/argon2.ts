@@ -10,7 +10,7 @@ export interface Argon2Input {
 }
 
 /**
- * The one place Argon2id runs - imported by the worker in the browser and
+ * The one place Argon2id runs: imported by the worker in the browser and
  * called directly where there is no Worker (Vitest under Node). WebCrypto has
  * no Argon2 yet (WICG webcrypto-modern-algos proposes it); hash-wasm is
  * checked against Node's native implementation in vault.test.ts.

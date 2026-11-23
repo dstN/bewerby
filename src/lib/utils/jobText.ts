@@ -23,7 +23,7 @@ export interface DocLine {
 
 /** Adjacent lines of the same size, merged back into one logical unit. */
 export interface DocBlock extends DocLine {
-	/** How many source lines were merged - a wrapped headline has > 1. */
+	/** How many source lines were merged; a wrapped headline has > 1. */
 	lineCount: number;
 }
 
@@ -57,7 +57,7 @@ export function unspaceLetterSpacing(text: string): string {
 /**
  * Rejoins tokens the Y-coordinate line reconstruction split in the middle.
  * Observed for real in a browser "print to PDF" capture, where an address came
- * out as `info@feneco n.de` - the glyph run happened to be interrupted, and a
+ * out as `info@feneco n.de`: the glyph run happened to be interrupted, and a
  * space was inserted between the two halves of the domain.
  */
 export function repairSplitTokens(text: string): string {
@@ -99,7 +99,7 @@ function normalizeForComparison(text: string): string {
  *
  * The rule is purely structural, so it needs no knowledge of the source: a line
  * that appears verbatim on three or more pages *and sits in the page margin* is
- * page furniture. Both halves matter. Repetition alone was not enough - a job
+ * page furniture. Both halves matter. Repetition alone was not enough: a job
  * board prints the employer name in every page header and again in the contact
  * block, and dropping every copy cost the company field in three of five real
  * ads. It only engages from three pages up, because in a two-page document a
@@ -121,7 +121,7 @@ export function stripBoilerplate(lines: DocLine[]): DocLine[] {
 	// Running headers are defined by sitting in the page margin, not by
 	// repetition alone. Dropping every repeated line cost the employer name in
 	// three of five real ads, because a job board prints it in the header of
-	// every page *and* in the contact block - so only the margin copies go.
+	// every page *and* in the contact block, so only the margin copies go.
 	const bounds = new Map<number, { min: number; max: number }>();
 	for (const line of lines) {
 		const current = bounds.get(line.page);
@@ -191,7 +191,7 @@ export function groupBlocks(lines: DocLine[], maxGapFactor = 1.8): DocBlock[] {
 
 /**
  * Gender markers are the single most reliable sign that a line is a German job
- * title, and they are entirely independent of the profession - a bakery and a
+ * title, and they are entirely independent of the profession: a bakery and a
  * hospital tag their vacancies exactly like a software company does.
  */
 export const GENDER_TAG_REGEX =
@@ -242,7 +242,7 @@ export function isSectionHeading(text: string): boolean {
 
 /**
  * German job ads announce the vacancy with a small set of stock phrases, and
- * the title follows immediately - either on the same line or the next one.
+ * the title follows immediately, either on the same line or the next one.
  * Grammar of the genre, not vocabulary of a trade, so it holds for any job.
  */
 export const VACANCY_PHRASE_REGEX =

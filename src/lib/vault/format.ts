@@ -1,6 +1,6 @@
 /**
  * The on-disk shape of an encrypted bewerby file (`.bwv`) and everything
- * needed to read one back safely. Pure byte handling - no keys, no crypto -
+ * needed to read one back safely. Pure byte handling (no keys, no crypto),
  * so the parser can be fuzzed on its own: a file is untrusted input until
  * AES-GCM has authenticated it, and the header has to be read *before* that.
  *

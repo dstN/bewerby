@@ -3,7 +3,7 @@ import { ReconnectRequiredError, type RemoteStore } from '../port.js';
 /**
  * Sync through a folder that a sync client of the user's choice watches:
  * Nextcloud, iCloud for Windows, Proton Drive, Synology Drive, Syncthing.
- * bewerby itself transmits nothing - it writes encrypted files into the
+ * bewerby itself transmits nothing: it writes encrypted files into the
  * folder, and the client moves them (#53). File System Access only exists
  * in Chromium-based desktop browsers.
  */
@@ -32,7 +32,7 @@ export function isFolderSyncSupported(): boolean {
  */
 export async function pickSyncFolder(): Promise<{
 	handle: FileSystemDirectoryHandle;
-	/** The folder the user picked, for display - the handle is the one inside it. */
+	/** The folder the user picked, for display; the handle is the one inside it. */
 	name: string;
 }> {
 	const picked = await (window as unknown as WindowWithPicker).showDirectoryPicker({

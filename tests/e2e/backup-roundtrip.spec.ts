@@ -43,7 +43,7 @@ test.describe('Backup export/import roundtrip', () => {
 		await page.goto('/settings');
 		// eraseAllData() reloads the page once its async cleanup finishes;
 		// waitForLoadState('load') would race it (it checks the *current*,
-		// already-loaded document, not the pending reload) - waiting for the
+		// already-loaded document, not the pending reload); waiting for the
 		// actual 'load' event instead catches the real post-reload navigation.
 		await Promise.all([
 			page.waitForEvent('load'),

@@ -3,10 +3,10 @@
 - **Status:** withdrawn, 2026-10-04. Live for a few hours the same day,
   then removed: storing strangers' names, addresses and application
   history on bewerby.de, even as ciphertext, is a liability the operator
-  does not want to carry - for a breach, for a loss, and for the
-  questions either would raise. Only the operator's own test device had
+  does not want to carry (for a breach, for a loss, and for the
+  questions either would raise). Only the operator's own test device had
   used it; its files on the server were deleted with the release that
-  removed it, and a device still set to it lets go of it quietly on
+  removed it, and a device still set to it lets go of it silently on
   start. Sync between devices
   runs through folders and cloud accounts of the users' own, and live over
   WebRTC while two devices are open. What follows is the decision as it

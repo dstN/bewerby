@@ -8,7 +8,7 @@ import { randomBytes } from 'node:crypto';
  * they leave them here and pick them up.
  *
  * Everything posted is encrypted by the browsers with a key the server never
- * sees - an opaque string per message. Messages live as files under one
+ * sees: an opaque string per message. Messages live as files under one
  * directory per room, because Passenger may run several worker processes
  * that share nothing but the disk. They expire after two minutes.
  */

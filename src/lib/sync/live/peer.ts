@@ -5,7 +5,7 @@
  *
  * The channel is DTLS-encrypted end to end. Its fingerprints travel inside
  * the sealed offer and answer, so the signaling server cannot put itself in
- * between - which is why the data channel carries no second layer of
+ * between, which is why the data channel carries no second layer of
  * encryption of its own (docs/adr/0004-live-sync.md).
  */
 

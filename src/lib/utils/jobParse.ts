@@ -7,7 +7,7 @@
  * ...), which meant a nurse, a baker or a tax clerk never got a title at all.
  * That list is gone. What replaced it, in descending order of strength:
  *
- *   1. Typography - the job title is the largest text on page one. Measured
+ *   1. Typography: the job title is the largest text on page one. Measured
  *      across five real ads from two unrelated sources: 5/5 correct, including
  *      one where every text heuristic fails. It holds because setting the
  *      vacancy as the headline is a typographic convention, not a domain rule.
@@ -85,7 +85,7 @@ function emptyInfo(): ParsedJobInfo {
 /**
  * Legal forms, extended well past the commercial ones. Without the public and
  * non-profit entries the whole public sector, every clinic and every charity
- * would fall through - exactly the "any industry" gap this rewrite is about.
+ * would fall through: exactly the "any industry" gap this rewrite is about.
  *
  * Split in two on purpose. The short all-caps forms have to be matched
  * case-sensitively, because case-insensitively they collide with ordinary
@@ -128,7 +128,7 @@ const PHONE_CONTEXT_REGEX =
 const SALARY_RANGE_REGEX =
 	/\d{1,3}(?:\.\d{3})+(?:,\d{2})?\s*(?:€|EUR)\s*(?:[–—-]|bis)\s*\d{1,3}(?:\.\d{3})+(?:,\d{2})?\s*(?:€|EUR)(?:\s*(?:\/|pro\s+)?\s*(?:Jahr|Monat|a|p\.a\.))?/i;
 
-/** "Iggensbach , Deutschland" - a place line, never the employer. */
+/** "Iggensbach , Deutschland": a place line, never the employer. */
 const LOCATION_LINE_REGEX =
 	/^.{2,40},\s*(?:Deutschland|Germany|Österreich|Austria|Schweiz|Switzerland|Nederland|France|España|Italia)$/i;
 
@@ -193,7 +193,7 @@ interface TitlePick {
 
 /**
  * Typography first: the largest block on page one. Only trusted when it
- * actually stands out from body text - a document with uniform sizing (a plain
+ * actually stands out from body text; a document with uniform sizing (a plain
  * text export, say) gets no title from this path and falls through to the
  * structural signals instead of inventing one.
  */
@@ -318,7 +318,7 @@ function pickContactName(lines: string[]): { value: string; confidence: FieldCon
 	for (let index = 0; index < lines.length; index++) {
 		const match = lines[index].trim().match(honorific);
 		if (!match) continue;
-		// Only trust a bare name line when it sits inside a contact block -
+		// Only trust a bare name line when it sits inside a contact block;
 		// otherwise a salutation in body text would be picked up.
 		const context = lines.slice(Math.max(0, index - 3), index + 4).join(' ');
 		if (/(?:Telefon|Tel\.|E-Mail|Email|Kontakt|Bewerbung|Ansprechpartner)/i.test(context)) {
@@ -466,7 +466,7 @@ export function parseJobDocument(doc: JobDocument, hints: ParseHints = {}): Pars
 }
 
 /**
- * Text-only entry point, for callers that have no layout information - a
+ * Text-only entry point, for callers that have no layout information: a
  * pasted job ad, say. It runs the same pipeline over a document of uniform
  * type size, which means the typography signal deliberately yields nothing
  * and the structural signals carry the result on their own.

@@ -68,7 +68,7 @@ export async function passphraseKek(passphrase: string, kdf: KdfParams): Promise
 
 /**
  * Key-encryption key from the recovery key. The recovery key is 160 random
- * bits, so a fast HKDF is enough - there is nothing to brute-force.
+ * bits, so a fast HKDF is enough; there is nothing to brute-force.
  */
 export async function recoveryKek(
 	recovery: Uint8Array<ArrayBuffer>,

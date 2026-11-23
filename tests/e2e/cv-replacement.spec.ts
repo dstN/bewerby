@@ -3,7 +3,7 @@ import { makeMinimalPdf } from './fixtures/make-pdf.js';
 
 /**
  * Every CV upload writes a fresh OPFS file. persist() only ever deletes
- * `originalCvRef` — the file the stored row pointed at when the dialog opened —
+ * `originalCvRef` (the file the stored row pointed at when the dialog opened),
  * so replacing the CV a second time inside one session used to strand the one
  * in between: bytes on disk that nothing referenced. The boot sweep collected
  * them on the next start, which made the leak easy to miss and impossible to

@@ -88,8 +88,8 @@ there is no direct path, cloud or folder sync carries the changes instead.
 - Two devices on the same network can be paired and kept in step with no
   cloud account at all.
 - The server learns which IP addresses use the same room at the same time
-  - that is, which devices belong together - for the two minutes a message
-    lives and for as long as the access log is kept.
+  (that is, which devices belong together) for the two minutes a message
+  lives and for as long as the access log is kept.
 - The devices learn each other's IP addresses, as any direct connection
   requires.
 - Rooms on disk survive a deploy, which only swaps `build/`; they expire

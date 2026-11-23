@@ -46,7 +46,7 @@ export class PdfProcessingError extends Error {
 
 /**
  * Content-based validation, not just the .pdf extension the file picker's
- * accept=".pdf" filters on (trivially spoofed by renaming any file) - checks
+ * accept=".pdf" filters on (trivially spoofed by renaming any file): checks
  * size and the %PDF- magic header before anything is persisted or parsed.
  */
 export async function validatePdfFile(file: File): Promise<void> {
@@ -69,7 +69,7 @@ export async function validatePdfFile(file: File): Promise<void> {
  * The previous version collapsed everything into one string and read only
  * `transform[5]` (the baseline Y) to decide where to break lines, throwing the
  * scale away. That scale is the single strongest source-independent signal
- * there is - the job title is the largest text on page one - so the line model
+ * there is (the job title is the largest text on page one), so the line model
  * now carries font size and weight as well. `text` is still produced so callers
  * that only want the prose keep working.
  */
@@ -141,7 +141,7 @@ export async function extractJobDocument(file: File): Promise<JobDocument> {
 
 			const y = Math.round(item.transform[5]);
 			// The rendered size is the length of the transformed unit vector, not
-			// transform[0] alone - that would be wrong for rotated or skewed text.
+			// transform[0] alone; that would be wrong for rotated or skewed text.
 			const size = Math.round(Math.hypot(item.transform[2], item.transform[3]) * 10) / 10;
 			const fontFamily = item.fontName ? (styles?.[item.fontName]?.fontFamily ?? '') : '';
 			const bold = /bold|black|heavy|semibold/i.test(fontFamily);

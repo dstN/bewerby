@@ -45,7 +45,7 @@
 			const previous = profileStore.cvRef;
 			const ref = await writePdfToOpfs(file);
 			profileStore.setCv(ref, file.name);
-			// Only once the new ref is persisted - deleting first would leave
+			// Only once the new ref is persisted; deleting first would leave
 			// the profile pointing at a file that no longer exists.
 			if (previous && previous !== ref) await deletePdfFromOpfs(previous);
 			announcer.announce(file.name);
@@ -751,7 +751,7 @@
 		min-height: 44px;
 		font-size: 0.8125rem;
 		font-weight: 600;
-		/* See .export-hint-link above - same dark-theme contrast fix. */
+		/* See .export-hint-link above; same dark-theme contrast fix. */
 		color: var(--color-accent-text);
 		text-decoration: none;
 	}

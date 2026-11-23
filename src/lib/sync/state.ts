@@ -29,7 +29,7 @@ export interface Progress {
 	seen: string[];
 	/**
 	 * Remote files of another vault, or unreadable: not downloaded again,
-	 * and never deleted - they are not this vault's to remove.
+	 * and never deleted: they are not this vault's to remove.
 	 */
 	skipped?: string[];
 	/** What the remote is known to have, as a Yjs state vector. */

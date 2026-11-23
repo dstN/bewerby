@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import Dexie from 'dexie';
 
 // writePdfToOpfs needs real OPFS (navigator.storage), unavailable under
-// Node/vitest - mocked here so the v1->v2 migration can be exercised without
+// Node/vitest; mocked here so the v1->v2 migration can be exercised without
 // it, while still recording what it was asked to persist.
 const writtenBlobs: Blob[] = [];
 vi.mock('#lib/utils/opfs.js', () => ({
@@ -24,7 +24,7 @@ function uniqueDbName(): string {
 
 /** A minimal, v1-only Dexie schema, mirroring BewerbyDatabase before the pdfRef migration existed. */
 class LegacyV1Database extends Dexie {
-	// Loosely typed on purpose - this reproduces the pre-migration row shape.
+	// Loosely typed on purpose: this reproduces the pre-migration row shape.
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	applications!: Dexie.Table<any, number>;
 
@@ -78,7 +78,7 @@ describe('Dexie v1 -> v2 migration (pdfBlob -> pdfRef via OPFS)', () => {
 		expect((row as unknown as { pdfBlob?: Blob }).pdfBlob).toBeUndefined();
 		expect(writtenBlobs).toHaveLength(1);
 		// IndexedDB structured-clones the Blob on write, so what the upgrade
-		// callback reads back is a distinct object - compare content, not identity.
+		// callback reads back is a distinct object; compare content, not identity.
 		expect(writtenBlobs[0].type).toBe(blob.type);
 		expect(writtenBlobs[0].size).toBe(blob.size);
 		await expect(writtenBlobs[0].text()).resolves.toBe(await blob.text());

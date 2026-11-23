@@ -7,8 +7,8 @@ export const BACKUP_FORMAT_VERSION = 3;
 /**
  * Read, not written. Version 3 only *adds* the profile block and the per-
  * application CV, so a version-2 file is still a complete, valid backup.
- * Rejecting it outright - as a bare equality check on the current version
- * would - would render every backup users already exported unreadable.
+ * Rejecting it outright, as a bare equality check on the current version
+ * would, would render every backup users already exported unreadable.
  */
 export const READABLE_BACKUP_VERSIONS = [2, 3];
 
@@ -73,7 +73,7 @@ export type BackupParseResult =
 
 /**
  * JSON has no `undefined`, so `null` is the other way a file can say a field
- * is absent - and what JSON.stringify writes for a NaN timestamp. Real 1.5.0
+ * is absent, and what JSON.stringify writes for a NaN timestamp. Real 1.5.0
  * exports carry `appliedAt: null` on rows imported before rows were
  * validated; the app reads those fine (`appliedAt ?? createdAt`), so they must
  * import too. A required field that is null still fails validation, missing.
@@ -84,8 +84,8 @@ function withoutNullFields(value: unknown): unknown {
 }
 
 /**
- * Parses and fully structurally validates an untrusted backup JSON string -
- * every application field, not just title/company - so a malformed file is
+ * Parses and fully structurally validates an untrusted backup JSON string
+ * (every application field, not just title/company), so a malformed file is
  * rejected up front instead of writing rows that later crash the board's or
  * analytics' $derived computations (e.g. a missing `tags` or `history`).
  */
@@ -131,7 +131,7 @@ export function parseBackupPayload(json: string): BackupParseResult {
 }
 
 /**
- * Restores every PDF under a *fresh* OPFS ref before touching the database -
+ * Restores every PDF under a *fresh* OPFS ref before touching the database;
  * never reuse the ref from the backup file, since it could collide with an
  * unrelated file this browser already has on disk. Decoding/writing all of
  * them up front, before any db write, means a corrupt PDF entry fails the
@@ -139,7 +139,7 @@ export function parseBackupPayload(json: string): BackupParseResult {
  * attachments that never got restored.
  *
  * Never trust a foreign export's autoincrement ids against this browser's
- * live sequence either - every imported row gets a fresh id.
+ * live sequence either; every imported row gets a fresh id.
  */
 export async function prepareImportRows(
 	payload: BackupPayload,

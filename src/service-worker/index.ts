@@ -6,11 +6,11 @@ import type { AssetPath } from '$app/types';
 
 const CACHE_NAME = `bewerby-cache-${version}`;
 
-// Every prerendered route (see +layout.ts: ssr = false, prerender = true) -
+// Every prerendered route (see +layout.ts: ssr = false, prerender = true).
 // `immutable`/`assets` below cover only the client JS/CSS bundle and static/,
 // not these HTML documents. Without listing them explicitly, a route's document
 // only ever enters the cache the first time a *hard* (non-SPA) navigation to
-// it succeeds online - which normal in-app link-clicking never triggers,
+// it succeeds online, which normal in-app link-clicking never triggers,
 // since SvelteKit's client router swaps content without a real navigation.
 // A user who only ever clicked between routes, then went offline and hard-
 // reloaded one, would hit nothing but this worker's offline fallback.
@@ -34,7 +34,7 @@ const PRERENDERED_ROUTES = [
 // below work with. `immutable` is only typed as string[], not the generated
 // AssetPath union, but asset() prefixes either the same way (a service worker
 // can't use paths.assets, so it's always just the base path).
-// `assets` mirrors static/ verbatim, including dotfiles (e.g. static/.gitignore) -
+// `assets` mirrors static/ verbatim, including dotfiles (e.g. static/.gitignore);
 // adapter-node leaves those out of the static file table it records at build
 // time and answers 404. A single 404 during install used to fail
 // cache.addAll() atomically, which meant the service worker never activated
@@ -50,7 +50,7 @@ const ASSETS = [
 
 // Install: precache all app assets. Each asset is added individually (instead
 // of one atomic cache.addAll) so a single missing/failed asset can't abort
-// the whole installation - we log and continue instead.
+// the whole installation; we log and continue instead.
 sw.addEventListener('install', (event) => {
 	event.waitUntil(
 		caches
@@ -93,7 +93,7 @@ async function cacheSameOriginResponse(request: Request, response: Response, url
 //   always sees the current app shell; a cached copy (if any) is the offline
 //   fallback instead of the browser's own network-error page.
 // - Everything else (JS/CSS/fonts/icons) is cache-first, since those assets
-//   are fingerprinted and immutable - once cached, the network is only
+//   are fingerprinted and immutable; once cached, the network is only
 //   consulted if the cache misses.
 // Every branch has an explicit .catch(), so a network failure always resolves
 // to *something* instead of an unhandled rejection breaking the whole request.
@@ -125,7 +125,7 @@ sw.addEventListener('fetch', (event) => {
 					const cached = await caches.match(event.request);
 					if (cached) return cached;
 					// No network and nothing cached for this route yet (e.g. first-ever
-					// visit to it happened offline) - fail predictably instead of
+					// visit to it happened offline): fail predictably instead of
 					// leaving the navigation to reject with no response at all.
 					return new Response('Offline und noch nicht im Cache verfügbar.', {
 						status: 503,

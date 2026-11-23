@@ -22,7 +22,7 @@ test.describe('Offline hard reload', () => {
 		await page.goto('/');
 
 		// Wait for the real installed-and-activated registration, not just "a
-		// registration exists" - .ready only resolves once a worker is
+		// registration exists"; .ready only resolves once a worker is
 		// controlling the page (see issue #3/#4's install-time fixes).
 		await page.evaluate(async () => {
 			const registration = await navigator.serviceWorker.ready;
@@ -32,7 +32,7 @@ test.describe('Offline hard reload', () => {
 		await context.setOffline(true);
 
 		for (const route of ROUTES) {
-			// A hard navigation (not client-side routing) is the real test here -
+			// A hard navigation (not client-side routing) is the real test here:
 			// it can only succeed offline if the service worker serves a
 			// precached document instead of the browser hitting the network.
 			await page.goto(route, { waitUntil: 'load' });

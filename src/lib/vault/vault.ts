@@ -31,7 +31,7 @@ import {
 /** A vault this session can encrypt and decrypt with. */
 export interface UnlockedVault {
 	header: KeyHeader;
-	/** Non-extractable HKDF key - see importRoot. */
+	/** Non-extractable HKDF key; see importRoot. */
 	root: CryptoKey;
 }
 
@@ -94,7 +94,7 @@ export async function unlock(header: KeyHeader, secret: Secret): Promise<CryptoK
 }
 
 /**
- * Like unlock, but hands back the root secret's bytes as well - only for
+ * Like unlock, but hands back the root secret's bytes as well, only for
  * passing the vault to a new device (#55), since the stored key cannot be
  * exported. The caller must zero `raw` once it is sent.
  */
@@ -155,7 +155,7 @@ function stripFileFields(header: FileHeader): KeyHeader {
 
 /**
  * Decrypts a `.bwv` file with an already unlocked root. Returns the payload
- * JSON as text with its kind - validating it is the caller's job
+ * JSON as text with its kind; validating it is the caller's job
  * (parseBackupPayload, decodeSnapshot), exactly as for an unencrypted export.
  */
 export async function openFile(

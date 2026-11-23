@@ -9,7 +9,7 @@ const PDF_DIRECTORY = 'application-pdfs';
 /**
  * A minimal in-memory stand-in for the parts of the File System Access API
  * that opfs.ts actually uses. Node has no OPFS, and the real thing cannot be
- * exercised outside a browser at all - but the module's own logic (unique
+ * exercised outside a browser at all, but the module's own logic (unique
  * ref generation, graceful reads of a missing file, orphan cleanup) is worth
  * testing independently of the browser implementing it.
  */

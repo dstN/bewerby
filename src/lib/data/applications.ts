@@ -17,7 +17,7 @@ export { MissingApplicationError };
 
 /**
  * No history: a new row gets one entry for its status, dated now. An entered
- * application date goes into sentAt, never into the log - a log entry dated
+ * application date goes into sentAt, never into the log: a log entry dated
  * at noon today sat in the future all morning, and every move made before
  * then counted as older than it, so the card jumped back (#59).
  */
@@ -44,7 +44,7 @@ export async function createApplication(data: NewApplication, now = Date.now()):
 
 /**
  * Field edits. A changed status is appended to the history here, so no
- * caller can forget to log it - the edit dialog did, until 2026-08-18 - and
+ * caller can forget to log it (the edit dialog did, until 2026-08-18), and
  * an entered rejection date, archive reason or end date is dropped with it
  * unless the caller sets one (STATUS_FIELDS).
  *

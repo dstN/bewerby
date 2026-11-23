@@ -11,8 +11,8 @@ first as a file the user drops into iCloud Drive or any synced folder (#50),
 then through Dropbox, OneDrive and Google Drive (#53, #54), and between the
 user's own devices (#55). Its promise so far was that this data never leaves
 the device. The replacement promise is that it leaves the device only
-encrypted, to destinations the user picks, and that nobody along the way -
-the storage provider, bewerby.de, a network observer - can read it.
+encrypted, to destinations the user picks, and that nobody along the way
+(the storage provider, bewerby.de, a network observer) can read it.
 
 That rules out anything server-side, and it means the format has to stand on
 its own: a file found in a cloud folder years later must open with what the

@@ -2,7 +2,7 @@ import { test, expect, type Page, type Locator } from '@playwright/test';
 
 /**
  * Native HTML5 drag-and-drop between columns. board-crud.spec.ts covers the
- * per-card status <select> - the keyboard/touch path - but the two share only
+ * per-card status <select> (the keyboard/touch path), but the two share only
  * moveApp(): the drop path alone carries the id through dataTransfer as a
  * string, and that round-trip is where a card can silently fail to move.
  */
@@ -38,7 +38,7 @@ async function addApplication(page: Page, title: string, company: string) {
  * whatever primary key the caller passes. That is how a row "written past
  * TypeScript" (a DevTools edit, a script, a pre-validation import that kept a
  * foreign export's keys) ends up with an id the Application type never
- * allows - and such rows exist in real databases, see the history-less rows
+ * allows, and such rows exist in real databases, see the history-less rows
  * analytics.ts had to learn to survive.
  */
 async function seedRowWithRawId(page: Page, id: string | number, company: string) {
@@ -148,7 +148,7 @@ test.describe('Kanban drag and drop', () => {
 		const card = column(page, 'In Arbeit').locator('.card', { hasText: 'Northwind e.V.' });
 		await expect(card).toBeVisible();
 
-		// The keyboard/touch path was never affected - it hands app.id over as-is.
+		// The keyboard/touch path was never affected; it hands app.id over as-is.
 		await card.locator('.card-status-select').selectOption('sent');
 		await expect(
 			column(page, 'Versendet').locator('.card', { hasText: 'Northwind e.V.' })

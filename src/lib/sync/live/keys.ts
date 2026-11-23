@@ -5,7 +5,7 @@ import { base64url } from '../oauth.js';
  * Keys for the signaling of live sync (#55). Two cases:
  *
  * - Pairing a new device: everything derives from 16 random bytes that only
- *   travel in the QR code (or as a typed code) - the room the two devices
+ *   travel in the QR code (or as a typed code): the room the two devices
  *   meet in, the key their signaling messages are sealed with, and the
  *   comparison code that rules out a third device that saw the QR code.
  * - Devices of one vault meeting later: derived from the vault's root, so

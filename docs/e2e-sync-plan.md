@@ -1,4 +1,4 @@
-# #36 + #41 — Ende-zu-Ende-verschlüsselte Mehrgeräte-Synchronisation
+# #36 + #41: Ende-zu-Ende-verschlüsselte Mehrgeräte-Synchronisation
 
 ## Context
 
@@ -24,9 +24,9 @@ Ziel sind **echte Mehrgeräte-Synchronisation mit verlustfreiem Zusammenführen*
 
 ---
 
-## 0. Was ich VON DIR brauche, bevor es losgeht
+## 0. Was ich von dir brauche, bevor es losgeht
 
-### A — Registrierungen
+### A: Registrierungen
 
 Das kann nur der Kontoinhaber. Ich schreibe dir für jede eine Schritt-für-Schritt-Anleitung. Alle Redirect-URIs: `https://bewerby.de/cloud/callback` und `http://localhost:5173/cloud/callback`.
 
@@ -37,23 +37,23 @@ Das kann nur der Kontoinhaber. Ich schreibe dir für jede eine Schritt-für-Schr
 | A3  | Google Cloud        | Projekt anlegen, Zustimmungsbildschirm „External“ mit Scope `drive.appdata` (nicht sensibel, einfache Verifizierung), Web-Client mit JS-Origin und Redirect-URIs. **bewerby.de per DNS-TXT in der Search Console bestätigen**, den TXT-Eintrag setzt du bei netcup | **Client-ID** (öffentlich) und **Client-Secret** (siehe B1) | 5        |
 | A4  | pCloud (optional)   | App unter my.pcloud.com                                                                                                                                                                                                                                            | Client-ID                                                   | 8        |
 
-### B — Server, Hosting und Deploy
+### B: Server, Hosting und Deploy
 
-- **B1** — Google-Client-Secret im **Plesk-Node.js-Panel als Umgebungsvariable** `GOOGLE_CLIENT_SECRET` hinterlegen. Es kommt nicht ins Repository und nicht in GitHub. Die öffentlichen Client-IDs kommen als **GitHub-Environment-Variablen** (`PUBLIC_DROPBOX_APP_KEY`, `PUBLIC_MS_CLIENT_ID`, `PUBLIC_GOOGLE_CLIENT_ID`) in den Build. Fehlt eine ID, ist der Anbieter einfach ausgeblendet.
-- **B2** — Deine **Freigabe, in Phase 0 einen versteckten Test-Endpunkt nach bewerby.de zu deployen.** Er klärt drei Fragen: Teilen sich mehrere Passenger-Prozesse ein beschreibbares `tmp/`-Verzeichnis? Hält Passenger Long-Polling-Requests 25 s offen? Kommt die Plesk-Umgebungsvariable an? Danach wird er wieder entfernt.
-- **B3** — Wahl des **öffentlichen EU-STUN-Servers**. Ich schlage vor, `stun.nextcloud.com` (Nextcloud GmbH, Stuttgart) erst zu prüfen und seine Datenschutzangaben zu lesen. Die Entscheidung liegt bei dir: Der Betreiber sieht IP-Adressen.
+- **B1:** Google-Client-Secret im **Plesk-Node.js-Panel als Umgebungsvariable** `GOOGLE_CLIENT_SECRET` hinterlegen. Es kommt nicht ins Repository und nicht in GitHub. Die öffentlichen Client-IDs kommen als **GitHub-Environment-Variablen** (`PUBLIC_DROPBOX_APP_KEY`, `PUBLIC_MS_CLIENT_ID`, `PUBLIC_GOOGLE_CLIENT_ID`) in den Build. Fehlt eine ID, ist der Anbieter einfach ausgeblendet.
+- **B2:** Deine **Freigabe, in Phase 0 einen versteckten Test-Endpunkt nach bewerby.de zu deployen.** Er klärt drei Fragen: Teilen sich mehrere Passenger-Prozesse ein beschreibbares `tmp/`-Verzeichnis? Hält Passenger Long-Polling-Requests 25 s offen? Kommt die Plesk-Umgebungsvariable an? Danach wird er wieder entfernt.
+- **B3:** Wahl des **öffentlichen EU-STUN-Servers**. Ich schlage vor, `stun.nextcloud.com` (Nextcloud GmbH, Stuttgart) erst zu prüfen und seine Datenschutzangaben zu lesen. Die Entscheidung liegt bei dir: Der Betreiber sieht IP-Adressen.
 
-### C — Tests
+### C: Tests
 
-- **C1** — Je ein **Testkonto** bei Dropbox, Microsoft und Google, getrennt von deinen privaten Konten.
-- **C2** — Testgeräte: ein **iPhone oder iPad** mit Safari (Dateien-App, Speicherverhalten, Kamera öffnet den Pairing-Link), ein **Android-Gerät** mit Chrome und ein **zweiter Desktop-Browser**. Auf den Handys messe ich die Dauer von Argon2id.
+- **C1:** Je ein **Testkonto** bei Dropbox, Microsoft und Google, getrennt von deinen privaten Konten.
+- **C2:** Testgeräte: ein **iPhone oder iPad** mit Safari (Dateien-App, Speicherverhalten, Kamera öffnet den Pairing-Link), ein **Android-Gerät** mit Chrome und ein **zweiter Desktop-Browser**. Auf den Handys messe ich die Dauer von Argon2id.
 
-### D — Recht
+### D: Recht
 
-- **D1** — Juristische Gegenprüfung der neuen Datenschutz-Abschnitte (de und en) zu Token-Broker, Signaling, STUN und den Anbietern als Vertragspartnern der Nutzer (US-Anbieter: Drittland, Chiffretext). Ich schreibe die Entwürfe. **Rechtssicher machen kannst nur du bzw. dein Anwalt.**
-- **D2** — Ergänzung der Nutzungsbedingungen zum Datenverlust bei verlorenem Passwort, Wiederherstellungsschlüssel und allen Geräten.
+- **D1:** Juristische Gegenprüfung der neuen Datenschutz-Abschnitte (de und en) zu Token-Broker, Signaling, STUN und den Anbietern als Vertragspartnern der Nutzer (US-Anbieter: Drittland, Chiffretext). Ich schreibe die Entwürfe. **Rechtssicher machen kannst nur du bzw. dein Anwalt.**
+- **D2:** Ergänzung der Nutzungsbedingungen zum Datenverlust bei verlorenem Passwort, Wiederherstellungsschlüssel und allen Geräten.
 
-### E — Abhängigkeiten
+### E: Abhängigkeiten
 
 Kurz bestätigen: **`yjs`, `lib0`, `hash-wasm`, `qrcode-generator`** (alle MIT, ohne eigenen Netzwerkzugriff). Ein Paket zum QR-Scannen kommt nicht dazu: Die Kamera-App des Handys öffnet den Pairing-Link selbst, als Fallback lässt sich ein Code eintippen. `yjs` wird erst geladen, wenn Sync eingerichtet ist. Wer ohne Sync arbeitet, lädt beim Start kein zusätzliches Byte.
 
@@ -73,7 +73,7 @@ Kurz bestätigen: **`yjs`, `lib0`, `hash-wasm`, `qrcode-generator`** (alle MIT, 
 | **Entferntes Gerät**                      | Was es bis zum Entfernen hatte. Das lässt sich technisch nicht zurückholen                                                                                                                                                                | Alles danach: Schlüsselrotation mit neuer Epoche                                                                                                                                   |
 | **XSS oder kompromittierter Deploy**      | Alles. Das gilt für jede Web-App mit E2E-Verschlüsselung                                                                                                                                                                                  | Gegenmittel: strikte CSP, kein Fremdskript, keine Anbieter-SDKs, Deploy-Härtung (Phase 8)                                                                                          |
 
-Ehrlich festgehalten wird auch: Jeder neue `connect-src`-Origin ist ein möglicher Abflussweg für XSS mit dem _eigenen_ Token eines Angreifers. Deshalb kommen nur feste Origins dazu, keine Wildcards, abgesehen von festen Host-Mustern für die S3-Anbieter in Phase 8.
+Jeder neue `connect-src`-Origin ist ein möglicher Abflussweg für XSS mit dem _eigenen_ Token eines Angreifers. Deshalb kommen nur feste Origins dazu, keine Wildcards, abgesehen von festen Host-Mustern für die S3-Anbieter in Phase 8.
 
 ---
 
@@ -96,7 +96,7 @@ Ehrlich festgehalten wird auch: Jeder neue `connect-src`-Origin ist ein möglich
 
 **Passwort ändern** wickelt nur den DEK neu. **Rotation** (Gerät entfernen, Verdacht auf Kompromittierung) erzeugt Epoche _n+1_: einen neuen DEK, gewickelt für Passwort, Wiederherstellungsschlüssel und jedes verbleibende Gerät. Danach wird ein neuer Snapshot geschrieben und die alten Update-Dateien werden gelöscht.
 
-**Auf dem Gerät merken:** Der DEK wird als nicht exportierbarer CryptoKey in der eigenen IndexedDB `bewerby-keys` abgelegt. Abschalten lässt sich das pro Gerät, dann wird das Passwort in jeder Sitzung abgefragt. `navigator.storage.persist()` wird angefragt. Safari ohne installierte PWA darf Speicher nach 7 Tagen ohne Nutzung löschen. Dann koppelt man das Gerät neu, die Daten kommen aus Cloud oder Partnergerät zurück. Die UI sagt das ehrlich.
+**Auf dem Gerät merken:** Der DEK wird als nicht exportierbarer CryptoKey in der eigenen IndexedDB `bewerby-keys` abgelegt. Abschalten lässt sich das pro Gerät, dann wird das Passwort in jeder Sitzung abgefragt. `navigator.storage.persist()` wird angefragt. Safari ohne installierte PWA darf Speicher nach 7 Tagen ohne Nutzung löschen. Dann koppelt man das Gerät neu, die Daten kommen aus Cloud oder Partnergerät zurück. Die UI weist darauf hin.
 
 ---
 
@@ -151,7 +151,7 @@ Gilt gleich für alle API-Anbieter und den Ordner-Adapter.
 
 - **Keine Schreibkonflikte:** Jedes Gerät hängt nur eigene Dateien an. Yjs-Updates sind kommutativ und idempotent, deshalb braucht es weder ETags noch Sperren.
 - **Verdichten:** Ein Gerät schreibt einen Snapshot und löscht danach nur die Update-Dateien, die sein Zustandsvektor abdeckt. Verdichten zwei Geräte gleichzeitig, ist das unschädlich.
-- **Senden** 20 s nach der letzten Änderung, gebündelt. **Holen:** Dropbox `list_folder/longpoll` (fast live), OneDrive `delta`, Google `changes`, der Ordner-Adapter alle 60 s. Das alles nur bei offenem Tab, dieselbe ehrliche Grenze wie bei den Erinnerungen.
+- **Senden** 20 s nach der letzten Änderung, gebündelt. **Holen:** Dropbox `list_folder/longpoll` (fast live), OneDrive `delta`, Google `changes`, der Ordner-Adapter alle 60 s. Das alles nur bei offenem Tab, dieselbe Grenze wie bei den Erinnerungen.
 - **Sicherheit:** Ein neues Gerät holt **zuerst** den Stand und schreibt erst danach. Eine unbekannte `vaultId` wird abgewiesen. Ein Anbieter-Ordner gehört zu genau einem Tresor.
 
 ### 4.2 Anbieter
@@ -228,17 +228,17 @@ Die Seite `/backup` wird zu **„Sync & Sicherung“** (Name noch abstimmen).
 
 Jede Phase endet mit Tests, Doku, Datenschutz-Text (de/en), axe-Prüfung, Versions-Bump, Commit und Push. E2E läuft **sequenziell**.
 
-| Phase                                        | Inhalt                                                                                                                                                                                                                                                                 | Größe | Ergebnis                                                             |
-| -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- | -------------------------------------------------------------------- |
-| **0 — Prüfungen**                            | Test-Endpunkt auf bewerby.de (B2). Prototypen der Anbieter mit A1–A3. Argon2-Dauer auf C2. Bundle-Größe von Yjs. STUN-Betreiber (B3). Fallen `stun:`-URLs unter die CSP?                                                                                               | S     | Belegte Annahmen, nur Prototypen, nicht im Repo                      |
-| **1 — Krypto-Kern und verschlüsselte Datei** | `src/lib/vault/*`: Format, Argon2id, HKDF, Schlüssel wickeln, Padmé, Keystore. Wiederherstellungsschlüssel. „Verschlüsselt exportieren/importieren“ zunächst mit dem bestehenden Backup-Format (Ersetzen oder Zusammenführen wie heute). ADR 0001 und Bedrohungsmodell | L     | **iCloud über die Dateien-App funktioniert.** v1.6.0                 |
-| **2 — Repository-Schicht**                   | Alle fünf Schreibpfade sowie Profil und Farben über `src/lib/data/`. **Keine Verhaltensänderung**, alle bestehenden E2E bleiben grün                                                                                                                                   | M     | Grundlage für den CRDT. v1.6.1                                       |
-| **3 — CRDT**                                 | Yjs per dynamischem Import, Dexie v3 (`uid`, `crdt`, `syncState`, `blobs`), Materializer, Status aus `history`, Blob-IDs. Die Datei aus Phase 1 trägt jetzt Yjs-Updates, beim Import wird zusammengeführt                                                              | XL    | Zwei Geräte lassen sich per Datei verlustfrei zusammenführen. v1.7.0 |
-| **4 — Cloud-Transport und Dropbox**          | `src/lib/sync/port.ts`, `oauth.ts`, `engine.ts`, Callback-Route (nur aus dem Cache), Ablage wie in 4.1 mit Verdichtung, Ordner-Adapter, Dropbox mit longpoll                                                                                                           | L     | Erster Cloud-Weg und beliebige Sync-Ordner. v1.8.0                   |
-| **5 — OneDrive und Google**                  | OneDrive-Adapter. Token-Broker und Google-Adapter. Server-Helfer nach `$lib/server`                                                                                                                                                                                    | M     | v1.9.0                                                               |
-| **6 — Live von Gerät zu Gerät (#41)**        | Pairing-Route, QR (`qrcode-generator`), Prüfcode, Signaling-Endpunkt, WebRTC-DataChannel, Yjs-Sync und PDF-Übertragung                                                                                                                                                 | L     | Live-Abgleich, Koppeln ohne Passwort. v1.10.0                        |
-| **7 — Geräte und Schlüssel**                 | Geräteschlüssel, Entfernen und Rotation (Epochen), Passwort ändern, Cloud löschen und widerrufen, `eraseAllData`                                                                                                                                                       | M     | v1.11.0                                                              |
-| **8 — Weitere Anbieter und Härtung**         | S3-kompatibel, pCloud mit Warnhinweis. GitHub-Actions auf Commit-SHA pinnen, Build-Hash in der App anzeigen, Trusted Types prüfen. Externes Review des Krypto-Kerns (deine Entscheidung)                                                                               | M     | v1.12.0                                                              |
+| Phase                                       | Inhalt                                                                                                                                                                                                                                                                 | Größe | Ergebnis                                                             |
+| ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- | -------------------------------------------------------------------- |
+| **0: Prüfungen**                            | Test-Endpunkt auf bewerby.de (B2). Prototypen der Anbieter mit A1–A3. Argon2-Dauer auf C2. Bundle-Größe von Yjs. STUN-Betreiber (B3). Fallen `stun:`-URLs unter die CSP?                                                                                               | S     | Belegte Annahmen, nur Prototypen, nicht im Repo                      |
+| **1: Krypto-Kern und verschlüsselte Datei** | `src/lib/vault/*`: Format, Argon2id, HKDF, Schlüssel wickeln, Padmé, Keystore. Wiederherstellungsschlüssel. „Verschlüsselt exportieren/importieren“ zunächst mit dem bestehenden Backup-Format (Ersetzen oder Zusammenführen wie heute). ADR 0001 und Bedrohungsmodell | L     | **iCloud über die Dateien-App funktioniert.** v1.6.0                 |
+| **2: Repository-Schicht**                   | Alle fünf Schreibpfade sowie Profil und Farben über `src/lib/data/`. **Keine Verhaltensänderung**, alle bestehenden E2E bleiben grün                                                                                                                                   | M     | Grundlage für den CRDT. v1.6.1                                       |
+| **3: CRDT**                                 | Yjs per dynamischem Import, Dexie v3 (`uid`, `crdt`, `syncState`, `blobs`), Materializer, Status aus `history`, Blob-IDs. Die Datei aus Phase 1 trägt jetzt Yjs-Updates, beim Import wird zusammengeführt                                                              | XL    | Zwei Geräte lassen sich per Datei verlustfrei zusammenführen. v1.7.0 |
+| **4: Cloud-Transport und Dropbox**          | `src/lib/sync/port.ts`, `oauth.ts`, `engine.ts`, Callback-Route (nur aus dem Cache), Ablage wie in 4.1 mit Verdichtung, Ordner-Adapter, Dropbox mit longpoll                                                                                                           | L     | Erster Cloud-Weg und beliebige Sync-Ordner. v1.8.0                   |
+| **5: OneDrive und Google**                  | OneDrive-Adapter. Token-Broker und Google-Adapter. Server-Helfer nach `$lib/server`                                                                                                                                                                                    | M     | v1.9.0                                                               |
+| **6: Live von Gerät zu Gerät (#41)**        | Pairing-Route, QR (`qrcode-generator`), Prüfcode, Signaling-Endpunkt, WebRTC-DataChannel, Yjs-Sync und PDF-Übertragung                                                                                                                                                 | L     | Live-Abgleich, Koppeln ohne Passwort. v1.10.0                        |
+| **7: Geräte und Schlüssel**                 | Geräteschlüssel, Entfernen und Rotation (Epochen), Passwort ändern, Cloud löschen und widerrufen, `eraseAllData`                                                                                                                                                       | M     | v1.11.0                                                              |
+| **8: Weitere Anbieter und Härtung**         | S3-kompatibel, pCloud mit Warnhinweis. GitHub-Actions auf Commit-SHA pinnen, Build-Hash in der App anzeigen, Trusted Types prüfen. Externes Review des Krypto-Kerns (deine Entscheidung)                                                                               | M     | v1.12.0                                                              |
 
 Erst ab Phase 7 ist die Rotation fertig. Bis dahin bietet die UI „Gerät entfernen“ noch nicht an.
 

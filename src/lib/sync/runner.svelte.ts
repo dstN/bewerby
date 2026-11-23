@@ -15,7 +15,7 @@ import { openStore } from './targets.js';
  * Runs the sync engine while bewerby is open (#53): once on start, shortly
  * after a change on this device, every minute for other devices' changes,
  * and when the tab comes back into view. Like the reminders, nothing runs
- * while no tab is open - there is no server to do it.
+ * while no tab is open; there is no server to do it.
  */
 
 export type SyncStatus = 'off' | 'locked' | 'reconnect' | 'rekey' | 'idle' | 'syncing' | 'error';
@@ -138,7 +138,7 @@ class SyncRunner {
 
 	/**
 	 * Forgets the target here and revokes its tokens where possible. With
-	 * `erase`, this vault's files there go first (right to erasure, #56) -
+	 * `erase`, this vault's files there go first (right to erasure, #56);
 	 * that throws when the target cannot be reached, so nothing is claimed
 	 * deleted that is not.
 	 */

@@ -34,7 +34,7 @@ function refuse(status: number) {
 const isText = (value: unknown, max: number): value is string =>
 	typeof value === 'string' && value.length > 0 && value.length <= max;
 
-/** This app's /cloud/callback - by host, for the same reason as the Origin check. */
+/** This app's /cloud/callback, by host, for the same reason as the Origin check. */
 function isOwnCallback(value: unknown, url: URL): value is string {
 	if (typeof value !== 'string') return false;
 	try {

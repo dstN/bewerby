@@ -23,12 +23,12 @@ jobs:
     # Generous, but bounded: a transient runner-infra hang (e.g. apt-get
     # stalling against a mirror) should fail loudly within minutes, not burn
     # Actions minutes for hours with no visibility until manually cancelled.
-    # This is intentionally the ONLY layer that kills a hung apt-get - see
+    # This is intentionally the ONLY layer that kills a hung apt-get; see
     # the comment on the Playwright install step for why an in-job retry
     # loop with its own `timeout` actively made this worse, not better.
     timeout-minutes: 15
-    # Public OAuth client ids of the sync providers (#53). Not secrets - PKCE
-    # needs none - so repository variables, not secrets. Job-wide, so the
+    # Public OAuth client ids of the sync providers (#53). Not secrets (PKCE
+    # needs none), so repository variables, not secrets. Job-wide, so the
     # artifact build and the build the E2E run makes come out the same. An
     # unset variable builds without that provider (see vite.config.ts).
     env:
@@ -68,19 +68,19 @@ jobs:
       # A retry loop with its own `timeout` wrapper was tried here and made
       # things worse: `timeout` only signals its direct child (npx), not the
       # privileged `sudo apt-get` it spawns, which sudo does not forward
-      # signals to by default - so a killed attempt leaves apt-get running,
+      # signals to by default, so a killed attempt leaves apt-get running,
       # holding the dpkg lock, and every subsequent retry in the *same* job
       # fails instantly instead of ever getting a clean shot. The job-level
       # timeout-minutes above is the only safety net that actually works
       # here, since it tears down the whole runner VM rather than one
-      # subprocess - on a hang, re-running the job gets a clean machine.
+      # subprocess; on a hang, re-running the job gets a clean machine.
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
 
       - name: E2E smoke tests
         run: npm run test:e2e
 
-      # This artifact IS the release - deploy.yml downloads exactly this
+      # This artifact IS the release: deploy.yml downloads exactly this
       # build and ships it, rather than re-running `npm run build` in the
       # deploy job, so what gets deployed is provably what CI tested. Every
       # branch uploads it, because the run that tested a commit is the one

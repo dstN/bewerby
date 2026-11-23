@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 /**
  * eraseAllData() is the app's right-to-erasure implementation, so what
- * matters is that it clears *every* store - a step silently skipped would
+ * matters is that it clears *every* store: a step silently skipped would
  * leave personal data behind while the UI reports success. These tests
  * assert each store is reached, and that a failure in one of the
  * best-effort steps never aborts the ones after it.
@@ -188,7 +188,7 @@ describe('eraseAllData resilience', () => {
 
 		await expect(eraseAllData()).resolves.toBeUndefined();
 		expect(warnSpy).toHaveBeenCalled();
-		// The steps *after* the failure still ran - that is the point.
+		// The steps *after* the failure still ran; that is the point.
 		expect(localStorage.length).toBe(0);
 		expect(deletedCaches).toHaveLength(2);
 	});

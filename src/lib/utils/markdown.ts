@@ -1,6 +1,6 @@
 /**
- * A deliberately small Markdown subset - paragraphs, bold, italic, bullet and
- * numbered lists - which is the whole of what a cover letter needs.
+ * A deliberately small Markdown subset (paragraphs, bold, italic, bullet and
+ * numbered lists), which is the whole of what a cover letter needs.
  *
  * No Markdown library: the alternative under consideration was a rich-text
  * editor, and the reason that was rejected (a contenteditable surface cannot
@@ -8,7 +8,7 @@
  * dependency weight too. CommonMark is not the goal; a letter is.
  *
  * Everything parses once into blocks, and the HTML preview, the plain-text
- * mail body and the PDF renderer are all projections of those same blocks - so
+ * mail body and the PDF renderer are all projections of those same blocks, so
  * what the writer sees is what the PDF gets.
  */
 
@@ -134,7 +134,7 @@ function escapeHtml(text: string): string {
 function runsToHtml(runs: InlineRun[]): string {
 	return runs
 		.map((run) => {
-			// Escaped first, always - the preview goes through {@html}, and the
+			// Escaped first, always: the preview goes through {@html}, and the
 			// writer's own text is still untrusted input to the DOM.
 			let html = escapeHtml(run.text);
 			if (run.bold) html = `<strong>${html}</strong>`;

@@ -8,7 +8,7 @@ import { fromBase64, toBase64 } from '#lib/vault/format.js';
  * it happens. PDFs follow on request, in chunks a data channel can carry.
  *
  * Plain Yjs state vectors and updates (Y.encodeStateVector,
- * Y.encodeStateAsUpdate) - no y-protocols, no y-webrtc.
+ * Y.encodeStateAsUpdate), no y-protocols, no y-webrtc.
  */
 
 /** Well under the 256 KB a data channel message can safely hold. */

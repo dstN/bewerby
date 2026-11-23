@@ -25,7 +25,7 @@
 		/** Extra controls between the secret and the buttons (the import mode). */
 		extra?: Snippet;
 		/**
-		 * Also hand the root's bytes to onunlock - only for passing the vault
+		 * Also hand the root's bytes to onunlock, only for passing the vault
 		 * to a new device (#55); otherwise they are zeroed here.
 		 */
 		keepRaw?: boolean;

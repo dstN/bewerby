@@ -27,8 +27,8 @@ import {
  * from it, so the board, statistics and reminders keep reading Dexie through
  * liveQuery exactly as before. See docs/adr/0002-crdt-yjs.md.
  *
- * Only loaded once a vault exists - it is imported dynamically by
- * session.ts - so a device without sync never downloads Yjs.
+ * Only loaded once a vault exists (it is imported dynamically by
+ * session.ts), so a device without sync never downloads Yjs.
  */
 
 /** Transaction origins, so persistence and materialization can tell writes apart. */
@@ -88,7 +88,7 @@ export class SyncRuntime {
 
 	/**
 	 * uid -> when it was deleted. Replicated like everything else, so a row
-	 * deleted on one device goes on all of them - and a row the document has
+	 * deleted on one device goes on all of them, and a row the document has
 	 * simply never seen (written while sync was off) is adopted, not
 	 * mistaken for a deleted one.
 	 */
@@ -390,7 +390,7 @@ export class SyncRuntime {
 	}
 
 	/**
-	 * Everything this device has that a peer at `stateVector` lacks - plus,
+	 * Everything this device has that a peer at `stateVector` lacks, plus,
 	 * always, the whole delete set: Yjs cannot tell which deletions a peer has
 	 * seen, which is also why an "empty" diff is no sign that nothing changed.
 	 */
@@ -472,7 +472,7 @@ export class SyncRuntime {
 	}
 
 	/**
-	 * Replaces this device's state with the snapshot's - a restore, not a
+	 * Replaces this device's state with the snapshot's: a restore, not a
 	 * merge. Returns the runtime to use from now on; this one is closed.
 	 */
 	async replaceWith(snapshot: Snapshot): Promise<SyncRuntime> {

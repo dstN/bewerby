@@ -30,7 +30,7 @@ export function makeSeedApplication(overrides: Partial<SeedApplication> = {}): S
 	const now = Date.now();
 	const status = overrides.status ?? 'draft';
 	// The move into the status happened on the application date, as it would
-	// on a real board - everything dates a row by that move, not by appliedAt.
+	// on a real board; everything dates a row by that move, not by appliedAt.
 	const appliedAt = overrides.appliedAt ?? now - DAY_MS;
 	return {
 		title: 'Frontend Entwickler',
@@ -106,7 +106,7 @@ export async function seedApplications(page: Page, applications: SeedApplication
 /**
  * A board covering every column, priority, a coloured card, tags (including
  * the "+N more" overflow), a salary, and an application that is overdue for
- * follow-up - so a single scan or screenshot exercises every card variant
+ * follow-up, so a single scan or screenshot exercises every card variant
  * the board can render rather than only the plain one.
  */
 export function representativeBoard(): SeedApplication[] {

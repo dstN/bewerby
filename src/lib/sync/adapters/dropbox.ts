@@ -5,7 +5,7 @@ import { TokenKeeper, tokenRequest, withTokens } from './tokens.js';
 /**
  * Dropbox, scoped to its "App folder" access type: the token can reach
  * /Apps/<app name> and nothing else in the account (#53). The browser talks
- * to Dropbox directly - PKCE needs no client secret, so bewerby.de is not
+ * to Dropbox directly: PKCE needs no client secret, so bewerby.de is not
  * involved at all. Endpoints as used by the official dropbox-sdk-js.
  */
 
@@ -161,7 +161,7 @@ export class DropboxStore implements RemoteStore {
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ path: `/${path}` })
 		});
-		// 409: path/not_found - already gone, which is what was wanted.
+		// 409: path/not_found, already gone, which is what was wanted.
 		if (!response.ok && response.status !== 409) {
 			throw new Error(`Dropbox delete failed: ${response.status}`);
 		}

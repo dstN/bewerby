@@ -16,8 +16,8 @@ import { clientAddress, createRateLimiter } from '#lib/server/requests.js';
  *   No row, no PDF, no profile, no id ever crosses this boundary.
  * - **It never writes anything down.** No database, no cache, no log of the
  *   target URL. The URL travels in the POST body, never the query string,
- *   precisely so Apache's access log - which records the path and the client
- *   IP, and rotates on the server's own schedule - cannot record *which*
+ *   precisely so Apache's access log (which records the path and the client
+ *   IP, and rotates on the server's own schedule) cannot record *which*
  *   vacancy anybody looked at. The log shows that the import feature was
  *   used, and nothing about what for.
  * - **It hides the user from the job board.** The employer's server sees our
@@ -33,7 +33,7 @@ const MAX_REDIRECTS = 3;
 const MAX_BYTES = 2 * 1024 * 1024;
 
 /**
- * A plain browser-ish UA. Not a disguise - a blank or scripted UA is simply
+ * A plain browser-ish UA. Not a disguise: a blank or scripted UA is simply
  * rejected outright by most sites, and there is nothing to gain by failing a
  * request we are making on a user's explicit instruction, for a page they
  * could open themselves.
@@ -60,7 +60,7 @@ const rateLimited = createRateLimiter(WINDOW_MS, MAX_PER_WINDOW);
 /**
  * One GET, over node:https rather than fetch(). fetch() cannot take a
  * `lookup`, so it resolves the host again on its own after assertPublicUrl
- * judged it - which is exactly the gap a DNS-rebinding answer slips through.
+ * judged it, which is exactly the gap a DNS-rebinding answer slips through.
  * publicLookup applies the check to the address the socket really uses.
  */
 function get(url: URL): Promise<IncomingMessage> {
@@ -130,7 +130,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	}
 
 	// Redirects are followed by hand, because every hop is a fresh chance to
-	// be pointed at something internal - a public host answering 302 to
+	// be pointed at something internal: a public host answering 302 to
 	// http://127.0.0.1:8443 defeats a one-time check completely.
 	let current = target;
 	for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {

@@ -6,7 +6,7 @@ import { isValidApplication, type Application } from './index.js';
  * backup file and the live database. A field it waves through writes a row
  * that the board and analytics later crash on (a missing `tags` array, a
  * `history` entry with no timestamp), long after the import reported
- * success - so every field it claims to check is asserted here explicitly.
+ * success, so every field it claims to check is asserted here explicitly.
  */
 
 function validApplication(overrides: Partial<Application> = {}): Application {
@@ -238,7 +238,7 @@ describe('isValidApplication - narrowing', () => {
 	it('narrows an unknown value to Application for the caller', () => {
 		const value: unknown = validApplication();
 		if (isValidApplication(value)) {
-			// Compiles only because the guard narrowed `value` - the point of the
+			// Compiles only because the guard narrowed `value`: the point of the
 			// `value is Application` return type that parseBackupPayload relies on.
 			expect(value.company).toBe('Acme GmbH');
 			expect(value.history[0].status).toBe('draft');

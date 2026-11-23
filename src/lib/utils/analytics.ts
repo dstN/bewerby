@@ -82,7 +82,7 @@ export function computeApplicationStats(list: AnalyticsRow[]): ApplicationStats 
 
 		// `history` is required on the type, but a row written past TypeScript
 		// (a hand-edited record, a put() with a partial object) can arrive
-		// without it — and one such row used to throw here and take the whole
+		// without it, and one such row used to throw here and take the whole
 		// statistics page down rather than just counting as having no events.
 		const history = app.history ?? [];
 		if (wasSent(app)) totalSent++;
@@ -94,7 +94,7 @@ export function computeApplicationStats(list: AnalyticsRow[]): ApplicationStats 
 		}
 		if (app.status === 'archived' && app.archiveReason === 'no-response') noResponse++;
 		if (app.status === 'archived' && app.archiveReason === 'withdrawn') withdrawn++;
-		// Response time: from the send to the first answer - a move into
+		// Response time: from the send to the first answer: a move into
 		// interview, offer or rejection, each by its entered date where there
 		// is one. Nothing else is an answer: a card still waiting, or one put
 		// away without ever hearing back, has no response time. The current

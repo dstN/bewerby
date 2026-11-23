@@ -2,8 +2,8 @@ name: Deploy
 
 # On every push to master. The commit's build comes from the CI run that
 # already tested it on its branch (master fast-forwards to that commit), so
-# nothing runs twice. Only a commit CI never saw - a merge commit, a direct
-# push, or one whose artifact expired after 7 days - gets a CI run here first.
+# nothing runs twice. Only a commit CI never saw (a merge commit, a direct
+# push, or one whose artifact expired after 7 days) gets a CI run here first.
 on:
   push:
     branches: [master]
@@ -18,12 +18,12 @@ on:
         type: boolean
 
 # The repo's default workflow token permission is "read", but that default
-# does not extend to the `actions` scope - looking up CI runs and
+# does not extend to the `actions` scope: looking up CI runs and
 # actions/download-artifact below need it explicitly to read another run's
 # artifact (cross-run artifact access is gated behind this specific scope).
 # Without it the download 403s ("Resource not accessible by integration"),
 # which is exactly what broke this workflow once the repo's default
-# permission tightened - see ci.yml's `permissions: contents: read` for the
+# permission tightened; see ci.yml's `permissions: contents: read` for the
 # same explicit-over-implicit pattern already used there.
 permissions:
   contents: read
@@ -97,14 +97,14 @@ jobs:
     # See ci.yml's identical comment: apt-get against the runner's mirror has
     # repeatedly stalled for 15-30 minutes instead of failing cleanly. This is
     # the only thing that reliably recovers from that, since it tears down
-    # the whole runner VM - a hung run here would otherwise sit on GitHub's
+    # the whole runner VM; a hung run here would otherwise sit on GitHub's
     # default 360-minute cap while a real deploy waits on it.
     timeout-minutes: 15
     # Runs when a tested build was found (ci skipped) or CI just passed here, or after the content-only build.
     if: ${{ !cancelled() && ((needs.tested.result == 'success' && (needs.tested.outputs.run-id != '' || needs.ci.result == 'success')) || needs.build.result == 'success') }}
     # The environment must exist in repo Settings → Environments for its protection
     # rules to apply. If it does not, GitHub silently auto-creates an UNPROTECTED one
-    # on first run - so an absent `production` environment means no approval gate.
+    # on first run, so an absent `production` environment means no approval gate.
     # Keep the DEPLOY_* secrets as ENVIRONMENT secrets on this environment, not
     # repository secrets: repo secrets are readable by any workflow on any branch,
     # which would bypass the approval gate entirely.
@@ -141,7 +141,7 @@ jobs:
           fi
           echo "All required deploy secrets are present."
 
-      # Check out the exact commit CI built, not master's tip - otherwise a push
+      # Check out the exact commit CI built, not master's tip; otherwise a push
       # landing mid-deploy would ship source that doesn't match the artifact.
       - name: Checkout the built commit
         uses: actions/checkout@v7
@@ -185,7 +185,7 @@ jobs:
           chmod 600 ~/.ssh/known_hosts_deploy
 
       # rsync/gzip are not assumed to exist in the chroot (GourMerge's deploy,
-      # same hosting, confirms only tar/sh/mv/touch/mkdir there) - the artifact
+      # same hosting, confirms only tar/sh/mv/touch/mkdir there); the artifact
       # is streamed as an uncompressed tar over ssh (Compression=yes handles it
       # in the SSH transport instead) into a staging directory, so the live
       # `build/` is never a half-written tree.
@@ -211,7 +211,7 @@ jobs:
             | sshpass -e ssh $SSH_OPTS "$REMOTE" "tar xf - -C '$REMOTE_PATH/build.new'"
 
           # Passenger's startup file, the Application-Root .htaccess (Passenger
-          # directives - not static/.htaccess, which ships inside build/client/
+          # directives, not static/.htaccess, which ships inside build/client/
           # already), and package.json (Passenger reads it for app metadata).
           # All three are tiny and rarely change, so streamed in place rather
           # than staged.
@@ -223,7 +223,7 @@ jobs:
 
       # Directory renames are near-instant, so the window where `build` is
       # absent is far smaller than a full upload. The outgoing release is kept
-      # as build.prev - that is what the rollback repoints to.
+      # as build.prev; that is what the rollback repoints to.
       - name: Activate release and restart Passenger
         env:
           SSHPASS: ${{ secrets.DEPLOY_SSH_PASSWORD }}
@@ -259,7 +259,7 @@ jobs:
           # prerendered. The pages sit in build/prerendered/ and Node serves
           # them through Passenger; only the assets come straight out of
           # Document Root (build/client/) (see DEPLOYMENT.md). A health
-          # endpoint isn't the meaningful check here - "does / return the real
+          # endpoint isn't the meaningful check here: "does / return the real
           # page, and did the client bundle actually land" is what a failed
           # upload or a wrong DEPLOY_PATH would break.
           ok=0
@@ -281,7 +281,7 @@ jobs:
             exit 1
           fi
 
-          # Confirm the client bundle - not just the shell HTML - actually made it,
+          # Confirm the client bundle (not just the shell HTML) actually made it,
           # and that it decodes as a browser asks for it (br, gzip): a second
           # compression layer from mod_deflate fails here, not in the browser.
           for path in /manifest.json /service-worker.js /robots.txt; do
@@ -323,8 +323,8 @@ jobs:
           done
           [ "$fail" = 0 ] || exit 1
 
-      # Application Root (package.json, app.cjs, the root .htaccess, and - if
-      # ever accidentally uploaded - src/, .git/) must never be reachable over
+      # Application Root (package.json, app.cjs, the root .htaccess, and, if
+      # ever accidentally uploaded, src/, .git/) must never be reachable over
       # HTTP; only Document Root (build/client/) may be. DEPLOYMENT.md calls
       # this out as a real, easy-to-hit Plesk misconfiguration (Application
       # Root and Document Root left identical), not a hypothetical one.
@@ -375,7 +375,7 @@ jobs:
           REMOTE
 
           # A rollback that is never checked is a guess. build.prev only means
-          # "what was there before", not "what worked" - on the very first
+          # "what was there before", not "what worked"; on the very first
           # deploy it won't exist at all, so restoring it can leave the site
           # more broken than the release that just failed. Say which of the
           # two happened, in the log, at the time.

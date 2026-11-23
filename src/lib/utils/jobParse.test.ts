@@ -42,7 +42,7 @@ function buildDoc(entries: [size: number, text: string][]): JobDocument {
 describe('parseJobDocument - real job ads', () => {
 	/**
 	 * Five real ads: four printed from one job board, one from a company's own
-	 * careers page. Everything here goes through the generic pipeline - there
+	 * careers page. Everything here goes through the generic pipeline; there
 	 * is deliberately no per-source profile, so a green test cannot be the
 	 * result of having tuned the parser to one portal.
 	 */

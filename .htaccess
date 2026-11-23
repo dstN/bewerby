@@ -1,27 +1,27 @@
 # Phusion Passenger Configuration for Netcup/Plesk Webhosting
 #
-# IMPORTANT — two separate roots, do not point Document Root here:
+# IMPORTANT: two separate roots, do not point Document Root here:
 #
-#   Application Root (this directory) - contains package.json, app.js,
+#   Application Root (this directory): contains package.json, app.js,
 #   node_modules/ and the build/ output. Passenger cds into this directory
 #   and runs app.js from it.
 #
-#   Document Root - must be build/client/ (a subdirectory OF this
+#   Document Root: must be build/client/ (a subdirectory OF this
 #   directory), NOT this directory itself. Apache serves any physically
 #   existing file under Document Root directly, bypassing Passenger/Node
-#   entirely ("static assets are accelerated" - see
+#   entirely ("static assets are accelerated"; see
 #   https://www.phusionpassenger.com/library/admin/apache/troubleshooting/nodejs/
 #   and the canonical Node.js deploy layout at
 #   https://www.phusionpassenger.com/library/deploy/apache/deploy/nodejs/,
 #   both of which set DocumentRoot to the app's public subdirectory while
 #   Passenger's application root stays one level up). If Document Root were
 #   set to this directory, requests like GET /package.json, GET /.git/config
-#   or GET /src/lib/db/index.ts would be served as plain static files -
+#   or GET /src/lib/db/index.ts would be served as plain static files,
 #   publishing source code and internals to every visitor. Full setup steps:
 #   see DEPLOYMENT.md.
 #
 # In Plesk's Node.js panel these are two distinct fields ("Application Root"
-# and "Document Root") rather than something configured through this file -
+# and "Document Root") rather than something configured through this file;
 # Plesk did not, as of this writing, warn if both are left identical
 # (https://talk.plesk.com/threads/add-warning-when-document-root-equals-application-root-in-node-js-apps.391992/),
 # so this is a real, easy-to-hit misconfiguration, not a hypothetical one.
@@ -30,7 +30,7 @@
 # PassengerNodejs, ...) do NOT belong in this file on Plesk/Netcup hosting.
 # Verified live: having them here made Apache reject the whole .htaccess
 # with "[core:alert] PassengerAppType not allowed here", which broke EVERY
-# request under this vhost (500, including static files like favicon.ico) -
+# request under this vhost (500, including static files like favicon.ico),
 # not just the app. Plesk generates the equivalent Passenger config at the
 # vhost level from its own Node.js panel (Application Root, Document Root,
 # Application Startup File, Node.js version), which is the only place these
@@ -39,5 +39,5 @@
 #   PassengerAppType node
 #   PassengerStartupFile app.cjs
 # (app.cjs, not app.js: Passenger's Node.js loader loads it via require(),
-# which cannot load an ES module - "type": "module" in package.json makes
+# which cannot load an ES module; "type": "module" in package.json makes
 # plain .js files ESM. See app.cjs's own comment for the full explanation.)

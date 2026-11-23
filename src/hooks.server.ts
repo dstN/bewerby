@@ -2,8 +2,8 @@ import type { Handle } from '@sveltejs/kit/hooks';
 
 // Every *page* route is prerendered (see src/routes/+layout.ts), and
 // adapter-node serves prerendered pages through a static-file fast path that
-// never invokes this hook - verified empirically by adding a logging
-// handle() and confirming it never fires for a request to any of them. The
+// never invokes this hook (verified empirically by adding a logging
+// handle() and confirming it never fires for a request to any of them). The
 // headers that reach a browser for those come from .htaccess instead (see
 // project root), which applies at the Apache/Passenger level regardless of
 // how the Node backend served the bytes.

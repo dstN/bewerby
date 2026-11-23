@@ -32,7 +32,7 @@ export function emptyProfile(): Profile {
 }
 
 /**
- * Field-by-field validation of an untrusted profile - it arrives either from
+ * Field-by-field validation of an untrusted profile: it arrives either from
  * localStorage or out of an imported backup file, and neither is ours to
  * trust. Anything unexpected degrades to the empty profile rather than
  * reaching the UI or a generated PDF.

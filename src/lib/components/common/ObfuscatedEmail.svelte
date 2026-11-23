@@ -9,7 +9,7 @@
 	}: { user?: string; domain?: string; decoy?: string } = $props();
 
 	// Left undefined until mount on purpose: bewerby has no SSR at all
-	// (ssr = false - see +layout.ts), so there is nothing in the served HTML
+	// (ssr = false; see +layout.ts), so there is nothing in the served HTML
 	// for a non-JS scraper to find either way, but keeping the href
 	// unresolved until mount avoids handing a plain mailto: string to
 	// anything that scans the client bundle's data/state instead.
